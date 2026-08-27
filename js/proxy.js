@@ -119,7 +119,10 @@
         { scope: base() + '/uv/service/' }
       ).then(function (reg) {
         state.sw = true;
-        return navigator.serviceWorker.ready.then(function () { return reg; });
+        // Not navigator.serviceWorker.ready: that waits for a worker
+        // controlling *this* page, and Orion sits outside the proxy scope on
+        // purpose, so it would never resolve. Wait on the registration.
+        return waitActivated(reg);
       }).then(function () {
         return loadScript(p.assets + '/baremux/index.js');
       }).then(function () {
@@ -163,6 +166,25 @@
     probeWisp: probeWisp,
     xorEncode: xorEncode
   };
+
+  /** Resolve once the registration has an activated worker. */
+  function waitActivated(reg) {
+    if (reg.active) return Promise.resolve(reg);
+    return new Promise(function (resolve, reject) {
+      var worker = reg.installing || reg.waiting;
+      if (!worker) return resolve(reg);
+      var timer = setTimeout(function () {
+        reject(new Error('The proxy service worker did not start.'));
+      }, 15000);
+      worker.addEventListener('statechange', function () {
+        if (worker.state === 'activated') { clearTimeout(timer); resolve(reg); }
+        if (worker.state === 'redundant') {
+          clearTimeout(timer);
+          reject(new Error('The proxy service worker failed to install.'));
+        }
+      });
+    });
+  }
 
   function firstLive(list) {
     var i = 0;
