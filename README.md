@@ -99,6 +99,22 @@ fetch → parse (DOMParser) → strip scripts/frames → rewrite every URL → p
 DuckDuckGo's instant-answer API and Wikipedia's search API (both CORS-open, no relay
 needed) plus full web results via the reader relay. Clicking a result opens that real page.
 
+## Proxy for blocked sites
+
+Sites that refuse to be framed (`X-Frame-Options`, `frame-ancestors`) are routed through an
+Ultraviolet deployment, which serves them same-origin so they render and their scripts run.
+
+**Games always bypass it.** `deadshot.io`, `kartbros.io` and the GitHub Pages game hosts are
+on a never-proxy list: a direct frame is faster and more reliable for them, and no setting or
+failure can push them onto the proxy path. Everything else tries direct first; known
+frame-blockers skip straight to the proxy; the info bar and the … menu offer it on demand.
+
+Orion supplies its own `uv/uv.config.js` and `uv/sw.js` because the stock config hardcodes
+`prefix: "/uv/service/"`, which only works at a domain root — under a Pages repo path the
+worker listens where nothing is requested. The heavy runtime is loaded from the deployment
+named by **Proxy files** in Orion VPN → Settings. Public wisp backends come and go, so Orion
+probes a list and uses the first that answers; you can override it there too.
+
 **Orion VPN** — a Windows-style VPN client with a connect orb, server list, session timer,
 kill switch, protocol picker and tray indicator. Read this part carefully:
 

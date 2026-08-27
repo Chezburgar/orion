@@ -121,6 +121,29 @@
         '<small>' + Net.cacheSize() + ' pages held in memory</small></div>' +
         '<button class="btn" data-act="clearcache">Clear</button></div>' +
 
+        '<div class="e-set"><div class="lbl"><b>Proxy for blocked sites</b>' +
+        '<small>' + (global.OrionProxy
+          ? (global.OrionProxy.state.ready
+              ? 'Running via ' + U.esc(global.OrionProxy.state.wisp || 'backend')
+              : (global.OrionProxy.state.error ? U.esc(global.OrionProxy.state.error) : 'Not started yet'))
+          : 'unavailable') + '</small></div>' +
+        '<div class="sw' + ((global.OrionProxy && global.OrionProxy.config().enabled) ? ' on' : '') +
+        '" data-act="proxy-toggle"></div></div>' +
+
+        '<div class="e-set"><div class="lbl"><b>Proxy backend</b>' +
+        '<small>Public wisp servers come and go; Orion uses the first that answers</small></div>' +
+        '<input class="ex-search" style="width:230px" data-act="wisp" value="' +
+        U.esc((global.OrionProxy && global.OrionProxy.config().wisp) || '') + '"></div>' +
+
+        '<div class="e-set"><div class="lbl"><b>Proxy files</b>' +
+        '<small>Path to the Ultraviolet deployment on this domain</small></div>' +
+        '<input class="ex-search" style="width:230px" data-act="assets" value="' +
+        U.esc((global.OrionProxy && global.OrionProxy.config().assets) || '') + '"></div>' +
+
+        '<div class="e-set"><div class="lbl"><b>Restart the proxy</b>' +
+        '<small>Re-registers the worker and finds a live backend</small></div>' +
+        '<button class="btn" data-act="proxy-restart">Restart</button></div>' +
+
         '<div class="vpn-note warn">' + Icons.get('warning') +
         '<span><b>Read this once.</b> When the tunnel is on, the address of every real page you open in ' +
         'Edge is sent to a third-party relay service, which fetches it for you. That service can see what ' +
@@ -226,6 +249,14 @@
         } else { render(); }
         return;
       }
+      if (act.dataset.act === 'proxy-toggle') {
+        var pc = global.OrionProxy.config();
+        pc.enabled = !pc.enabled;
+        Emu.save();
+        if (!pc.enabled) global.OrionProxy.stop();
+        paneSettings();
+        return;
+      }
       var sw = e.target.closest('[data-set]');
       if (sw && sw.classList.contains('sw')) {
         s[sw.dataset.set] = !s[sw.dataset.set];
@@ -244,9 +275,27 @@
         });
       }
       if (act.dataset.act === 'clearcache') { Net.clearCache(); addLog('Page cache cleared'); paneSettings(); }
+      if (act.dataset.act === 'proxy-restart') {
+        act.textContent = 'Starting…';
+        global.OrionProxy.stop()
+          .then(function () { return global.OrionProxy.start(); })
+          .then(function (ok) {
+            addLog(ok ? 'Proxy ready via ' + global.OrionProxy.state.wisp : 'Proxy failed: ' + global.OrionProxy.state.error,
+              ok ? 'g' : 'r');
+            paneSettings();
+          });
+      }
     });
 
     win.body.addEventListener('change', function (e) {
+      var a = e.target.dataset.act;
+      if (a === 'wisp' || a === 'assets') {
+        var pc = global.OrionProxy.config();
+        pc[a === 'wisp' ? 'wisp' : 'assets'] = e.target.value.trim();
+        Emu.save();
+        addLog('Proxy ' + a + ' set to ' + e.target.value.trim());
+        return;
+      }
       var k = e.target.dataset.set;
       if (!k) return;
       s[k] = e.target.value;
