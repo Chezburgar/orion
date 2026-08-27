@@ -139,6 +139,12 @@ Emu.registerApp({
 });
 ```
 
+## Deploying changes
+
+Stylesheets and scripts are linked with a `?v=N` query string in `index.html`. Bump that
+number whenever you push, or returning visitors keep running the cached copy for up to ten
+minutes after a deploy.
+
 ## Branding
 
 The Orion mark and the Orion Store bag are hand-authored SVG in `assets/orion.svg` and
