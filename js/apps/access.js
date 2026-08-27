@@ -132,6 +132,9 @@
       load();
     }
 
+    var onChanged = Emu.on('access:changed', load);
+    win.onClose = function () { Emu.off('access:changed', onChanged); };
+
     load();
     return win;
   }
@@ -140,6 +143,24 @@
     id: 'access', name: 'Orion Access', icon: 'shield',
     desc: 'Approve or deny devices',
     launch: launchAccess
+  });
+
+  // Notifications are actionable: clicking one opens the console, and the
+  // Approve / Deny buttons decide without opening anything.
+  Emu.onNotifAction('access:open', function () { Emu.launch('access'); });
+
+  Emu.onNotifAction('access:decide', function (a) {
+    if (!Auth.isOwner()) {
+      Emu.notify('Orion Access', 'Sign in with the owner key first.', 'shield', { action: { do: 'access:open' } });
+      return;
+    }
+    Auth.decide(a.id, a.status).then(function () {
+      Emu.notify('Orion Access', (a.name || 'Device') + ' ' +
+        (a.status === 'approved' ? 'approved' : 'denied') + '.', 'shield');
+      Emu.emit('access:changed');
+    }).catch(function (e) {
+      Emu.notify('Orion Access', 'Could not update that request: ' + e.message, 'warning');
+    });
   });
 
   /** Only the owner gets the app on the taskbar and in Start. */

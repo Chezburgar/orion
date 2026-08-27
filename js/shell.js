@@ -40,6 +40,7 @@
       Emu.on('win:change', syncTaskbar);
       Emu.on('vfs', function (p) { if (!p || p === VFS.DESKTOP) renderIcons(); });
       Emu.on('notify', function (n) { toast(n); syncBadge(); });
+      Emu.on('notify:changed', function () { if (openFlyout === 'notif') renderNotifs(); syncBadge(); });
       Emu.on('user', function () { buildStart(); });
       Emu.on('theme', function () { renderIcons(); });
       Emu.on('apps', function () { buildStart(); syncTaskbar(); });
@@ -460,11 +461,21 @@
   }
 
   // ------------------------------------------------ notifications + clock
+  function notifButtons(n) {
+    if (!n.buttons || !n.buttons.length) return '';
+    return '<div class="notif-actions">' + n.buttons.map(function (b, i) {
+      return '<button class="btn' + (b.primary ? ' primary' : '') + '" data-nbtn="' + i + '">' +
+        U.esc(b.label) + '</button>';
+    }).join('') + '</div>';
+  }
+
   function renderNotifs() {
     var list = Emu.state.notifications;
     $('#notifList').innerHTML = list.length ? list.map(function (n) {
-      return '<div class="notif" data-n="' + n.id + '"><b>' + U.esc(n.title) + '</b>' +
+      return '<div class="notif' + (n.action ? ' actionable' : '') + '" data-n="' + n.id + '">' +
+        '<b>' + U.esc(n.title) + '</b>' +
         '<p>' + U.esc(n.body) + '</p>' +
+        notifButtons(n) +
         '<div class="muted" style="font-size:11px;margin-top:6px">' + U.fmtAgo(n.ts) + '</div>' +
         '<button class="x" data-dismiss="' + n.id + '">' + Icons.get('x') + '</button></div>';
     }).join('') : '<div class="notif-empty">No new notifications</div>';
@@ -507,6 +518,25 @@
         Emu.save(); renderNotifs(); return;
       }
       if (e.target.closest('#clearNotifs')) { Emu.state.notifications = []; Emu.save(); renderNotifs(); }
+
+      var btn = e.target.closest('[data-nbtn]');
+      if (btn) {
+        var row = btn.closest('[data-n]');
+        var n = Emu.state.notifications.filter(function (x) { return x.id === row.dataset.n; })[0];
+        if (n) {
+          var spec = (n.buttons || [])[+btn.dataset.nbtn];
+          if (spec) Emu.runNotifAction(spec.action);
+          Emu.dismissNotif(n.id);
+        }
+        renderNotifs();
+        return;
+      }
+      var card = e.target.closest('.notif.actionable');
+      if (card) {
+        var nn = Emu.state.notifications.filter(function (x) { return x.id === card.dataset.n; })[0];
+        if (nn && Emu.runNotifAction(nn.action)) closeFlyouts();
+        return;
+      }
       if (e.target.closest('#calPrev')) { calMonth.setMonth(calMonth.getMonth() - 1); renderCalendar(); }
       if (e.target.closest('#calNext')) { calMonth.setMonth(calMonth.getMonth() + 1); renderCalendar(); }
     });
@@ -516,14 +546,29 @@
 
   function toast(n) {
     var app = Emu.apps[n.icon];
-    var el = U.el('<div class="toast">' + Icons.get(app ? app.icon : n.icon) +
-      '<div><b>' + U.esc(n.title) + '</b><p>' + U.esc(n.body) + '</p></div></div>');
-    el.addEventListener('click', function () { el.remove(); });
+    var el = U.el('<div class="toast' + (n.action ? ' actionable' : '') + '">' +
+      Icons.get(app ? app.icon : n.icon) +
+      '<div><b>' + U.esc(n.title) + '</b><p>' + U.esc(n.body) + '</p>' +
+      notifButtons(n) + '</div></div>');
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-nbtn]');
+      if (b) {
+        e.stopPropagation();
+        var btn = (n.buttons || [])[+b.dataset.nbtn];
+        if (btn) Emu.runNotifAction(btn.action);
+        Emu.dismissNotif(n.id);
+        el.remove();
+        return;
+      }
+      if (n.action) { Emu.runNotifAction(n.action); closeFlyouts(); }
+      el.remove();
+    });
     els.toasts.appendChild(el);
+    // A toast you are meant to act on needs longer than one you just read.
     setTimeout(function () {
       el.classList.add('out');
       setTimeout(function () { el.remove(); }, 240);
-    }, 4600);
+    }, n.buttons && n.buttons.length ? 15000 : 4600);
   }
 
   function tickClock() {

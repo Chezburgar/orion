@@ -17,7 +17,8 @@ Orion is private. Each device gets its own identity and has to be let in:
    (student / personal / educator / employee).
 2. The request lands in Supabase and shows up as a notification inside Orion on the
    owner's machine.
-3. The owner opens **Orion Access** and approves, denies, or later revokes it.
+3. The owner can hit **Approve** or **Deny** straight on the notification, or click it to
+   open **Orion Access** for the full list, reasons and revoking.
 4. Approval is stored server-side, so it takes effect on the requester's own device.
 
 Identity is **per device, not per network**. A public IP belongs to a router, so everyone on

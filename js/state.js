@@ -197,14 +197,38 @@
       return def;
     },
 
-    /** Push a notification into the Action Center (shell renders the toast). */
-    notify: function (title, body, icon) {
-      var n = { id: util.uid('n'), title: title, body: body, icon: icon || 'info', ts: Date.now() };
+    /**
+     * Push a notification into the Action Center (shell renders the toast).
+     * opts.action / opts.buttons are stored as plain data - a notification
+     * outlives a reload, so handlers are looked up by name at click time.
+     */
+    notify: function (title, body, icon, opts) {
+      opts = opts || {};
+      var n = {
+        id: util.uid('n'), title: title, body: body, icon: icon || 'info', ts: Date.now(),
+        action: opts.action || null, buttons: opts.buttons || null
+      };
       state.notifications.unshift(n);
       if (state.notifications.length > 30) state.notifications.length = 30;
       Emu.save();
       Emu.emit('notify', n);
       return n;
+    },
+
+    /** Apps register what a notification click should do. */
+    notifyHandlers: {},
+    onNotifAction: function (name, fn) { Emu.notifyHandlers[name] = fn; },
+    runNotifAction: function (action) {
+      if (!action || !action.do) return false;
+      var fn = Emu.notifyHandlers[action.do];
+      if (!fn) return false;
+      try { fn(action); } catch (e) { console.error('notif action', e); }
+      return true;
+    },
+    dismissNotif: function (id) {
+      state.notifications = state.notifications.filter(function (n) { return n.id !== id; });
+      Emu.save();
+      Emu.emit('notify:changed');
     },
 
     /** Track a recently used item for Start's Recommended list. */

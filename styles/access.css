@@ -65,3 +65,10 @@
   .gate-card{padding:26px 20px}
   .acc-list{padding:10px}
 }
+
+/* Actionable notifications */
+.notif.actionable,.toast.actionable{cursor:default}
+.notif.actionable:hover,.toast.actionable:hover{background:var(--card-hover)}
+.notif-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.notif-actions .btn{height:28px;padding:0 12px;font-size:12px}
+.toast .notif-actions{margin-top:8px}

@@ -304,11 +304,18 @@
             if (seen[r.id]) return;
             seen[r.id] = true;
             if (first) return;
-            Emu.notify('Access request', r.name + ' (' + r.role + ') is asking for access. Open Orion Access to decide.', 'shield');
+            Emu.notify('Access request',
+              r.name + ' (' + r.role + ') is asking for access.', 'shield', {
+                action: { do: 'access:open' },
+                buttons: [
+                  { label: 'Approve', primary: true, action: { do: 'access:decide', id: r.id, status: 'approved', name: r.name } },
+                  { label: 'Deny', action: { do: 'access:decide', id: r.id, status: 'denied', name: r.name } }
+                ]
+              });
           });
           if (first && pending.length) {
             Emu.notify('Access requests', pending.length + ' request' + (pending.length === 1 ? '' : 's') +
-              ' waiting for a decision.', 'shield');
+              ' waiting for a decision.', 'shield', { action: { do: 'access:open' } });
           }
           first = false;
           Emu.emit('access', pending.length);
