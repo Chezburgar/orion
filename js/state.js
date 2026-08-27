@@ -3,7 +3,7 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-08-27.15';
+  var BUILD = '2026-08-27.16';
 
   var DEFAULTS = {
     user: 'Chase',
@@ -93,6 +93,15 @@
     // that cannot load it; start every build from a clean slate.
     if (state.proxy) state.proxy.siteEngine = {};
     state.build = BUILD;
+  }
+
+  // Proxy-everything became the default after it turned out the network here
+  // filters most sites. Apply it once to existing installs, then leave it to
+  // whatever the user sets.
+  if (!state.proxyDefaultApplied) {
+    state.proxy = state.proxy || {};
+    state.proxy.always = true;
+    state.proxyDefaultApplied = true;
   }
 
   if (!state.rebranded) {
