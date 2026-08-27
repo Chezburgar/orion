@@ -7,12 +7,18 @@ HTML/CSS/JS with no build step and no dependencies, so it drops straight onto Gi
 > This is an independent **simulation** of the Windows 11 interface. It is not affiliated
 > with Microsoft, contains no Microsoft code or assets, and nothing is virtualised.
 
+**Live: <https://chezburgar.github.io/win11/>**
+
 ## Deploy to GitHub Pages
+
+Already deployed from `main` at the repository root. Any push to `main` republishes it —
+there is no build step or workflow to wait on beyond the Pages deploy itself.
+
+To set this up on a fresh fork or repo:
 
 1. Push this folder to a GitHub repository.
 2. **Settings → Pages → Build and deployment → Source: Deploy from a branch**.
 3. Pick the `main` branch and the `/ (root)` folder, then save.
-4. Your emulator is live at `https://<user>.github.io/<repo>/`.
 
 Everything is relative-path based, so it works from a subdirectory. `.nojekyll` is
 included so Pages serves the files untouched.
