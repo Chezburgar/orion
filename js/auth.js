@@ -1,5 +1,6 @@
 /* ===== Orion access control =====
-   Devices are identified by their public IP. A new device fills in a request
+   Each device gets its own identity (a public IP is shared by everyone behind
+   the same router, so it cannot gate a single device). A new device fills in a request
    form; the owner sees it as a notification inside Orion and approves or
    denies it. Requests and decisions live in Supabase, so a decision made on
    the owner's machine takes effect on everyone else's.
@@ -18,7 +19,23 @@
   };
 
   var OWNER_KEY = 'orion.owner.key';
-  var IP_CACHE = 'orion.ip.cache';
+  var DEVICE_KEY = 'orion.device.id';
+
+  /**
+   * A public IP identifies a network, not a device - every phone and laptop
+   * behind the same router shares one. Access is therefore keyed on an id
+   * minted once per browser; the IP is only shown to the owner as context.
+   */
+  function deviceId() {
+    var id = null;
+    try { id = localStorage.getItem(DEVICE_KEY); } catch (e) {}
+    if (id && id.length >= 8) return id;
+    id = (global.crypto && global.crypto.randomUUID)
+      ? global.crypto.randomUUID()
+      : 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+    try { localStorage.setItem(DEVICE_KEY, id); } catch (e) {}
+    return id;
+  }
 
   var ROLES = [
     { id: 'student', label: 'Student' },
@@ -27,7 +44,7 @@
     { id: 'employee', label: 'Employee' }
   ];
 
-  var state = { ip: null, status: 'unknown', name: '', role: '', note: '', owner: false, error: null };
+  var state = { ip: null, device: null, status: 'unknown', name: '', role: '', note: '', owner: false, error: null };
 
   // ------------------------------------------------------------------ api
   function rpc(fn, body) {
@@ -77,9 +94,15 @@
     return next();
   }
 
+  function shortDevice() {
+    var d = state.device || '';
+    return d ? d.slice(0, 8) : '—';
+  }
+
   var Auth = {
     ROLES: ROLES,
     state: state,
+    deviceId: deviceId,
 
     ownerKey: function () { try { return localStorage.getItem(OWNER_KEY) || ''; } catch (e) { return ''; } },
     setOwnerKey: function (k) {
@@ -89,10 +112,10 @@
 
     /** Work out where this device stands. */
     check: function () {
-      return fetchIp().then(function (ip) {
+      state.device = deviceId();
+      return fetchIp().catch(function () { return null; }).then(function (ip) {
         state.ip = ip;
-        try { localStorage.setItem(IP_CACHE, ip); } catch (e) {}
-        return rpc('orion_status', { p_ip: ip });
+        return rpc('orion_status', { p_device: state.device, p_ip: ip });
       }).then(function (res) {
         state.status = (res && res.status) || 'none';
         state.name = (res && res.name) || '';
@@ -109,7 +132,8 @@
 
     submit: function (name, reason, role) {
       return rpc('orion_request', {
-        p_ip: state.ip, p_name: name, p_reason: reason, p_role: role,
+        p_device: state.device || deviceId(), p_ip: state.ip,
+        p_name: name, p_reason: reason, p_role: role,
         p_ua: navigator.userAgent.slice(0, 200)
       }).then(function (res) {
         state.status = (res && res.status) || 'pending';
@@ -182,7 +206,8 @@
               '<h2>Waiting for approval</h2>' +
               '<p class="gate-sub">Your request was sent' + (state.name ? ' as <b>' + U.esc(state.name) + '</b>' : '') +
               '. The owner sees it inside Orion and can approve it from there.</p>' +
-              '<div class="gate-ip">This device: <code>' + U.esc(state.ip || '—') + '</code></div>' +
+              '<div class="gate-ip">This device: <code>' + U.esc(shortDevice()) + '</code>' +
+              (state.ip ? ' · network ' + U.esc(state.ip) : '') + '</div>' +
               '<div class="gate-actions"><button class="btn primary" data-a="retry">Check again</button>' +
               '<button class="btn" data-a="owner">Owner sign in</button></div>';
             return;
@@ -192,7 +217,8 @@
               '<h2>Access denied</h2>' +
               '<p class="gate-sub">This device was not approved.' +
               (state.note ? ' <br><i>' + U.esc(state.note) + '</i>' : '') + '</p>' +
-              '<div class="gate-ip">This device: <code>' + U.esc(state.ip || '—') + '</code></div>' +
+              '<div class="gate-ip">This device: <code>' + U.esc(shortDevice()) + '</code>' +
+              (state.ip ? ' · network ' + U.esc(state.ip) : '') + '</div>' +
               '<div class="gate-actions"><button class="btn" data-a="owner">Owner sign in</button></div>';
             return;
           }
@@ -208,8 +234,8 @@
                 '<select name="role">' + ROLES.map(function (r) {
                   return '<option value="' + r.id + '">' + r.label + '</option>';
                 }).join('') + '</select></label>' +
-              '<div class="gate-ip">This device: <code>' + U.esc(state.ip || '—') + '</code>' +
-                ' — approval applies to this address.</div>' +
+              '<div class="gate-ip">This device: <code>' + U.esc(shortDevice()) + '</code>' +
+                ' — approval applies to this device only, not to everyone on your network.</div>' +
               '<div class="gate-actions"><button class="btn primary" type="submit">Send request</button>' +
               '<button class="btn" type="button" data-a="owner">Owner sign in</button></div>' +
             '</form>';

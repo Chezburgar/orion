@@ -390,6 +390,7 @@
             '<input spellcheck="false" placeholder="Search or enter web address">' +
             '<button class="e-act" data-nav="fav" title="Add to favourites">' + Icons.get('star') + '</button>' +
           '</div>' +
+          '<button class="e-mode" data-nav="mode" title="How this page is being shown - click for App mode">App</button>' +
           '<button class="e-btn" data-nav="find" title="Find on page (Ctrl+F)">' + Icons.get('find') + '</button>' +
           '<button class="e-btn" data-nav="reader" title="Reader mode">' + Icons.get('reader') + '</button>' +
           '<button class="e-btn" data-nav="vpn" title="Tunnel status">' + Icons.get('shield') + '</button>' +
@@ -487,6 +488,19 @@
       U.$('[data-nav="back"]', win.body).classList.toggle('disabled', active.hIndex <= 0);
       U.$('[data-nav="fwd"]', win.body).classList.toggle('disabled', active.hIndex >= active.history.length - 1);
       starBtn.classList.toggle('on', isFav(active.url));
+      var host = p.host;
+      var shown = /^(internal|site|source)$/.test(p.kind) ? 'local'
+        : (active.mode || st.siteModes[host] || st.render || 'app');
+      var chip = U.$('.e-mode', win.body);
+      if (chip) {
+        chip.textContent = shown === 'local' ? 'Orion' : shown === 'app' ? 'App'
+          : shown === 'reader' ? 'Reader' : 'Engine';
+        chip.className = 'e-mode mode-' + shown;
+        chip.title = shown === 'app' ? 'Running the real site'
+          : shown === 'local' ? 'A page built into Orion'
+          : 'Showing a stripped-down copy - click to run the real site';
+      }
+      U.$('[data-nav="reader"]', win.body).classList.toggle('on', shown === 'reader');
       U.$('[data-nav="vpn"]', win.body).classList.toggle('vpn-on', !!Emu.state.net.connected);
       renderFavbar();
     }
@@ -511,6 +525,12 @@
       var p = parseUrl(input);
       var url = p.kind === 'search' ? searchUrl(p.term) : p.url;
       if (p.kind === 'search') p = parseUrl(url);
+
+      // A view override (Reader, "render it here") belongs to the page you
+      // chose it on. Moving to a different site drops it, otherwise one tap
+      // of Reader would quietly turn every later site into text.
+      if (tab.lastHost && p.host && tab.lastHost !== p.host) tab.mode = null;
+      if (p.host) tab.lastHost = p.host;
 
       tab.url = url;
       tab.loading = true;
@@ -1076,6 +1096,12 @@
         active.mode = active.mode === 'reader' ? null : 'reader';
         navigate(active, active.url, false);
       }
+      else if (kind === 'mode') {
+        var h = parseUrl(active.url).host;
+        active.mode = null;
+        if (h) { delete st.siteModes[h]; Emu.save(); }
+        navigate(active, active.url, false);
+      }
       else if (kind === 'vpn') Emu.launch('vpn');
       else if (kind === 'fav') toggleFav();
       else if (kind === 'menu') openMenu(b);
@@ -1098,7 +1124,16 @@
       var r = anchor.getBoundingClientRect();
       var host = parseUrl(active.url).host;
       var mode = active.mode || st.siteModes[host] || st.render || 'app';
-      function pick(m) { return function () { active.mode = m; setSiteMode(host, m); navigate(active, active.url, false); }; }
+      function pick(m) {
+        return function () {
+          active.mode = m === 'app' ? null : m;
+          // App and Engine are lasting choices for a site; Reader is not.
+          if (m === 'reader') delete st.siteModes[host];
+          else setSiteMode(host, m);
+          Emu.save();
+          navigate(active, active.url, false);
+        };
+      }
       global.Shell.contextMenu([
         { label: 'New tab', icon: 'plus', key: 'Ctrl+T', action: function () { newTab(NEWTAB); } },
         { label: 'New window', icon: 'globe', action: function () { Emu.launch('edge'); } },

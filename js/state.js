@@ -18,6 +18,7 @@
       searchEngine: 'bing',
       render: 'app',
       siteModes: {},
+      modesReset: false,
       images: true,
       styles: true,
       allowEmbedding: true,
@@ -82,6 +83,14 @@
 
   // One-time move onto the Orion theme. Only values still sitting at the old
   // defaults are touched, so a colour or wallpaper you picked yourself stays.
+  // Per-site overrides saved while the browser defaulted to the engine would
+  // keep sites stuck on text, so clear them once.
+  if (!state.edge.modesReset) {
+    state.edge.siteModes = {};
+    state.edge.render = 'app';
+    state.edge.modesReset = true;
+  }
+
   if (!state.rebranded) {
     if (state.accent === '#0078d4') state.accent = '#4f46e5';
     if (state.wallpaper === 'assets/wall-bloom.svg') state.wallpaper = 'assets/wall-orion.svg';

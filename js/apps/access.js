@@ -38,7 +38,8 @@
         '<div class="acc-head">' +
           '<span class="acc-avatar">' + U.esc((r.name || '?').charAt(0).toUpperCase()) + '</span>' +
           '<div class="acc-who"><b>' + U.esc(r.name) + '</b>' +
-            '<small>' + U.esc(ROLE_LABEL[r.role] || r.role) + ' · ' + U.esc(r.ip) + '</small></div>' +
+            '<small>' + U.esc(ROLE_LABEL[r.role] || r.role) + ' · device ' + U.esc(String(r.device_id || '').slice(0, 8)) +
+            (r.ip ? ' · ' + U.esc(r.ip) : '') + '</small></div>' +
           '<span class="acc-badge ' + r.status + '">' + r.status + '</span>' +
         '</div>' +
         '<p class="acc-reason">' + (r.reason ? U.esc(r.reason) : '<i>No reason given</i>') + '</p>' +
@@ -83,7 +84,7 @@
            : '<div class="acc-empty">' + Icons.get('check') + '<span>Nothing ' + filter + '</span></div>') +
         '</div>' +
         '<div class="ex-status"><span>' + rows.length + ' device' + (rows.length === 1 ? '' : 's') + ' on record</span>' +
-        '<span style="margin-left:auto">Approval is by public IP address</span></div>' +
+        '<span style="margin-left:auto">Approval is per device, not per network</span></div>' +
       '</div>';
     }
 

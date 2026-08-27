@@ -11,7 +11,7 @@ installs real web games. Pure static HTML/CSS/JS, no build step, no dependencies
 
 ## Access control
 
-Orion is private. A new device is identified by its public IP address and has to be let in:
+Orion is private. Each device gets its own identity and has to be let in:
 
 1. The visitor fills in a request form — name, why they want access, and role
    (student / personal / educator / employee).
@@ -19,6 +19,11 @@ Orion is private. A new device is identified by its public IP address and has to
    owner's machine.
 3. The owner opens **Orion Access** and approves, denies, or later revokes it.
 4. Approval is stored server-side, so it takes effect on the requester's own device.
+
+Identity is **per device, not per network**. A public IP belongs to a router, so everyone on
+the same Wi-Fi shares one — approving a phone would have let every other device straight in.
+Each browser mints its own id on first visit and that is what gets approved; the IP is kept
+only as context for the owner. Clearing site data means asking again.
 
 The owner signs in once per device with an owner key (gate → *Owner sign in*). The key is
 never stored anywhere but that browser and the database only holds its SHA-256.
