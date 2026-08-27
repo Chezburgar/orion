@@ -156,21 +156,16 @@
         // purpose, so it would never resolve. Wait on the registration.
         return waitActivated(reg);
       }).then(function () {
-        return transportBase('uv');
-      }).then(function (tb) {
-        state.transportBase = tb;
-        return loadScript(tb + '/baremux/index.js');
-      }).then(function () {
         // Use the first backend that answers; they come and go.
-        var candidates = [p.wisp].concat(p.wispFallbacks || []);
-        return firstLive(candidates);
+        return firstLive([p.wisp].concat(p.wispFallbacks || []));
       }).then(function (wisp) {
         if (!wisp) throw new Error('No proxy backend answered. All wisp servers appear to be down.');
         state.wisp = wisp;
-        var tb = state.transportBase;
-        var conn = new global.BareMux.BareMuxConnection(tb + '/baremux/worker.js');
-        // Newer transports expect { wisp }, older ones { websocket }.
-        return conn.setTransport(tb + '/libcurl/index.mjs', [{ wisp: wisp, websocket: wisp }]);
+        return setupTransport('uv', wisp, function (u) {
+          return base() + '/uv/service/' + xorEncode(u);
+        });
+      }).then(function (tb) {
+        state.transportBase = tb;
       }).then(function () {
         state.ready = true;
         state.error = null;
@@ -321,18 +316,15 @@
         scram.sw = true;
         return waitActivated(reg);
       }).then(function () {
-        return transportBase('scram');
-      }).then(function (tb) {
-        scram.transportBase = tb;
-        return loadScript(tb + '/baremux/index.js');
-      }).then(function () {
         return firstLive([p.wisp].concat(p.wispFallbacks || []));
       }).then(function (wisp) {
         if (!wisp) throw new Error('No proxy backend answered.');
         scram.wisp = wisp;
-        var tb = scram.transportBase;
-        var conn = new global.BareMux.BareMuxConnection(tb + '/baremux/worker.js');
-        return conn.setTransport(tb + '/libcurl/index.mjs', [{ wisp: wisp, websocket: wisp }]);
+        return setupTransport('scram', wisp, function (u) {
+          try { return scram.controller.encodeUrl(u); } catch (e) { return null; }
+        });
+      }).then(function (tb) {
+        scram.transportBase = tb;
       }).then(function () {
         scram.ready = true;
         scram.error = null;
@@ -385,19 +377,54 @@
    * copy, so try the engine's own first and the other as a spare - otherwise
    * one unreachable path takes down both engines.
    */
-  function transportBase(preferred) {
+  function transportOrder(preferred) {
     var p = cfg();
+    // The deployments ship different BareMux/libcurl versions and they are not
+    // interchangeable, so try each and keep the one that actually serves a
+    // page rather than assuming the first reachable one works.
     var order = preferred === 'scram'
-      ? [p.scramAssets, p.assets]
+      ? [p.assets, p.scramAssets]
       : [p.assets, p.scramAssets];
+    return order.filter(Boolean).filter(function (b, i, a) { return a.indexOf(b) === i; });
+  }
+
+  /** Prove the proxy can fetch something before calling it ready. */
+  function verifyThrough(buildUrl) {
+    var probe = buildUrl('https://example.com/');
+    if (!probe) return Promise.resolve(false);
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 20000);
+    return fetch(probe, { signal: ctrl.signal }).then(function (r) {
+      clearTimeout(timer);
+      return r.text();
+    }).then(function (t) {
+      return /Example Domain/i.test(t);
+    }).catch(function () {
+      clearTimeout(timer);
+      return false;
+    });
+  }
+
+  /** Bring up BareMux + transport on the first base that genuinely works. */
+  function setupTransport(preferred, wisp, buildUrl) {
+    var bases = transportOrder(preferred);
     var i = 0;
     function next(lastErr) {
-      if (i >= order.length) {
-        return Promise.reject(lastErr || new Error('No reachable transport files.'));
+      if (i >= bases.length) {
+        return Promise.reject(lastErr || new Error('No transport could serve pages.'));
       }
-      var b = order[i++];
-      if (!b) return next(lastErr);
-      return preflight(b + '/baremux/index.js').then(function () { return b; })
+      var b = bases[i++];
+      return preflight(b + '/baremux/index.js')
+        .then(function () { return loadScript(b + '/baremux/index.js'); })
+        .then(function () {
+          var conn = new global.BareMux.BareMuxConnection(b + '/baremux/worker.js');
+          return conn.setTransport(b + '/libcurl/index.mjs', [{ wisp: wisp, websocket: wisp }]);
+        })
+        .then(function () { return verifyThrough(buildUrl); })
+        .then(function (ok) {
+          if (!ok) throw new Error('transport at ' + b + ' did not serve pages');
+          return b;
+        })
         .catch(function (e) { return next(e); });
     }
     return next(null);
