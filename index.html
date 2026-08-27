@@ -7,14 +7,24 @@
 <meta name="description" content="A Windows 11 desktop emulator with Microsoft Edge, running entirely in the browser.">
 <meta name="color-scheme" content="dark light">
 <link rel="icon" href="assets/orion.svg">
-<link rel="stylesheet" href="styles/base.css?v=3">
-<link rel="stylesheet" href="styles/shell.css?v=3">
-<link rel="stylesheet" href="styles/windows.css?v=3">
-<link rel="stylesheet" href="styles/apps.css?v=3">
-<link rel="stylesheet" href="styles/features.css?v=3">
-<link rel="stylesheet" href="styles/games.css?v=3">
+<link rel="stylesheet" href="styles/base.css?v=4">
+<link rel="stylesheet" href="styles/shell.css?v=4">
+<link rel="stylesheet" href="styles/windows.css?v=4">
+<link rel="stylesheet" href="styles/apps.css?v=4">
+<link rel="stylesheet" href="styles/features.css?v=4">
+<link rel="stylesheet" href="styles/games.css?v=4">
+<link rel="stylesheet" href="styles/access.css?v=4">
 </head>
 <body>
+
+<!-- ============ ACCESS GATE ============ -->
+<div id="gate" class="screen gate hidden">
+  <div class="gate-card">
+    <img class="gate-logo" src="assets/orion.svg" width="76" height="76" alt="">
+    <div class="gate-brand">Orion</div>
+    <div id="gateBody"></div>
+  </div>
+</div>
 
 <!-- ============ BOOT ============ -->
 <div id="boot" class="screen boot">
@@ -148,22 +158,24 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=3"></script>
-<script src="js/state.js?v=3"></script>
-<script src="js/net.js?v=3"></script>
-<script src="js/vfs.js?v=3"></script>
-<script src="js/wm.js?v=3"></script>
-<script src="js/games.js?v=3"></script>
-<script src="js/apps/edge.js?v=3"></script>
-<script src="js/apps/vpn.js?v=3"></script>
-<script src="js/apps/store.js?v=3"></script>
-<script src="js/apps/explorer.js?v=3"></script>
-<script src="js/apps/notepad.js?v=3"></script>
-<script src="js/apps/settings.js?v=3"></script>
-<script src="js/apps/calculator.js?v=3"></script>
-<script src="js/apps/terminal.js?v=3"></script>
-<script src="js/apps/extras.js?v=3"></script>
-<script src="js/shell.js?v=3"></script>
-<script src="js/main.js?v=3"></script>
+<script src="js/icons.js?v=4"></script>
+<script src="js/state.js?v=4"></script>
+<script src="js/net.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/vfs.js?v=4"></script>
+<script src="js/wm.js?v=4"></script>
+<script src="js/games.js?v=4"></script>
+<script src="js/apps/edge.js?v=4"></script>
+<script src="js/apps/vpn.js?v=4"></script>
+<script src="js/apps/store.js?v=4"></script>
+<script src="js/apps/access.js?v=4"></script>
+<script src="js/apps/explorer.js?v=4"></script>
+<script src="js/apps/notepad.js?v=4"></script>
+<script src="js/apps/settings.js?v=4"></script>
+<script src="js/apps/calculator.js?v=4"></script>
+<script src="js/apps/terminal.js?v=4"></script>
+<script src="js/apps/extras.js?v=4"></script>
+<script src="js/shell.js?v=4"></script>
+<script src="js/main.js?v=4"></script>
 </body>
 </html>

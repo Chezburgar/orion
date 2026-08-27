@@ -1,0 +1,67 @@
+/* ===== Access gate + owner console ===== */
+.gate{z-index:9200;display:grid;place-items:center;padding:24px;overflow:auto;
+  background:#05070f center/cover no-repeat url("../assets/wall-orion.svg");
+  transition:opacity .4s var(--ease),transform .4s var(--ease)}
+.gate.lifting{opacity:0;transform:scale(1.04)}
+.gate-card{width:min(460px,100%);padding:34px 32px 30px;border-radius:16px;text-align:center;
+  background:var(--acrylic);backdrop-filter:blur(60px) saturate(160%);-webkit-backdrop-filter:blur(60px);
+  border:1px solid var(--stroke-strong);box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.gate-logo{margin:0 auto;display:block;filter:drop-shadow(0 0 26px rgba(76,110,245,.5))}
+.gate-brand{font-size:26px;font-weight:600;letter-spacing:.5px;margin:10px 0 20px}
+.gate-card h2{margin:0 0 6px;font-size:19px;font-weight:600}
+.gate-sub{margin:0 0 18px;font-size:13px;color:var(--text-2);line-height:1.55}
+.gate-ip{font-size:11.5px;color:var(--text-3);margin:12px 0;line-height:1.5}
+.gate-ip code{background:var(--card);padding:2px 6px;border-radius:4px;user-select:text}
+.gate-form{display:grid;gap:12px;text-align:left;margin-top:6px}
+.gate-form label{display:grid;gap:5px;font-size:12px;color:var(--text-2)}
+.gate-form input,.gate-form textarea,.gate-form select{
+  padding:9px 11px;border-radius:7px;background:var(--card);color:var(--text);
+  border:1px solid var(--stroke-strong);outline:0;font:inherit;font-size:13px;user-select:text;resize:vertical}
+.gate-form input:focus,.gate-form textarea:focus,.gate-form select:focus{border-color:var(--accent)}
+.gate-actions{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.gate-actions .btn{height:34px}
+.gate-err{font-size:12px;color:#f87171;background:rgba(248,113,113,.12);
+  border:1px solid rgba(248,113,113,.3);border-radius:6px;padding:8px 10px}
+.gate-spin{width:34px;height:34px;margin:12px auto;position:relative}
+.gate-spin i{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.14);
+  border-top-color:var(--accent-2);animation:spin .9s linear infinite}
+
+/* owner console */
+.acc{height:100%;display:flex;flex-direction:column}
+.acc-bar{flex:none;display:flex;align-items:center;gap:6px;padding:10px 14px;border-bottom:1px solid var(--stroke)}
+.acc-tab{height:30px;padding:0 12px;border-radius:15px;font-size:12.5px;color:var(--text-2);
+  background:var(--card);border:1px solid var(--stroke)}
+.acc-tab b{color:var(--accent-2)}
+.acc-tab:hover{background:var(--card-hover)}
+.acc-tab.active{background:var(--accent);border-color:transparent;color:#fff}
+.acc-tab.active b{color:#fff}
+.acc-list{flex:1;min-height:0;overflow:auto;padding:14px;display:grid;gap:10px;align-content:start}
+.acc-card{border-radius:var(--r-lg);background:var(--card);border:1px solid var(--stroke);padding:14px 16px}
+.acc-card.pending{border-left:3px solid var(--accent)}
+.acc-card.approved{border-left:3px solid #4ade80}
+.acc-card.denied{border-left:3px solid #f87171;opacity:.75}
+.acc-head{display:flex;align-items:center;gap:12px}
+.acc-avatar{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,#4f46e5,#22a7ff)}
+.acc-who{flex:1;min-width:0}
+.acc-who b{display:block;font-size:14px}
+.acc-who small{color:var(--text-3);font-size:11.5px}
+.acc-badge{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:10px;
+  background:var(--card-hover);color:var(--text-2)}
+.acc-badge.pending{background:rgba(79,70,229,.22);color:var(--accent-2)}
+.acc-badge.approved{background:rgba(74,222,128,.18);color:#4ade80}
+.acc-badge.denied{background:rgba(248,113,113,.18);color:#f87171}
+.acc-reason{margin:10px 0 6px;font-size:13px;line-height:1.55;color:var(--text-2);
+  white-space:pre-wrap;word-break:break-word;user-select:text}
+.acc-meta{font-size:11px;color:var(--text-3)}
+.acc-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.acc-actions .btn.danger{color:#f87171;border-color:rgba(248,113,113,.35)}
+.acc-actions .btn.danger:hover{background:rgba(248,113,113,.14)}
+.acc-empty{display:grid;justify-items:center;align-content:center;gap:10px;padding:60px 20px;
+  color:var(--text-3);text-align:center}
+.acc-empty svg{width:34px;height:34px;opacity:.6}
+
+@media (max-width:760px){
+  .gate-card{padding:26px 20px}
+  .acc-list{padding:10px}
+}

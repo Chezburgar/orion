@@ -7,7 +7,29 @@ installs real web games. Pure static HTML/CSS/JS, no build step, no dependencies
 > Orion is an independent **simulation** of a Windows 11 style desktop. It is not affiliated with
 > Microsoft, contains no Microsoft code or assets, and nothing is virtualised.
 
-**Live: <https://chezburgar.github.io/win11/>**
+**Live: <https://chezburgar.github.io/orion/>**
+
+## Access control
+
+Orion is private. A new device is identified by its public IP address and has to be let in:
+
+1. The visitor fills in a request form — name, why they want access, and role
+   (student / personal / educator / employee).
+2. The request lands in Supabase and shows up as a notification inside Orion on the
+   owner's machine.
+3. The owner opens **Orion Access** and approves, denies, or later revokes it.
+4. Approval is stored server-side, so it takes effect on the requester's own device.
+
+The owner signs in once per device with an owner key (gate → *Owner sign in*). The key is
+never stored anywhere but that browser and the database only holds its SHA-256.
+
+Both tables have RLS enabled with **no policies at all**, so the publishable key cannot read
+or write them directly — every operation goes through `SECURITY DEFINER` functions, and the
+admin ones verify the owner key first. `orion_status` returns only the calling device's own row.
+
+> This is a soft gate, not a security boundary. The site is static and its source is public,
+> so anyone determined can read the code and bypass the check locally. It keeps casual
+> visitors out of a personal desktop; do not put anything sensitive behind it.
 
 ## Deploy to GitHub Pages
 
@@ -117,11 +139,12 @@ styles/             base tokens, shell, window chrome, app and game styles
 js/icons.js         inline SVG icon set
 js/state.js         settings, persistence, events, utilities
 js/net.js           relays, page fetching, HTML sanitising/rewriting, search
+js/auth.js          IP identity, request gate, owner key, Supabase calls
 js/vfs.js           virtual file system
 js/wm.js            window manager
 js/games.js         installable web games + the Store catalogue
 js/shell.js         taskbar, Start, flyouts, Task View, context menus
-js/apps/            edge, vpn, store, explorer, notepad, settings, calculator, terminal, extras
+js/apps/            edge, vpn, store, access, explorer, notepad, settings, calculator, terminal, extras
 assets/             Orion logos and SVG wallpapers
 server.js           local preview server (not needed for Pages)
 ```

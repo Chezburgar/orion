@@ -1,5 +1,7 @@
 /* ===== Window chrome ===== */
-.window-layer{position:absolute;inset:0 0 var(--taskbar-h) 0}
+/* The layer spans the whole desktop, so it must not intercept clicks meant
+   for the icons underneath it. Only the windows themselves are clickable. */
+.window-layer{position:absolute;inset:0 0 var(--taskbar-h) 0;pointer-events:none}
 
 .win{position:absolute;display:flex;flex-direction:column;min-width:320px;min-height:200px;
   background:var(--layer-solid);border:1px solid var(--stroke-strong);border-radius:var(--r-lg);

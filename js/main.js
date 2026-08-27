@@ -27,7 +27,13 @@
   function start() {
     Emu.applyTheme();
     Shell.init();
-    Shell.boot();
+
+    // Nothing starts until this device is allowed in.
+    global.Auth.gate().then(function () {
+      Shell.boot();
+      global.Auth.watch();
+      if (global.AccessApp) global.AccessApp.syncVisibility();
+    });
 
     // Suppress the native browser menu so the emulated one is the only one.
     document.addEventListener('contextmenu', function (e) {

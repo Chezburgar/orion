@@ -140,7 +140,7 @@
 
   // ------------------------------------------------------------- taskbar
   function pinnedApps() {
-    return Emu.appOrder.filter(function (id) { return Emu.apps[id].pinned; });
+    return Emu.appOrder.filter(function (id) { return Emu.apps[id].pinned && !Emu.apps[id].hidden; });
   }
 
   function buildTaskbar() {
@@ -238,10 +238,11 @@
   function buildStart() {
     var pinnedGrid = $('#startPinned');
     var q = ($('#startSearch').value || '').toLowerCase();
-    var startList = Emu.appOrder.filter(function (id) {
+    var visible = Emu.appOrder.filter(function (id) { return !Emu.apps[id].hidden; });
+    var startList = visible.filter(function (id) {
       return Emu.apps[id].pinned || Emu.apps[id].startPinned;
     });
-    var ids = (allApps ? Emu.appOrder : startList).filter(function (id) {
+    var ids = (allApps ? visible : startList).filter(function (id) {
       return !q || Emu.apps[id].name.toLowerCase().indexOf(q) >= 0;
     });
     pinnedGrid.innerHTML = ids.map(function (id) {
@@ -316,7 +317,9 @@
       return;
     }
     var lower = q.toLowerCase();
-    var apps = Emu.appOrder.filter(function (id) { return Emu.apps[id].name.toLowerCase().indexOf(lower) >= 0; });
+    var apps = Emu.appOrder.filter(function (id) {
+      return !Emu.apps[id].hidden && Emu.apps[id].name.toLowerCase().indexOf(lower) >= 0;
+    });
     var files = VFS.search(VFS.HOME, q, 8);
     var html = '';
     if (apps.length) {
@@ -604,21 +607,25 @@
   }
 
   function wireIcons() {
-    var lastClick = 0, lastIdx = -1;
+    // Single click selects, double click opens - the dblclick event alone,
+    // so a real double click cannot also trip a manual click-timer and
+    // launch the app twice.
     els.icons.addEventListener('click', function (e) {
       var ic = e.target.closest('.d-icon');
       $$('.d-icon', els.icons).forEach(function (x) { x.classList.remove('selected'); });
-      if (!ic) return;
-      ic.classList.add('selected');
-      var idx = +ic.dataset.i, now = Date.now();
-      if (idx === lastIdx && now - lastClick < 420) {
-        els.icons._items[idx].act();
-        lastIdx = -1;
-      } else { lastIdx = idx; lastClick = now; }
+      if (ic) ic.classList.add('selected');
     });
     els.icons.addEventListener('dblclick', function (e) {
       var ic = e.target.closest('.d-icon');
-      if (ic) els.icons._items[+ic.dataset.i].act();
+      if (!ic) return;
+      var item = els.icons._items[+ic.dataset.i];
+      if (item) item.act();
+    });
+    // Enter opens whatever is selected, like Explorer.
+    els.icons.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var sel = $('.d-icon.selected', els.icons);
+      if (sel) els.icons._items[+sel.dataset.i].act();
     });
   }
 

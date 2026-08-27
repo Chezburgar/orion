@@ -152,7 +152,7 @@
 
       if (page === 'apps') {
         main.innerHTML = '<h3 class="store-h">Apps included with Orion</h3><div class="store-grid2">' +
-          Emu.appOrder.filter(function (id) { return !Emu.apps[id].game; }).map(function (id) {
+          Emu.appOrder.filter(function (id) { return !Emu.apps[id].game && !Emu.apps[id].hidden; }).map(function (id) {
             var a = Emu.apps[id];
             return '<div class="store-tile"><div class="store-art">' + Icons.get(a.icon) + '</div>' +
               '<b>' + U.esc(a.name) + '</b><small class="muted">' + U.esc(a.desc || 'App') + '</small>' +
