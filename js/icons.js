@@ -74,7 +74,13 @@
     network: '<circle cx="12" cy="12" r="8.4"/><path d="M3.6 12h16.8M12 3.6c4.2 4.6 4.2 12.2 0 16.8-4.2-4.6-4.2-12.2 0-16.8Z"/>',
     game: '<path d="M8 10v4M6 12h4M15.4 11h.1M17.6 13.4h.1"/><path d="M6.6 6.6h10.8a4 4 0 0 1 3.9 3.1l1 4.6a2.9 2.9 0 0 1-5.2 2.3l-1.2-1.6H8.1l-1.2 1.6a2.9 2.9 0 0 1-5.2-2.3l1-4.6a4 4 0 0 1 3.9-3.1Z"/>',
     doc: '<path d="M6 3.6h7.4L18 8.2v12.2H6z"/><path d="M13.2 3.6v5H18"/><path d="M8.8 12.6h6.4M8.8 16h4.6"/>',
-    image: '<rect x="3.4" y="5" width="17.2" height="14" rx="1.8"/><circle cx="8.6" cy="10" r="1.6"/><path d="m4.4 17.4 4.8-4.4 3.4 3 3-2.6 4 4"/>'
+    image: '<rect x="3.4" y="5" width="17.2" height="14" rx="1.8"/><circle cx="8.6" cy="10" r="1.6"/><path d="m4.4 17.4 4.8-4.4 3.4 3 3-2.6 4 4"/>',
+    find: '<circle cx="10.6" cy="10.6" r="6"/><path d="M15 15l5.4 5.4"/><path d="M8.2 10.6h4.8"/>',
+    reader: '<rect x="3.4" y="4.6" width="17.2" height="14.8" rx="2"/><path d="M7 9h5M7 12.4h10M7 15.8h8"/>',
+    zoomIn: '<circle cx="10.6" cy="10.6" r="6"/><path d="M15 15l5.4 5.4M10.6 8.2v4.8M8.2 10.6h4.8"/>',
+    zoomOut: '<circle cx="10.6" cy="10.6" r="6"/><path d="M15 15l5.4 5.4M8.2 10.6h4.8"/>',
+    code: '<path d="m8.6 8.4-4.6 3.6 4.6 3.6M15.4 8.4l4.6 3.6-4.6 3.6M13.4 5l-2.8 14"/>',
+    plug: '<path d="M9 3v5M15 3v5"/><path d="M6.6 8h10.8v3.4a5.4 5.4 0 0 1-10.8 0z"/><path d="M12 16.8V21"/>'
   };
 
   // Filled / colored app icons (32x32) ------------------------------------
@@ -131,7 +137,32 @@
       + '<rect x="3.4" y="9" width="25.2" height="7" rx="2.6" fill="#7c8b99"/>'
       + '<circle cx="24" cy="19.4" r="1.6" fill="#8fe36a"/>',
     docs: '<path d="M4.6 7.4A2 2 0 0 1 6.6 5.4h6l2.4 2.8h10.4a2 2 0 0 1 2 2v13.4a2 2 0 0 1-2 2H6.6a2 2 0 0 1-2-2z" fill="#4c8fd6"/>'
-      + '<path d="M11 13.6h10v9H11z" fill="#eaf2fb"/><g stroke="#4c8fd6" stroke-width="1.2"><path d="M13 16.4h6M13 19h6"/></g>'
+      + '<path d="M11 13.6h10v9H11z" fill="#eaf2fb"/><g stroke="#4c8fd6" stroke-width="1.2"><path d="M13 16.4h6M13 19h6"/></g>',
+
+    vpn: '<defs><linearGradient id="vpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#0e7490"/></linearGradient></defs>'
+      + '<path d="M16 3.2 5.6 7.2v8.2c0 6.4 4.4 10.9 10.4 13.4 6-2.5 10.4-7 10.4-13.4V7.2z" fill="url(#vpg)"/>'
+      + '<path d="m10.8 16.2 3.6 3.6 7-7.2" fill="none" stroke="#eafff6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+    mine: '<circle cx="16" cy="17" r="9" fill="#37414d"/><path d="M16 3v5M16 26v3M3 17h5M24 17h5M7.2 8.2l3.6 3.6M21.2 22.2l3.6 3.6M24.8 8.2l-3.6 3.6M10.8 22.2l-3.6 3.6" stroke="#37414d" stroke-width="2.4" stroke-linecap="round"/>'
+      + '<circle cx="12.6" cy="13.6" r="2.2" fill="#8fa3b8"/>',
+    cards: '<rect x="4" y="7" width="14" height="19" rx="2.2" fill="#f4f7fb" stroke="#c3cfdb" transform="rotate(-10 11 16)"/>'
+      + '<rect x="13" y="6" width="15" height="20" rx="2.2" fill="#fff" stroke="#c3cfdb"/>'
+      + '<path d="M20.5 10.5 24 15l-3.5 4.5L17 15z" fill="#d13b3b"/>',
+    tiles: '<rect x="3.4" y="3.4" width="25.2" height="25.2" rx="3.4" fill="#bbada0"/>'
+      + '<g fill="#eee4da"><rect x="6" y="6" width="8.6" height="8.6" rx="1.6"/><rect x="17.4" y="17.4" width="8.6" height="8.6" rx="1.6"/></g>'
+      + '<rect x="17.4" y="6" width="8.6" height="8.6" rx="1.6" fill="#f2b179"/>'
+      + '<rect x="6" y="17.4" width="8.6" height="8.6" rx="1.6" fill="#edc22e"/>',
+    snake: '<rect x="3" y="3" width="26" height="26" rx="4" fill="#12321c"/>'
+      + '<g fill="#4ade80"><rect x="7" y="12" width="5" height="5" rx="1.4"/><rect x="12.5" y="12" width="5" height="5" rx="1.4"/><rect x="18" y="12" width="5" height="5" rx="1.4"/><rect x="18" y="17.5" width="5" height="5" rx="1.4"/></g>'
+      + '<circle cx="10" cy="22" r="2.6" fill="#f87171"/>',
+    blocks: '<rect x="3" y="3" width="26" height="26" rx="4" fill="#141a2e"/>'
+      + '<g><rect x="7" y="7" width="6" height="6" rx="1" fill="#22d3ee"/><rect x="13.5" y="7" width="6" height="6" rx="1" fill="#22d3ee"/>'
+      + '<rect x="13.5" y="13.5" width="6" height="6" rx="1" fill="#a855f7"/><rect x="20" y="13.5" width="6" height="6" rx="1" fill="#a855f7"/>'
+      + '<rect x="7" y="20" width="6" height="6" rx="1" fill="#f59e0b"/><rect x="13.5" y="20" width="6" height="6" rx="1" fill="#f59e0b"/></g>',
+    pong: '<rect x="3" y="5" width="26" height="22" rx="3" fill="#0b0f16"/>'
+      + '<path d="M16 6v20" stroke="#33465a" stroke-width="1.6" stroke-dasharray="2 3"/>'
+      + '<rect x="5.6" y="10" width="2.8" height="9" rx="1.4" fill="#e2e8f0"/>'
+      + '<rect x="23.6" y="13" width="2.8" height="9" rx="1.4" fill="#e2e8f0"/>'
+      + '<circle cx="17.4" cy="15" r="2.2" fill="#4ade80"/>'
   };
 
   function wrap(inner, vb, extra) {

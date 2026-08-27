@@ -1,4 +1,4 @@
-/* ===== Photos, Microsoft Store, Task Manager ===== */
+/* ===== Photos and Task Manager ===== */
 (function (global) {
   'use strict';
 
@@ -70,55 +70,6 @@
 
       if (args && args.path) viewing = args.path;
       render();
-      return win;
-    }
-  });
-
-  // -------------------------------------------------------------- Store
-  var CATALOG = [
-    { id: 'edge', name: 'Microsoft Edge', pub: 'Emulated', desc: 'Fast, secure browser' },
-    { id: 'notepad', name: 'Notepad', pub: 'Emulated', desc: 'Plain text editing' },
-    { id: 'calculator', name: 'Calculator', pub: 'Emulated', desc: 'Standard and keyboard-driven' },
-    { id: 'terminal', name: 'Windows Terminal', pub: 'Emulated', desc: 'Shell for the virtual file system' },
-    { id: 'photos', name: 'Photos', pub: 'Emulated', desc: 'Browse your pictures' },
-    { id: 'taskmgr', name: 'Task Manager', pub: 'Emulated', desc: 'See what is running' },
-    { id: 'explorer', name: 'File Explorer', pub: 'Emulated', desc: 'Your files, folders and drives' },
-    { id: 'settings', name: 'Settings', pub: 'Emulated', desc: 'Personalise everything' }
-  ];
-
-  Emu.registerApp({
-    id: 'store', name: 'Microsoft Store', icon: 'store', pinned: true, desc: 'Get apps',
-    launch: function () {
-      var win = WM.create({
-        appId: 'store', title: 'Microsoft Store', icon: 'store',
-        width: 900, height: 620, minWidth: 460, minHeight: 340
-      });
-      win.body.innerHTML = '<div class="store">' +
-        '<div class="store-hero"><h2>Everything here is already installed</h2>' +
-        '<p>The Store is a mock-up - but the buttons pin real emulator apps to your desktop.</p></div>' +
-        '<div class="store-grid">' + CATALOG.map(function (c) {
-          var app = Emu.apps[c.id];
-          return '<div class="store-card">' + Icons.get(app ? app.icon : 'store') +
-            '<div style="min-width:0"><b>' + U.esc(c.name) + '</b><small>' + U.esc(c.pub) + ' &middot; ' + U.esc(c.desc) + '</small>' +
-            '<button class="btn primary" data-open="' + c.id + '">Open</button> ' +
-            '<button class="btn" data-pin="' + c.id + '">Pin to desktop</button></div></div>';
-        }).join('') + '</div></div>';
-
-      win.body.addEventListener('click', function (e) {
-        var o = e.target.closest('[data-open]');
-        if (o) { Emu.launch(o.dataset.open); return; }
-        var p = e.target.closest('[data-pin]');
-        if (p) {
-          var app = Emu.apps[p.dataset.pin];
-          var target = VFS.DESKTOP + '\\' + app.name;
-          if (VFS.exists(target)) { Emu.notify('Microsoft Store', app.name + ' is already on the desktop.', 'store'); return; }
-          var d = VFS.get(VFS.DESKTOP);
-          d.children[app.name] = VFS.link(app.id);
-          VFS.save();
-          VFS.emitChange(VFS.DESKTOP);
-          Emu.notify('Microsoft Store', app.name + ' pinned to the desktop.', 'store');
-        }
-      });
       return win;
     }
   });

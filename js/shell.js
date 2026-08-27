@@ -42,6 +42,9 @@
       Emu.on('notify', function (n) { toast(n); syncBadge(); });
       Emu.on('user', function () { buildStart(); });
       Emu.on('theme', function () { renderIcons(); });
+      Emu.on('apps', function () { buildStart(); syncTaskbar(); });
+      Emu.on('net', syncVpnTray);
+      syncVpnTray();
     },
 
     // ---------------------------------------------------------- boot/lock
@@ -235,7 +238,10 @@
   function buildStart() {
     var pinnedGrid = $('#startPinned');
     var q = ($('#startSearch').value || '').toLowerCase();
-    var ids = (allApps ? Emu.appOrder : pinnedApps()).filter(function (id) {
+    var startList = Emu.appOrder.filter(function (id) {
+      return Emu.apps[id].pinned || Emu.apps[id].startPinned;
+    });
+    var ids = (allApps ? Emu.appOrder : startList).filter(function (id) {
       return !q || Emu.apps[id].name.toLowerCase().indexOf(q) >= 0;
     });
     pinnedGrid.innerHTML = ids.map(function (id) {
@@ -531,7 +537,21 @@
     $('.lock-name').textContent = Emu.state.user;
   }
 
+  /** The tray shield only appears while the tunnel is up. */
+  function syncVpnTray() {
+    var el = $('#trayVpn');
+    if (!el) return;
+    var on = Emu.state.net.connected;
+    el.classList.toggle('hidden', !on);
+    if (on) {
+      var loc = (global.Net.LOCATIONS.filter(function (l) { return l.id === Emu.state.net.location; })[0] || {});
+      el.innerHTML = Icons.get('shield');
+      el.title = 'Emu VPN - connected via ' + (loc.city || 'relay');
+    }
+  }
+
   function wireTray() {
+    $('#trayVpn').addEventListener('click', function () { Emu.launch('vpn'); });
     $('#trayQuick').addEventListener('click', function () { toggleFlyout('quick'); });
     $('#trayClock').addEventListener('click', function () { toggleFlyout('notif'); });
     $('#trayBell').addEventListener('click', function () { toggleFlyout('notif'); });

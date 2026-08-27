@@ -16,6 +16,9 @@
     edge: {
       homepage: 'edge://newtab',
       searchEngine: 'bing',
+      mode: 'engine',
+      images: true,
+      styles: true,
       allowEmbedding: true,
       favorites: [
         { title: 'New tab', url: 'edge://newtab', icon: 'globe' },
@@ -26,6 +29,19 @@
       history: [],
       downloads: []
     },
+    net: {
+      connected: false,
+      relay: 'corsproxy',
+      location: 'auto',
+      killSwitch: false,
+      autoConnect: false,
+      protocol: 'WireGuard',
+      since: 0,
+      lastPing: 0,
+      lastProbe: '',
+      seenDisclosure: false
+    },
+    installed: [],
     notifications: [],
     recent: [],
     desktopIcons: null

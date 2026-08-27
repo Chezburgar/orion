@@ -42,23 +42,48 @@ menus, and toast notifications.
 **Window manager** — drag, resize from eight edges, minimise/maximise/restore, focus and
 z-order, edge snapping, Snap Layouts on maximise-button hover, and modal dialogs.
 
-**Microsoft Edge** — the centrepiece:
+**Microsoft Edge** — a browser with its own rendering engine, not an iframe wrapper.
+Opening a page runs a real pipeline:
 
-- Tab strip built into the title bar: new, close, switch, middle-click to close
-- Omnibox with live suggestions from history, favourites and the site index
-- Back/forward history per tab, refresh, home, favourites bar, progress bar
-- `edge://newtab`, `history`, `favorites`, `downloads`, `settings`, `version`
-- A small **simulated web** that always loads: `bing.local` (search), `docs.emu`,
-  `news.emu`, `weather.emu`, `about.emu` and `games.emu` (playable Minesweeper)
-- **Real websites** load in an iframe. Most refuse to be framed (`X-Frame-Options`),
-  so the error page offers *Open in system browser* — `example.com` works as a live demo
-- Downloads write real files into the virtual file system
+```
+fetch → parse (DOMParser) → strip scripts/frames → rewrite every URL → paint into a shadow root
+```
+
+- Scripts, iframes, objects and inline event handlers are removed before anything renders;
+  password fields on remote pages are disabled on purpose
+- Links, forms, images and CSS `url()`s are rewritten to absolute URLs; clicking a link
+  navigates *inside* the emulator, and GET forms (site search boxes) work
+- The page's own stylesheets are fetched and injected afterwards, so layout progressively
+  sharpens — shadow DOM keeps that CSS from leaking into the desktop
+- **Three render modes**: Engine (default), Reader (clean text), Compatibility (iframe)
+- Find on page (`Ctrl+F`) with match counts, zoom, `view-source:`, and `edge://net` internals
+- Tabs in the title bar, per-tab history and zoom, favourites, downloads, page cache
+- `edge://` pages: `newtab`, `history`, `favorites`, `downloads`, `settings`, `net`, `version`
+
+**Search actually searches.** Results come from three live providers, combined:
+DuckDuckGo's instant-answer API and Wikipedia's search API (both CORS-open, no relay
+needed) plus full web results via the reader relay. Clicking a result renders that real
+page in the engine.
+
+**Emu VPN** — a Windows-style VPN client with a connect orb, server list, session timer,
+kill switch, protocol picker and tray indicator. Read this part carefully:
+
+> The tunnel is **real in one specific sense**: it changes how the browser fetches pages,
+> routing them through a public relay so sites that block cross-origin reads still load.
+> It is **not** encryption, **not** anonymity, and it does **not** hide your IP. The relay
+> operator can see which URLs you request. The app says this before it will connect, and
+> sign-in fields are disabled on relayed pages.
+
+**Microsoft Store** — installs six real games, with download progress, a library, and
+uninstall. An installed game becomes a launchable app, lands on the desktop and in Start,
+and is still there after a reload: **Minesweeper** (three difficulties, safe first click),
+**Solitaire** (Klondike, click-to-move), **2048**, **Snake**, **Blocks** (tetrominoes with
+ghost piece and hard drop) and **Pong**. High scores persist.
 
 **Apps** — File Explorer (create, rename, copy, delete, grid/list views, search),
 Notepad (opens and saves real files), Settings (wallpaper, accent, light/dark,
 transparency, account), Calculator (keyboard driven), Terminal (`dir`, `cd`, `type`,
-`echo >`, `mkdir`, `tree`, `start`, `ipconfig`, …), Photos, Microsoft Store and
-Task Manager.
+`echo >`, `mkdir`, `tree`, `start`, `ipconfig`, …), Photos and Task Manager.
 
 **Storage** — a virtual file system and all settings persist in `localStorage`.
 Nothing leaves the browser. *Settings → Privacy & security → Reset* wipes it.
@@ -74,6 +99,8 @@ Nothing leaves the browser. *Settings → Privacy & security → Reset* wipes it
 | `Win`+`←` `→` `↑` `↓` | Snap, maximise, minimise |
 | `Alt`+`Tab` / `Alt`+`F4` | Switch / close window |
 | `Ctrl`+`T` / `W` / `L` | New tab / close tab / address bar (Edge) |
+| `Ctrl`+`F` | Find on page (Edge) |
+| `Ctrl`+`+` / `-` / `0` | Zoom in / out / reset (Edge) |
 | `F5`, `Alt`+`←` `→` | Reload, back, forward (Edge) |
 
 On Windows the `Win` key is captured by the real OS — use the taskbar button instead.
@@ -85,10 +112,12 @@ index.html          shell markup
 styles/             base tokens, shell, window chrome, app styles
 js/icons.js         inline SVG icon set
 js/state.js         settings, persistence, events, utilities
+js/net.js           relays, page fetching, HTML sanitising/rewriting, search
 js/vfs.js           virtual file system
 js/wm.js            window manager
+js/games.js         the six games the Store installs
 js/shell.js         taskbar, Start, flyouts, Task View, context menus
-js/apps/            edge, explorer, notepad, settings, calculator, terminal, extras
+js/apps/            edge, vpn, store, explorer, notepad, settings, calculator, terminal, extras
 assets/             SVG wallpapers
 server.js           local preview server (not needed for Pages)
 ```

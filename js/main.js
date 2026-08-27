@@ -52,6 +52,11 @@
     });
 
     if (!VFS.exists(VFS.DESKTOP)) VFS.mkdir(VFS.DESKTOP);
+
+    // Bring the tunnel up automatically if the user asked for that.
+    if (Emu.state.net.autoConnect && !Emu.state.net.connected) {
+      setTimeout(function () { global.Net.connect(); }, 3000);
+    }
   }
 
   if (document.readyState === 'loading') {

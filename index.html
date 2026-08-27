@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="styles/shell.css">
 <link rel="stylesheet" href="styles/windows.css">
 <link rel="stylesheet" href="styles/apps.css">
+<link rel="stylesheet" href="styles/features.css">
 </head>
 <body>
 
@@ -127,6 +128,7 @@
     <div class="tb-left" id="tbLeft"></div>
     <div class="tb-center" id="tbCenter"></div>
     <div class="tb-right">
+      <button class="tray-btn tray-vpn hidden" id="trayVpn" title="Emu VPN"></button>
       <button class="tray-btn" id="trayChevron" title="Show hidden icons"></button>
       <button class="tray-btn tray-group" id="trayQuick" title="Network, Sound, Battery">
         <span data-ico="wifi"></span><span data-ico="volume"></span><span data-ico="battery"></span>
@@ -149,9 +151,13 @@
 
 <script src="js/icons.js"></script>
 <script src="js/state.js"></script>
+<script src="js/net.js"></script>
 <script src="js/vfs.js"></script>
 <script src="js/wm.js"></script>
+<script src="js/games.js"></script>
 <script src="js/apps/edge.js"></script>
+<script src="js/apps/vpn.js"></script>
+<script src="js/apps/store.js"></script>
 <script src="js/apps/explorer.js"></script>
 <script src="js/apps/notepad.js"></script>
 <script src="js/apps/settings.js"></script>
