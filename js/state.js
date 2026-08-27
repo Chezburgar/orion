@@ -42,6 +42,7 @@
       lastProbe: '',
       seenDisclosure: false
     },
+    rebranded: false,
     installed: [],
     games: [],
     notifications: [],
@@ -78,6 +79,14 @@
   var state = load();
   var listeners = {};
   var saveTimer = null;
+
+  // One-time move onto the Orion theme. Only values still sitting at the old
+  // defaults are touched, so a colour or wallpaper you picked yourself stays.
+  if (!state.rebranded) {
+    if (state.accent === '#0078d4') state.accent = '#4f46e5';
+    if (state.wallpaper === 'assets/wall-bloom.svg') state.wallpaper = 'assets/wall-orion.svg';
+    state.rebranded = true;
+  }
 
   var util = {
     $: function (sel, root) { return (root || document).querySelector(sel); },
