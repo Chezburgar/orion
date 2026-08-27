@@ -26,8 +26,12 @@
   var state = { ready: false, starting: null, error: null, wisp: null, sw: false };
   var scram = { ready: false, starting: null, error: null, wisp: null, sw: false, controller: null };
 
-  /** Sites Ultraviolet cannot render properly; Scramjet handles these. */
-  var UV_BREAKS = ['deadshot.io'];
+  /**
+   * Scramjet is the default engine: it rendered every site tested, including
+   * deadshot.io, which Ultraviolet cannot load on any backend. Ultraviolet is
+   * kept as an automatic fallback in case Scramjet fails to start.
+   */
+  var DEFAULT_ENGINE = 'scramjet';
 
   function cfg() {
     var p = Emu.state.proxy || (Emu.state.proxy = {});
@@ -139,10 +143,11 @@
         return Promise.resolve(false);
       }
 
-      state.starting = navigator.serviceWorker.register(
+      state.starting = preflight(p.assets + '/uv/uv.bundle.js').then(function () {
+        return navigator.serviceWorker.register(
         base() + '/uv/sw.js?assets=' + encodeURIComponent(p.assets),
-        { scope: base() + '/uv/service/' }
-      ).then(function (reg) {
+        { scope: base() + '/uv/service/' });
+      }).then(function (reg) {
         state.sw = true;
         // Not navigator.serviceWorker.ready: that waits for a worker
         // controlling *this* page, and Orion sits outside the proxy scope on
@@ -199,8 +204,8 @@
     engineFor: function (url) {
       var h = hostOf(url);
       var p = cfg();
-      if (p.siteEngine[h]) return p.siteEngine[h];
-      return UV_BREAKS.some(function (n) { return h === n || h.endsWith('.' + n); }) ? 'scramjet' : 'uv';
+      if (p.siteEngine[h] && p.siteEngine[h] !== 'direct') return p.siteEngine[h];
+      return DEFAULT_ENGINE;
     },
 
     setEngineFor: function (url, engine) {
@@ -210,16 +215,50 @@
       Emu.save();
     },
 
-    /** Start whichever engine a URL needs. Resolves false, never rejects. */
+    /**
+     * Start the engine this URL wants and, if that fails, the other one. One
+     * engine failing to register must not take the whole proxy down.
+     * Resolves the engine name that worked, or false.
+     */
     startFor: function (url) {
-      return Proxy.engineFor(url) === 'scramjet' ? Proxy.startScramjet() : Proxy.start();
+      var pref = Proxy.engineFor(url);
+      var alt = pref === 'scramjet' ? 'uv' : 'scramjet';
+      var runPref = pref === 'scramjet' ? Proxy.startScramjet : Proxy.start;
+      var runAlt = alt === 'scramjet' ? Proxy.startScramjet : Proxy.start;
+
+      return runPref().then(function (ok) {
+        if (ok) return pref;
+        return runAlt().then(function (ok2) {
+          if (!ok2) return false;
+          // Remember what actually worked for this site.
+          Proxy.setEngineFor(url, alt);
+          return alt;
+        });
+      });
+    },
+
+    /** Whichever engine failed, in words. */
+    lastError: function () {
+      var bits = [];
+      if (scram.error) bits.push('Scramjet: ' + scram.error);
+      if (state.error) bits.push('Ultraviolet: ' + state.error);
+      return bits.join(' · ') || 'The proxy could not start.';
     },
 
     urlFor: function (target) {
       if (Proxy.isProtected(target)) return null;
-      return Proxy.engineFor(target) === 'scramjet'
-        ? Proxy.scramUrl(target)
-        : Proxy.url(target);
+      var want = Proxy.engineFor(target);
+      if (want === 'scramjet' && scram.ready) return Proxy.scramUrl(target);
+      if (want === 'uv' && state.ready) return Proxy.url(target);
+      // Preferred engine is not up; use whatever is.
+      if (scram.ready) return Proxy.scramUrl(target);
+      if (state.ready) return Proxy.url(target);
+      return null;
+    },
+
+    /** Which engine actually served the last URL built. */
+    activeEngine: function () {
+      return scram.ready ? 'scramjet' : state.ready ? 'uv' : null;
     },
 
     scramUrl: function (target) {
@@ -240,7 +279,9 @@
         return Promise.resolve(false);
       }
 
-      scram.starting = loadScript(p.scramAssets + '/scram/scramjet.all.js').then(function () {
+      scram.starting = preflight(p.scramAssets + '/scram/scramjet.all.js').then(function () {
+        return loadScript(p.scramAssets + '/scram/scramjet.all.js');
+      }).then(function () {
         if (typeof global.$scramjetLoadController !== 'function') {
           throw new Error('The Scramjet runtime did not load.');
         }
@@ -317,6 +358,17 @@
       return probeWisp(u, 6000).then(function (ok) { return ok ? u : next(); });
     }
     return next();
+  }
+
+  /** Confirm a runtime file is actually reachable before relying on it. */
+  function preflight(url) {
+    return fetch(url, { method: 'GET', cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return true;
+    }).catch(function (e) {
+      throw new Error('Could not fetch the proxy runtime at ' + url +
+        ' (' + e.message + '). Your network may be blocking it.');
+    });
   }
 
   function loadScript(src) {

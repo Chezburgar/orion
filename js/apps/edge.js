@@ -592,7 +592,7 @@
           if (ok) renderFrame(tab, url, p.host, true);
           else {
             renderMessage(tab, 'warning', 'The proxy is not available',
-              global.OrionProxy.state.error || 'The proxy could not start.',
+              global.OrionProxy.lastError(),
               [['retry', 'Try again', true], ['use-direct', 'Load it directly', false],
                ['open-external', 'Open in system browser', false]], url);
             finish(tab);
@@ -715,7 +715,8 @@
       tab.favicon = 'globe';
       record(tab.title, url);
       status(proxied
-        ? 'Proxy · routed through your proxy so the site can be framed'
+        ? 'Proxy · ' + (global.OrionProxy.activeEngine() === 'scramjet' ? 'Scramjet' : 'Ultraviolet') +
+          ' · routed through your proxy'
         : 'App mode · the site is running its own code');
 
       var canProxy = global.OrionProxy && !global.OrionProxy.isProtected(url) && global.OrionProxy.config().enabled;
