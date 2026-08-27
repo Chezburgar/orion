@@ -3,7 +3,7 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-08-27.14';
+  var BUILD = '2026-08-27.15';
 
   var DEFAULTS = {
     user: 'Chase',
@@ -89,6 +89,9 @@
   if (state.build !== BUILD) {
     state.edge.siteModes = {};
     state.edge.render = 'app';
+    // Engine pins written by older builds could force a site onto an engine
+    // that cannot load it; start every build from a clean slate.
+    if (state.proxy) state.proxy.siteEngine = {};
     state.build = BUILD;
   }
 

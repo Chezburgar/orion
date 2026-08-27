@@ -24,6 +24,8 @@
     'instagram.com', 'facebook.com', 'discord.com', 'netflix.com', 'amazon.com'];
 
   var state = { ready: false, starting: null, error: null, wisp: null, sw: false };
+  /** Engines chosen automatically live here only - never in storage. */
+  var sessionEngine = {};
   var scram = { ready: false, starting: null, error: null, wisp: null, sw: false, controller: null };
 
   /**
@@ -38,7 +40,7 @@
     if (!p.assets) p.assets = '/PRUXYZ';
     if (!p.scramAssets) p.scramAssets = '/Scramjet-App';
     if (!p.siteEngine) p.siteEngine = {};
-    if (p.always === undefined) p.always = false;
+    if (p.always === undefined) p.always = true;
     if (!p.wisp) p.wisp = 'wss://wisp.mercurywork.shop/';
     if (!p.wispFallbacks) {
       p.wispFallbacks = ['wss://anura.pro/', 'wss://nebulaproxy.io/wisp/', 'wss://wisp.terbiumon.top/wisp/'];
@@ -208,15 +210,24 @@
     engineFor: function (url) {
       var h = hostOf(url);
       var p = cfg();
+      // Only a choice you made yourself is allowed to persist. An engine that
+      // a failover picked lives for this session only, so one bad day can
+      // never pin a site to a broken engine forever.
       if (p.siteEngine[h] && p.siteEngine[h] !== 'direct') return p.siteEngine[h];
+      if (sessionEngine[h]) return sessionEngine[h];
       return DEFAULT_ENGINE;
     },
 
-    setEngineFor: function (url, engine) {
+    /** persist=true only for an explicit choice made in the menu. */
+    setEngineFor: function (url, engine, persist) {
       var h = hostOf(url);
       if (!h) return;
-      cfg().siteEngine[h] = engine;
-      Emu.save();
+      if (persist) {
+        cfg().siteEngine[h] = engine;
+        Emu.save();
+      } else {
+        sessionEngine[h] = engine;
+      }
     },
 
     /**
@@ -234,19 +245,20 @@
         if (ok) return pref;
         return runAlt().then(function (ok2) {
           if (!ok2) return false;
-          // Remember what actually worked for this site.
-          Proxy.setEngineFor(url, alt);
+          // Remember for this session only.
+          Proxy.setEngineFor(url, alt, false);
           return alt;
         });
       });
     },
 
-    /** Whichever engine failed, in words. */
+    /** Whichever engine failed, in words, with the build for bug reports. */
     lastError: function () {
       var bits = [];
       if (scram.error) bits.push('Scramjet: ' + scram.error);
       if (state.error) bits.push('Ultraviolet: ' + state.error);
-      return bits.join(' · ') || 'The proxy could not start.';
+      bits.push('build ' + (Emu.BUILD || '?'));
+      return bits.join(' · ');
     },
 
     urlFor: function (target) {

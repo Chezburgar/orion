@@ -1173,7 +1173,7 @@
             ' (switch)', icon: 'refresh', action: function () {
           var Px = global.OrionProxy;
           var next = Px.engineFor(active.url) === 'scramjet' ? 'uv' : 'scramjet';
-          Px.setEngineFor(active.url, next);
+          Px.setEngineFor(active.url, next, true);
           Emu.notify('Microsoft Edge', 'Using ' + (next === 'scramjet' ? 'Scramjet' : 'Ultraviolet') +
             ' for this site.', 'plug');
           active.mode = 'proxy';
