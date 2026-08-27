@@ -24,9 +24,37 @@
     return app.launch(args);
   };
 
+  /**
+   * GitHub Pages caches index.html, so a browser can keep running an old
+   * build long after a deploy. version.json is always fetched fresh; if it
+   * names a newer build, reload once through a changed URL so the cached
+   * HTML is bypassed. The session guard stops any reload loop.
+   */
+  function checkForUpdate() {
+    fetch('version.json?cb=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (v) {
+        if (!v || !v.build || v.build === Emu.BUILD) return;
+        var seen = null;
+        try { seen = sessionStorage.getItem('orion.reloadedFor'); } catch (e) {}
+        if (seen === v.build) {
+          Emu.notify('Orion update', 'Version ' + v.build + ' is available but this tab is still on ' +
+            Emu.BUILD + '. Try a hard refresh.', 'update', { action: { do: 'app:reload' } });
+          return;
+        }
+        try { sessionStorage.setItem('orion.reloadedFor', v.build); } catch (e) {}
+        location.replace(location.pathname + '?b=' + encodeURIComponent(v.build));
+      })
+      .catch(function () { /* offline is fine */ });
+  }
+
   function start() {
     Emu.applyTheme();
     Shell.init();
+    checkForUpdate();
+    Emu.onNotifAction('app:reload', function () {
+      location.replace(location.pathname + '?b=' + Date.now());
+    });
 
     // Nothing starts until this device is allowed in.
     global.Auth.gate().then(function () {

@@ -139,6 +139,7 @@
             '<span>Device name</span><b>ORION-PC</b>' +
             '<span>Edition</span><b>Orion</b>' +
             '<span>Version</span><b>2.0.0</b>' +
+            '<span>Build</span><b>' + U.esc(Emu.BUILD) + '</b>' +
             '<span>Processor</span><b>' + (navigator.hardwareConcurrency || 4) + ' logical cores (your real CPU)</b>' +
             '<span>Renderer</span><b>' + U.esc((navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg)\/[\d.]+/) || ['Browser'])[0]) + '</b>' +
             '<span>Storage</span><b>localStorage</b>' +

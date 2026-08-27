@@ -3,6 +3,7 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
+  var BUILD = '2026-08-27.7';
 
   var DEFAULTS = {
     user: 'Chase',
@@ -83,12 +84,12 @@
 
   // One-time move onto the Orion theme. Only values still sitting at the old
   // defaults are touched, so a colour or wallpaper you picked yourself stays.
-  // Per-site overrides saved while the browser defaulted to the engine would
-  // keep sites stuck on text, so clear them once.
-  if (!state.edge.modesReset) {
+  // Stored render overrides are gone for good: a site can no longer be left
+  // permanently downgraded to text. Clear any left over from older builds.
+  if (state.build !== BUILD) {
     state.edge.siteModes = {};
     state.edge.render = 'app';
-    state.edge.modesReset = true;
+    state.build = BUILD;
   }
 
   if (!state.rebranded) {
@@ -159,6 +160,7 @@
   };
 
   var Emu = {
+    BUILD: BUILD,
     state: state,
     util: util,
     apps: {},

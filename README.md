@@ -87,7 +87,9 @@ fetch → parse (DOMParser) → strip scripts/frames → rewrite every URL → p
   navigates *inside* the emulator, and GET forms (site search boxes) work
 - The page's own stylesheets are fetched and injected afterwards, so layout progressively
   sharpens — shadow DOM keeps that CSS from leaking into the desktop
-- **Three render modes**: App (default), Engine, Reader — switchable per site and remembered
+- **Three render modes**: App (default), Engine, Reader. Real sites always start in App;
+  Engine and Reader are per-page views that reset when the tab moves on, so a site can
+  never be left permanently downgraded to text
 - The engine falls through several public relays, since any one of them may be rate limited
 - Find on page (`Ctrl+F`) with match counts, zoom, `view-source:`, and `edge://net` internals
 - Tabs in the title bar, per-tab history and zoom, favourites, downloads, page cache
@@ -169,6 +171,11 @@ Emu.registerApp({
 ```
 
 ## Deploying changes
+
+Bump `build` in `version.json` **and** `BUILD` in `js/state.js` together. Orion fetches
+`version.json` uncached on start and, if it names a newer build, reloads once through a
+changed URL to get past the cached HTML. The current build shows in Settings → About and
+at `edge://net`.
 
 Stylesheets and scripts are linked with a `?v=N` query string in `index.html`. Bump that
 number whenever you push, or returning visitors keep running the cached copy for up to ten

@@ -292,6 +292,7 @@
             '<div class="e-row"><span class="t">Scripts &amp; frames blocked</span><span class="when">' + st2.blocked + '</span></div>' +
             '<div class="e-row"><span class="t">Failed fetches</span><span class="when">' + st2.errors + '</span></div>' +
             '<div class="e-row"><span class="t">Cached pages</span><span class="when">' + Net.cacheSize() + '</span></div>' +
+            '<div class="e-row"><span class="t">Orion build</span><span class="when">' + U.esc(Emu.BUILD) + '</span></div>' +
             '<p><button class="btn" data-act="clear-cache">Clear cache</button> ' +
             '<button class="btn" data-act="open-vpn">Open Orion VPN</button></p></div>'
         };
@@ -303,12 +304,9 @@
             '<div class="e-set"><div class="lbl"><b>Home page</b><small>Opened by the home button and new windows</small></div>' +
               '<input class="ex-search" style="width:230px" data-act="homepage" value="' + U.esc(st.homepage) + '"></div>' +
             '<div class="e-set"><div class="lbl"><b>How pages are rendered</b>' +
-              '<small>App runs the real site; Engine renders it here without scripts; Reader is text only</small></div>' +
-              '<select class="st-select" data-act="mode">' +
-              ['app:App (run the real site)', 'engine:Engine (render here)', 'reader:Reader'].map(function (o) {
-                var kv = o.split(':');
-                return '<option value="' + kv[0] + '"' + (st.render === kv[0] ? ' selected' : '') + '>' + kv[1] + '</option>';
-              }).join('') + '</select></div>' +
+              '<small>Real sites always run for real. Engine and Reader are per-page views in the ' +
+              '&hellip; menu, and reset when you move on.</small></div>' +
+              '<span class="muted">App</span></div>' +
             '<div class="e-set"><div class="lbl"><b>Load images</b><small>Routed through the relay</small></div>' +
               '<div class="sw' + (st.images ? ' on' : '') + '" data-act="images"></div></div>' +
             '<div class="e-set"><div class="lbl"><b>Load the page\'s own stylesheets</b>' +
@@ -489,8 +487,7 @@
       U.$('[data-nav="fwd"]', win.body).classList.toggle('disabled', active.hIndex >= active.history.length - 1);
       starBtn.classList.toggle('on', isFav(active.url));
       var host = p.host;
-      var shown = /^(internal|site|source)$/.test(p.kind) ? 'local'
-        : (active.mode || st.siteModes[host] || st.render || 'app');
+      var shown = /^(internal|site|source)$/.test(p.kind) ? 'local' : (active.mode || 'app');
       var chip = U.$('.e-mode', win.body);
       if (chip) {
         chip.textContent = shown === 'local' ? 'Orion' : shown === 'app' ? 'App'
@@ -568,7 +565,7 @@
       // A real page on the real internet. App mode runs the site's own code
       // in a frame, which is the only way games and web apps actually work;
       // the engine is for reading pages that refuse to be framed.
-      var mode = tab.mode || st.siteModes[p.host] || st.render || 'app';
+      var mode = tab.mode || 'app';
       if (mode === 'app') { renderFrame(tab, url, p.host); return; }
       if (Emu.state.net.killSwitch && !Emu.state.net.connected) {
         renderMessage(tab, 'warning', 'Blocked by the VPN kill switch',
@@ -578,13 +575,6 @@
         return;
       }
       renderEngine(tab, url, mode === 'reader');
-    }
-
-    /** Remember how a particular site should be opened next time. */
-    function setSiteMode(host, mode) {
-      if (!host) return;
-      st.siteModes[host] = mode;
-      Emu.save();
     }
 
     /** Pages that ship with the emulator. */
@@ -691,9 +681,7 @@
       status('App mode · the site is running its own code');
 
       var bar = U.el('<div class="edge-infobar app-bar">' + Icons.get('info') +
-        '<span class="sp">Running in app mode, so the site\'s own code works. ' +
-        'If the page stays blank, it refuses to be embedded.</span>' +
-        '<button data-act="use-engine">Render it here instead</button>' +
+        '<span class="sp">Running the real site. Big games can take a while to appear.</span>' +
         '<button data-act="open-external">Open in system browser</button>' +
         '<button data-act="dismiss-bar">Dismiss</button></div>');
       bar.addEventListener('click', function (e) {
@@ -701,11 +689,7 @@
         if (!b) return;
         if (b.dataset.act === 'dismiss-bar') { bar.remove(); sizeFrame(); return; }
         if (b.dataset.act === 'open-external') { openExternal(url); return; }
-        if (b.dataset.act === 'use-engine') {
-          setSiteMode(host, 'engine');
-          tab.mode = 'engine';
-          navigate(tab, url, false);
-        }
+
       });
       tab.pane.appendChild(bar);
       bar.style.cssText = 'position:absolute;left:0;right:0;top:0;z-index:5';
@@ -1097,9 +1081,7 @@
         navigate(active, active.url, false);
       }
       else if (kind === 'mode') {
-        var h = parseUrl(active.url).host;
         active.mode = null;
-        if (h) { delete st.siteModes[h]; Emu.save(); }
         navigate(active, active.url, false);
       }
       else if (kind === 'vpn') Emu.launch('vpn');
@@ -1122,15 +1104,12 @@
 
     function openMenu(anchor) {
       var r = anchor.getBoundingClientRect();
-      var host = parseUrl(active.url).host;
-      var mode = active.mode || st.siteModes[host] || st.render || 'app';
+      var mode = active.mode || 'app';
+      // Every override applies to this page only and is dropped when the tab
+      // moves on, so a site can never end up permanently stuck as text.
       function pick(m) {
         return function () {
           active.mode = m === 'app' ? null : m;
-          // App and Engine are lasting choices for a site; Reader is not.
-          if (m === 'reader') delete st.siteModes[host];
-          else setSiteMode(host, m);
-          Emu.save();
           navigate(active, active.url, false);
         };
       }
