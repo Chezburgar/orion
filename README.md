@@ -106,10 +106,12 @@ Ultraviolet deployment, which serves them same-origin so they render and their s
 
 Two engines, because one is not enough:
 
-- **Ultraviolet** handles most sites, including `kartbros.io`.
-- **Scramjet** handles the ones UV mangles. UV strips the cross-origin isolation headers that
-  threaded-WASM games need, so `deadshot.io` loads under UV but its own loader dies with
-  "Couldn't load the game" — on every backend. Under Scramjet it renders properly.
+- **Scramjet** is the default and handled every site tested.
+- **Ultraviolet** is an automatic fallback. It cannot run `deadshot.io` (it strips the
+  cross-origin isolation headers that threaded WASM needs), and its service worker fails to
+  evaluate on some machines — so if either engine will not start, the other is tried before any
+  error appears, and the working one is remembered for that site. Each engine loads its
+  transport from its own deployment, so one blocked path cannot take both down.
 
 Sites are routed per host and you can flip the engine for the current site from the … menu.
 `deadshot.io` and `kartbros.io` are sent straight through the proxy, because filtered networks
