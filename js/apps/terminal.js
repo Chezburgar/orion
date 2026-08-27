@@ -6,7 +6,7 @@
 
   function launchTerminal(args) {
     var win = WM.create({
-      appId: 'terminal', title: 'Windows Terminal', icon: 'terminal',
+      appId: 'terminal', title: 'Orion Terminal', icon: 'terminal',
       width: 860, height: 520, minWidth: 420, minHeight: 260
     });
 
@@ -164,18 +164,18 @@
         print('   Default Gateway . . . . . . . . . : 192.168.0.1\n');
       },
       systeminfo: function () {
-        print('Host Name:                 EMU-PC');
-        print('OS Name:                   Windows 11 Emulator');
+        print('Host Name:                 ORION-PC');
+        print('OS Name:                   Orion');
         print('OS Version:                1.0.0 build 22621');
         print('System Type:               ' + (navigator.platform || 'browser'));
         print('Logical Processors:        ' + (navigator.hardwareConcurrency || 4));
         print('Screen:                    ' + window.innerWidth + 'x' + window.innerHeight);
         print('Storage:                   localStorage (' + U.fmtBytes(VFS.sizeOf(VFS.get('C:'))) + ' used)');
       },
-      whoami: function () { print('emu-pc\\' + Emu.state.user.toLowerCase().replace(/\s+/g, '')); },
-      hostname: function () { print('EMU-PC'); },
+      whoami: function () { print('orion-pc\\' + Emu.state.user.toLowerCase().replace(/\s+/g, '')); },
+      hostname: function () { print('ORION-PC'); },
       date: function () { print(new Date().toString()); },
-      ver: function () { print('\nWindows 11 Emulator [Version 1.0.0]\n'); },
+      ver: function () { print('\nOrion [Version 1.0.0]\n'); },
       cls: function () { out.innerHTML = ''; },
       exit: function () { win.close(); }
     };
@@ -217,7 +217,7 @@
       if (!window.getSelection().toString()) input.focus();
     });
 
-    print('<span class="c">Windows Terminal</span> <span class="d">- Windows 11 Emulator, version 1.0.0</span>');
+    print('<span class="c">Orion Terminal</span> <span class="d">- Orion, version 1.0.0</span>');
     print('<span class="d">Type \'help\' to see what this shell can do.</span>\n');
     sync();
     setTimeout(function () { input.focus(); }, 60);

@@ -22,7 +22,7 @@
               'File Explorer': link('explorer'),
               'Notepad': link('notepad'),
               'Read me first.txt': file(
-                'Welcome to the Windows 11 Emulator!\r\n\r\n' +
+                'Welcome to the Orion!\r\n\r\n' +
                 'Everything here runs in your browser - no VM, no install.\r\n\r\n' +
                 'Try this:\r\n' +
                 '  * Press the Windows key (or click Start) to open the Start menu\r\n' +

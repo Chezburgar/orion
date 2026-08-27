@@ -139,6 +139,31 @@
     docs: '<path d="M4.6 7.4A2 2 0 0 1 6.6 5.4h6l2.4 2.8h10.4a2 2 0 0 1 2 2v13.4a2 2 0 0 1-2 2H6.6a2 2 0 0 1-2-2z" fill="#4c8fd6"/>'
       + '<path d="M11 13.6h10v9H11z" fill="#eaf2fb"/><g stroke="#4c8fd6" stroke-width="1.2"><path d="M13 16.4h6M13 19h6"/></g>',
 
+    orion: '<defs>'
+      + '<linearGradient id="oR" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#12102e"/><stop offset=".35" stop-color="#4c1d95"/><stop offset=".7" stop-color="#2563eb"/><stop offset="1" stop-color="#22a7ff"/></linearGradient>'
+      + '<linearGradient id="oRL" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#12102e"/><stop offset=".55" stop-color="#3b1f9e"/><stop offset="1" stop-color="#6d3bf5"/></linearGradient>'
+      + '<linearGradient id="oS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c1d95"/><stop offset=".45" stop-color="#3b5cf6"/><stop offset="1" stop-color="#22a7ff"/></linearGradient></defs>'
+      + '<g transform="scale(0.32)">'
+      + '<path d="M36.5 15.4A38 38 0 0 0 36.5 84.6" fill="none" stroke="url(#oRL)" stroke-width="9.5" stroke-linecap="round"/>'
+      + '<path d="M63.5 15.4A38 38 0 0 1 63.5 84.6" fill="none" stroke="url(#oR)" stroke-width="9.5" stroke-linecap="round"/>'
+      + '<path d="M50 2C52.4 26 57 40.5 71 45.4C81 48.9 88 49.4 98 50C88 50.6 81 51.1 71 54.6C57 59.5 52.4 74 50 98C47.6 74 43 59.5 29 54.6C19 51.1 12 50.6 2 50C12 49.4 19 48.9 29 45.4C43 40.5 47.6 26 50 2 Z" fill="url(#oS)"/>'
+      + '</g>',
+
+    orionstore: '<defs>'
+      + '<linearGradient id="sB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#161340"/><stop offset=".45" stop-color="#2a1c6b"/><stop offset="1" stop-color="#8b3ce8"/></linearGradient>'
+      + '<linearGradient id="sH" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5b2bc4"/><stop offset="1" stop-color="#a855f7"/></linearGradient>'
+      + '<linearGradient id="sO" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3b82f6"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>'
+      + '<g transform="scale(0.32)">'
+      + '<ellipse cx="50" cy="55" rx="45" ry="17" fill="none" stroke="url(#sO)" stroke-width="4" transform="rotate(-20 50 55)"/>'
+      + '<path d="M36 36V27a14 14 0 0 1 28 0v9" fill="none" stroke="url(#sH)" stroke-width="6"/>'
+      + '<g transform="rotate(-4 50 58)">'
+      + '<path d="M28 34h44a5 5 0 0 1 5 5.4l-3.6 40A7 7 0 0 1 66.4 86H33.6a7 7 0 0 1-7-6.6l-3.6-40A5 5 0 0 1 28 34Z" fill="url(#sB)"/>'
+      + '<path d="M50 40c1.5 13.6 4.3 17.6 17.6 19.2C54.3 60.8 51.5 64.8 50 78.4 48.5 64.8 45.7 60.8 32.4 59.2 45.7 57.6 48.5 53.6 50 40Z" fill="#fff"/>'
+      + '<path d="M35.5 41c.6 4.6 1.7 6 6 6.6-4.3.6-5.4 2-6 6.6-.6-4.6-1.7-6-6-6.6 4.3-.6 5.4-2 6-6.6Z" fill="#fff" opacity=".95"/>'
+      + '<circle cx="66" cy="74" r="2.6" fill="#fff"/></g>'
+      + '<path d="M8.6 60.9A45 17 -20 0 0 91.4 49.1" fill="none" stroke="url(#sO)" stroke-width="4" stroke-linecap="round"/>'
+      + '</g>',
+
     vpn: '<defs><linearGradient id="vpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#0e7490"/></linearGradient></defs>'
       + '<path d="M16 3.2 5.6 7.2v8.2c0 6.4 4.4 10.9 10.4 13.4 6-2.5 10.4-7 10.4-13.4V7.2z" fill="url(#vpg)"/>'
       + '<path d="m10.8 16.2 3.6 3.6 7-7.2" fill="none" stroke="#eafff6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -180,15 +205,12 @@
       return wrap('<rect x="4" y="4" width="16" height="16" rx="3"/>', '0 0 24 24',
         'fill="none" stroke="currentColor" stroke-width="1.6"');
     },
-    /** Windows logo (4 panes) at any size, tinted with the accent colour. */
-    start: function () {
-      return wrap('<g fill="currentColor"><rect x="2.6" y="2.6" width="8.4" height="8.4" rx="1"/>'
-        + '<rect x="13" y="2.6" width="8.4" height="8.4" rx="1"/>'
-        + '<rect x="2.6" y="13" width="8.4" height="8.4" rx="1"/>'
-        + '<rect x="13" y="13" width="8.4" height="8.4" rx="1"/></g>', '0 0 24 24',
-        'style="color:#4cc2ff"');
-    },
-    has: function (name) { return !!(A[name] || S[name]); }
+    /** The Orion mark, used for the Start button. */
+    start: function () { return Icons.get('orion'); },
+    has: function (name) { return !!(A[name] || S[name]); },
+
+    /** Register generated artwork (used for installed game tiles). */
+    add: function (name, inner) { A[name] = inner; return name; }
   };
 
   global.Icons = Icons;

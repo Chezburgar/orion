@@ -1,0 +1,26 @@
+/* ===== Installed game windows ===== */
+.win.game-win{background:#08080f}
+.gw{height:100%;display:flex;flex-direction:column;background:#08080f}
+.gw-bar{flex:none;display:flex;align-items:center;gap:8px;height:34px;padding:0 8px;
+  background:var(--layer-solid);border-bottom:1px solid var(--stroke)}
+.gw-name{display:flex;align-items:center;gap:8px;font-size:12.5px;min-width:0}
+.gw-name svg{width:18px;height:18px;flex:none}
+.gw-name b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gw-spacer{flex:1}
+.gw-load{font-size:11.5px;color:var(--text-3);white-space:nowrap}
+.gw-load.hidden{display:none}
+.gw-stage{flex:1;min-height:0;position:relative;background:#000}
+.gw-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;display:block}
+.win.game-win.maximized .gw-bar{opacity:.35;transition:opacity .18s var(--ease)}
+.win.game-win.maximized .gw-bar:hover{opacity:1}
+
+/* Store: the "add your own" tile */
+.store-tile.store-add{border-style:dashed;background:transparent}
+.store-tile.store-add .store-art{background:transparent;border-style:dashed}
+.store-tile.store-add .store-art svg{width:26px;height:26px;color:var(--text-3)}
+.store-tile.store-add:hover{border-color:var(--accent)}
+.store-facts .lnk{cursor:default;text-decoration:underline}
+
+/* Browser: app-mode info bar sits above the frame */
+.edge-infobar.app-bar{background:rgba(79,70,229,.14);border-color:var(--stroke-strong)}
+.edge-infobar.app-bar svg{color:var(--accent-2)}

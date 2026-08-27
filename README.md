@@ -1,11 +1,11 @@
-# Windows 11 Emulator
+# Orion
 
-A Windows 11 desktop environment that runs entirely in the browser — window manager,
-taskbar, Start menu, file system and a working **Microsoft Edge** browser. Pure static
-HTML/CSS/JS with no build step and no dependencies, so it drops straight onto GitHub Pages.
+Orion is a desktop environment that runs entirely in the browser — window manager, taskbar,
+Start menu, file system, a browser with its own rendering engine, a relay VPN and a store that
+installs real web games. Pure static HTML/CSS/JS, no build step, no dependencies.
 
-> This is an independent **simulation** of the Windows 11 interface. It is not affiliated
-> with Microsoft, contains no Microsoft code or assets, and nothing is virtualised.
+> Orion is an independent **simulation** of a Windows 11 style desktop. It is not affiliated with
+> Microsoft, contains no Microsoft code or assets, and nothing is virtualised.
 
 **Live: <https://chezburgar.github.io/win11/>**
 
@@ -42,8 +42,12 @@ menus, and toast notifications.
 **Window manager** — drag, resize from eight edges, minimise/maximise/restore, focus and
 z-order, edge snapping, Snap Layouts on maximise-button hover, and modal dialogs.
 
-**Microsoft Edge** — a browser with its own rendering engine, not an iframe wrapper.
-Opening a page runs a real pipeline:
+**Microsoft Edge** — the browser opens pages two different ways, because one size does not fit all:
+
+- **App mode (default)** loads the real site in a frame with `pointer-lock`, `fullscreen`,
+  `gamepad`, `autoplay` and clipboard delegated to it. The site runs its own JavaScript, so
+  games, WebGL and web apps work properly.
+- **Engine mode** fetches the document over Orion's own network stack and renders it here:
 
 ```
 fetch → parse (DOMParser) → strip scripts/frames → rewrite every URL → paint into a shadow root
@@ -55,17 +59,17 @@ fetch → parse (DOMParser) → strip scripts/frames → rewrite every URL → p
   navigates *inside* the emulator, and GET forms (site search boxes) work
 - The page's own stylesheets are fetched and injected afterwards, so layout progressively
   sharpens — shadow DOM keeps that CSS from leaking into the desktop
-- **Three render modes**: Engine (default), Reader (clean text), Compatibility (iframe)
+- **Three render modes**: App (default), Engine, Reader — switchable per site and remembered
+- The engine falls through several public relays, since any one of them may be rate limited
 - Find on page (`Ctrl+F`) with match counts, zoom, `view-source:`, and `edge://net` internals
 - Tabs in the title bar, per-tab history and zoom, favourites, downloads, page cache
 - `edge://` pages: `newtab`, `history`, `favorites`, `downloads`, `settings`, `net`, `version`
 
 **Search actually searches.** Results come from three live providers, combined:
 DuckDuckGo's instant-answer API and Wikipedia's search API (both CORS-open, no relay
-needed) plus full web results via the reader relay. Clicking a result renders that real
-page in the engine.
+needed) plus full web results via the reader relay. Clicking a result opens that real page.
 
-**Emu VPN** — a Windows-style VPN client with a connect orb, server list, session timer,
+**Orion VPN** — a Windows-style VPN client with a connect orb, server list, session timer,
 kill switch, protocol picker and tray indicator. Read this part carefully:
 
 > The tunnel is **real in one specific sense**: it changes how the browser fetches pages,
@@ -74,11 +78,11 @@ kill switch, protocol picker and tray indicator. Read this part carefully:
 > operator can see which URLs you request. The app says this before it will connect, and
 > sign-in fields are disabled on relayed pages.
 
-**Microsoft Store** — installs six real games, with download progress, a library, and
-uninstall. An installed game becomes a launchable app, lands on the desktop and in Start,
-and is still there after a reload: **Minesweeper** (three difficulties, safe first click),
-**Solitaire** (Klondike, click-to-move), **2048**, **Snake**, **Blocks** (tetrominoes with
-ghost piece and hard drop) and **Pong**. High scores persist.
+**Orion Store** — installs real web games as desktop apps. An installed game gets its own icon,
+window, desktop shortcut and Start tile, and comes back after a reload. It ships with
+**Breach**, **Rythem** and **Hollow Knight**, and **Add by URL** installs any other web game
+you point it at. Games run in a real frame with `pointer-lock`, `fullscreen`, `gamepad` and
+autoplay delegated, so their own code, WebGL and audio work at full speed.
 
 **Apps** — File Explorer (create, rename, copy, delete, grid/list views, search),
 Notepad (opens and saves real files), Settings (wallpaper, accent, light/dark,
@@ -109,16 +113,16 @@ On Windows the `Win` key is captured by the real OS — use the taskbar button i
 
 ```
 index.html          shell markup
-styles/             base tokens, shell, window chrome, app styles
+styles/             base tokens, shell, window chrome, app and game styles
 js/icons.js         inline SVG icon set
 js/state.js         settings, persistence, events, utilities
 js/net.js           relays, page fetching, HTML sanitising/rewriting, search
 js/vfs.js           virtual file system
 js/wm.js            window manager
-js/games.js         the six games the Store installs
+js/games.js         installable web games + the Store catalogue
 js/shell.js         taskbar, Start, flyouts, Task View, context menus
 js/apps/            edge, vpn, store, explorer, notepad, settings, calculator, terminal, extras
-assets/             SVG wallpapers
+assets/             Orion logos and SVG wallpapers
 server.js           local preview server (not needed for Pages)
 ```
 
@@ -134,3 +138,10 @@ Emu.registerApp({
   }
 });
 ```
+
+## Branding
+
+The Orion mark and the Orion Store bag are hand-authored SVG in `assets/orion.svg` and
+`assets/orion-store.svg`, redrawn from the supplied artwork so they stay crisp at every size
+and can be tinted by the theme. They are also the favicon, the boot logo and the Start button.
+Drop replacement files at those paths to swap the artwork without touching any code.

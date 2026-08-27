@@ -17,24 +17,37 @@
       note: 'Only works for sites that already allow cross-origin reads.',
       url: function (target) { return target; }
     },
-    corsproxy: {
-      id: 'corsproxy', name: 'Relay A', host: 'corsproxy.io', kind: 'html',
+    corssh: {
+      id: 'corssh', name: 'Relay A', host: 'proxy.cors.sh', kind: 'html',
       note: 'Returns the page HTML so the engine can render it.',
-      url: function (target) { return 'https://corsproxy.io/?url=' + encodeURIComponent(target); }
+      url: function (target) { return 'https://proxy.cors.sh/' + target; }
+    },
+    allorigins: {
+      id: 'allorigins', name: 'Relay B', host: 'api.allorigins.win', kind: 'html',
+      note: 'Slower, but a good second opinion when Relay A is busy.',
+      url: function (target) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target); }
     },
     jina: {
-      id: 'jina', name: 'Relay B', host: 'r.jina.ai', kind: 'text',
-      note: 'Returns a clean text version of the page. Great for reading, no layout.',
+      id: 'jina', name: 'Relay C', host: 'r.jina.ai', kind: 'text',
+      note: 'Returns a clean text version of the page. Very reliable, but no layout.',
       url: function (target) { return 'https://r.jina.ai/' + target; }
+    },
+    corsproxy: {
+      id: 'corsproxy', name: 'Relay D', host: 'corsproxy.io', kind: 'html',
+      note: 'Needs your own API key these days - usually answers 401 without one.',
+      url: function (target) { return 'https://corsproxy.io/?url=' + encodeURIComponent(target); }
     }
   };
 
+  /** Order the engine falls through when a relay refuses or times out. */
+  var FALLBACK = ['corssh', 'allorigins', 'jina'];
+
   var LOCATIONS = [
-    { id: 'auto', city: 'Fastest available', cc: 'AUTO', relay: 'corsproxy', ping: 38 },
-    { id: 'ams', city: 'Amsterdam', cc: 'NL', relay: 'corsproxy', ping: 42 },
-    { id: 'fra', city: 'Frankfurt', cc: 'DE', relay: 'corsproxy', ping: 47 },
-    { id: 'lon', city: 'London', cc: 'UK', relay: 'corsproxy', ping: 51 },
-    { id: 'nyc', city: 'New York', cc: 'US', relay: 'corsproxy', ping: 63 },
+    { id: 'auto', city: 'Fastest available', cc: 'AUTO', relay: 'corssh', ping: 38 },
+    { id: 'ams', city: 'Amsterdam', cc: 'NL', relay: 'corssh', ping: 42 },
+    { id: 'fra', city: 'Frankfurt', cc: 'DE', relay: 'corssh', ping: 47 },
+    { id: 'lon', city: 'London', cc: 'UK', relay: 'allorigins', ping: 51 },
+    { id: 'nyc', city: 'New York', cc: 'US', relay: 'allorigins', ping: 63 },
     { id: 'tor', city: 'Toronto', cc: 'CA', relay: 'jina', ping: 71 },
     { id: 'sfo', city: 'San Francisco', cc: 'US', relay: 'jina', ping: 88 },
     { id: 'sgp', city: 'Singapore', cc: 'SG', relay: 'jina', ping: 164 }
@@ -135,10 +148,18 @@
         return Promise.resolve(Object.assign({}, cache[key].res, { cached: true }));
       }
 
+      // Public relays rate-limit and come and go, so always keep spares behind
+      // the preferred one rather than failing on the first refusal.
       var chain = [];
-      if (opts.mode === 'reader') chain = [RELAYS.jina];
-      else if (Emu.state.net.connected) chain = [relay(), relay().id === 'jina' ? RELAYS.corsproxy : RELAYS.jina];
-      else chain = [RELAYS.direct, RELAYS.corsproxy];
+      if (opts.mode === 'reader') {
+        chain = [RELAYS.jina, RELAYS.corssh];
+      } else {
+        if (Emu.state.net.connected) chain.push(relay());
+        else chain.push(RELAYS.direct);
+        FALLBACK.forEach(function (id) {
+          if (chain.indexOf(RELAYS[id]) < 0) chain.push(RELAYS[id]);
+        });
+      }
 
       var attempt = 0;
       function next(lastErr) {
@@ -148,7 +169,7 @@
         }
         var r = chain[attempt++];
         stats.requests++;
-        return timedFetch(r.url(url), r.id === 'jina' ? 20000 : 15000).then(function (res) {
+        return timedFetch(r.url(url), r.id === 'jina' ? 20000 : r.id === 'allorigins' ? 22000 : 15000).then(function (res) {
           if (!res.ok && r.id !== 'direct') throw new Error('HTTP ' + res.status);
           if (!res.body || res.body.length < 8) throw new Error('Empty response');
           stats.bytes += res.body.length;
@@ -166,8 +187,8 @@
     /** Route an asset (image, stylesheet) through the active relay. */
     assetUrl: function (url) {
       if (!/^https?:/i.test(url)) return url;
-      var r = Emu.state.net.connected ? relay() : RELAYS.corsproxy;
-      if (r.id === 'jina') r = RELAYS.corsproxy;   // jina cannot serve binaries
+      var r = Emu.state.net.connected ? relay() : RELAYS.corssh;
+      if (r.kind !== 'html') r = RELAYS.corssh;   // the reader relay cannot serve binaries
       return r.url(url);
     },
 

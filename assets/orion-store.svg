@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="sBag" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#161340"/>
+      <stop offset="45%" stop-color="#2a1c6b"/>
+      <stop offset="100%" stop-color="#8b3ce8"/>
+    </linearGradient>
+    <linearGradient id="sHandle" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#5b2bc4"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="sOrbit" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="55%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+
+  <!-- orbit ring, back half -->
+  <ellipse cx="50" cy="55" rx="45" ry="17" fill="none" stroke="url(#sOrbit)"
+           stroke-width="4" transform="rotate(-20 50 55)" opacity=".95"/>
+
+  <!-- bag handle -->
+  <path d="M36 36V27a14 14 0 0 1 28 0v9" fill="none" stroke="url(#sHandle)" stroke-width="6"/>
+
+  <!-- bag body, very slightly tilted like the original -->
+  <g transform="rotate(-4 50 58)">
+    <path d="M28 34h44a5 5 0 0 1 5 5.4l-3.6 40A7 7 0 0 1 66.4 86H33.6a7 7 0 0 1-7-6.6l-3.6-40A5 5 0 0 1 28 34Z"
+          fill="url(#sBag)"/>
+
+    <!-- big sparkle -->
+    <path d="M50 40c1.5 13.6 4.3 17.6 17.6 19.2C54.3 60.8 51.5 64.8 50 78.4
+             48.5 64.8 45.7 60.8 32.4 59.2 45.7 57.6 48.5 53.6 50 40Z" fill="#fff"/>
+    <!-- small sparkle -->
+    <path d="M35.5 41c.6 4.6 1.7 6 6 6.6-4.3.6-5.4 2-6 6.6-.6-4.6-1.7-6-6-6.6 4.3-.6 5.4-2 6-6.6Z"
+          fill="#fff" opacity=".95"/>
+    <circle cx="66" cy="74" r="2.6" fill="#fff"/>
+  </g>
+
+  <!-- orbit ring, front half -->
+  <path d="M8.6 60.9A45 17 -20 0 0 91.4 49.1" fill="none" stroke="url(#sOrbit)"
+        stroke-width="4" stroke-linecap="round"/>
+</svg>

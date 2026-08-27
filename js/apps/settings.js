@@ -11,7 +11,7 @@
     { id: 'accounts', name: 'Accounts', icon: 'user' },
     { id: 'network', name: 'Network & internet', icon: 'network' },
     { id: 'privacy', name: 'Privacy & security', icon: 'privacy' },
-    { id: 'update', name: 'Windows Update', icon: 'update' },
+    { id: 'update', name: 'Orion Update', icon: 'update' },
     { id: 'about', name: 'About', icon: 'info' }
   ];
 
@@ -106,7 +106,7 @@
           return '<h2>Network &amp; internet</h2>' +
             card('wifi', 'Wi-Fi', s.quick.wifi ? 'Connected to Emulated-Network-5G' : 'Disconnected', sw(s.quick.wifi, 'wifi')) +
             card('airplane', 'Aeroplane mode', 'Stops all simulated radios', sw(s.quick.airplane, 'airplane')) +
-            card('bluetooth', 'Bluetooth', 'Discoverable as EMU-PC', sw(s.quick.bluetooth, 'bluetooth')) +
+            card('bluetooth', 'Bluetooth', 'Discoverable as ORION-PC', sw(s.quick.bluetooth, 'bluetooth')) +
             '<h3>Properties</h3>' +
             '<div class="st-card"><div class="lbl"><div class="st-about">' +
             '<span>IPv4 address</span><b>192.168.0.' + (10 + (Emu.state.user.length % 40)) + '</b>' +
@@ -117,7 +117,7 @@
         },
         privacy: function () {
           return '<h2>Privacy &amp; security</h2>' +
-            card('shield', 'Windows Security (simulated)', 'No threats found - because nothing here can run',
+            card('shield', 'Orion Security (simulated)', 'No threats found - because nothing here can run',
               '<span class="muted">Protected</span>') +
             card('privacy', 'Location', 'The emulator never asks for your location', '<span class="muted">Off</span>') +
             card('trash', 'Clear emulator data', 'Wipes settings, files and browsing data from this browser',
@@ -126,7 +126,7 @@
             'Nothing is uploaded anywhere.</small></div></div>';
         },
         update: function () {
-          return '<h2>Windows Update</h2>' +
+          return '<h2>Orion Update</h2>' +
             '<div class="st-card">' + Icons.get('check') +
             '<div class="lbl"><b>You\'re up to date</b><small>Last checked: just now</small></div>' +
             '<button class="btn primary" data-act="check-update">Check for updates</button></div>' +
@@ -136,9 +136,9 @@
         about: function () {
           return '<h2>About</h2>' +
             '<div class="st-card"><div class="lbl"><div class="st-about">' +
-            '<span>Device name</span><b>EMU-PC</b>' +
-            '<span>Edition</span><b>Windows 11 Emulator</b>' +
-            '<span>Version</span><b>1.0.0</b>' +
+            '<span>Device name</span><b>ORION-PC</b>' +
+            '<span>Edition</span><b>Orion</b>' +
+            '<span>Version</span><b>2.0.0</b>' +
             '<span>Processor</span><b>' + (navigator.hardwareConcurrency || 4) + ' logical cores (your real CPU)</b>' +
             '<span>Renderer</span><b>' + U.esc((navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg)\/[\d.]+/) || ['Browser'])[0]) + '</b>' +
             '<span>Storage</span><b>localStorage</b>' +
@@ -189,7 +189,7 @@
         act.textContent = 'Checking…';
         setTimeout(function () {
           act.textContent = 'Check for updates';
-          Emu.notify('Windows Update', 'Your emulator is up to date (build 1.0.0).', 'update');
+          Emu.notify('Orion Update', 'Your emulator is up to date (build 1.0.0).', 'update');
         }, 1400);
       }
     });

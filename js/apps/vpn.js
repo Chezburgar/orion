@@ -1,4 +1,4 @@
-/* ===== Emu VPN =====
+/* ===== Orion VPN =====
    A Windows-style VPN client. The tunnel is real in the sense that it
    changes how the emulated browser reaches the internet (via a relay);
    it is NOT encryption or anonymity, and the app says so plainly.       */
@@ -22,7 +22,7 @@
 
   function launchVpn() {
     var win = WM.create({
-      appId: 'vpn', title: 'Emu VPN', icon: 'vpn',
+      appId: 'vpn', title: 'Orion VPN', icon: 'vpn',
       width: 540, height: 700, minWidth: 400, minHeight: 460
     });
 
@@ -159,7 +159,7 @@
       if (s.connected) {
         Net.disconnect();
         addLog('Tunnel closed', 'r');
-        Emu.notify('Emu VPN', 'Disconnected. Edge is back on a direct connection.', 'vpn');
+        Emu.notify('Orion VPN', 'Disconnected. Edge is back on a direct connection.', 'vpn');
         render();
         return;
       }
@@ -173,10 +173,10 @@
           if (r.ms < 0) {
             Net.disconnect();
             addLog('Handshake failed - relay unreachable', 'r');
-            Emu.notify('Emu VPN', 'Could not reach the relay. It may be rate limiting - try the other relay in Settings.', 'warning');
+            Emu.notify('Orion VPN', 'Could not reach the relay. It may be rate limiting - try the other relay in Settings.', 'warning');
           } else {
             addLog('Connected to ' + r.location.city + ' (' + r.ms + ' ms)', 'g');
-            Emu.notify('Emu VPN', 'Connected via ' + r.location.city + '. Edge will now render real sites itself.', 'vpn');
+            Emu.notify('Orion VPN', 'Connected via ' + r.location.city + '. Edge will now render real sites itself.', 'vpn');
           }
           render();
         });
@@ -261,7 +261,7 @@
   }
 
   Emu.registerApp({
-    id: 'vpn', name: 'Emu VPN', icon: 'vpn', pinned: true,
+    id: 'vpn', name: 'Orion VPN', icon: 'vpn', pinned: true,
     desc: 'Relay tunnel for the emulated browser',
     launch: launchVpn
   });

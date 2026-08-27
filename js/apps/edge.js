@@ -12,9 +12,9 @@
 
   var INDEX = [
     { url: 'https://bing.local', title: 'Bing', desc: 'Search the real web from inside the emulator.', kw: 'search bing engine web' },
-    { url: 'https://docs.emu', title: 'Windows 11 Emulator - Documentation', desc: 'Every feature, keyboard shortcut and app in this emulator.', kw: 'docs help shortcuts keyboard manual guide windows' },
-    { url: 'https://news.emu', title: 'Emu News - Today', desc: 'Headlines from the simulated web.', kw: 'news headlines today feed' },
-    { url: 'https://weather.emu', title: 'Weather - Emu Forecast', desc: 'Seven day forecast.', kw: 'weather forecast rain temperature' },
+    { url: 'https://docs.emu', title: 'Orion - Documentation', desc: 'Every feature, keyboard shortcut and app in this emulator.', kw: 'docs help shortcuts keyboard manual guide windows' },
+    { url: 'https://news.emu', title: 'Orion News - Today', desc: 'Headlines from the simulated web.', kw: 'news headlines today feed' },
+    { url: 'https://weather.emu', title: 'Weather - Orion Forecast', desc: 'Seven day forecast.', kw: 'weather forecast rain temperature' },
     { url: 'https://about.emu', title: 'About this emulator', desc: 'What is real, what is simulated.', kw: 'about credits built how source' },
     { url: 'https://en.wikipedia.org/wiki/Windows_11', title: 'Windows 11 - Wikipedia', desc: 'A real page, fetched and rendered by the emulator itself.', kw: 'wikipedia windows real' },
     { url: 'https://news.ycombinator.com', title: 'Hacker News', desc: 'A real site that renders well in the engine.', kw: 'hacker news tech real' },
@@ -95,19 +95,19 @@
       title: 'Documentation', favicon: 'doc',
       render: function () {
         return {
-          title: 'Windows 11 Emulator - Docs',
+          title: 'Orion - Docs',
           html: pageShell(
-            '<div class="hero"><h1>Windows 11 Emulator</h1><p>A desktop environment, a window manager and a ' +
+            '<div class="hero"><h1>Orion</h1><p>A desktop environment, a window manager and a ' +
             'browser that renders real pages itself - all of it HTML, CSS and JavaScript.</p></div>' +
             '<h2>How the browser works</h2>' +
             '<p>Edge here is not an iframe wrapper. When you open a page it fetches the document over the ' +
             'emulator\'s own network stack, strips scripts and frames, rewrites every URL, and paints the ' +
-            'result into a shadow root with its own history, tabs and cache. Turn on <b>Emu VPN</b> to route ' +
+            'result into a shadow root with its own history, tabs and cache. Turn on <b>Orion VPN</b> to route ' +
             'that fetching through a relay so more sites load.</p>' +
             '<div class="kv">' +
             '<b>Engine</b><span>Fetch, sanitise, rewrite, render. Default.</span>' +
             '<b>Reader</b><span>Text-only version of the page. Fastest, always works.</span>' +
-            '<b>Compatibility</b><span>Old iframe behaviour, for sites that allow framing.</span>' +
+            '<b>App</b><span>Runs the real site in a frame. Default, and what games need.</span>' +
             '</div>' +
             '<h2>Keyboard shortcuts</h2>' +
             '<div class="kv">' +
@@ -124,15 +124,15 @@
             '<p><button class="btn" data-act="download" data-name="Shortcuts.txt">Download the shortcut list</button></p>' +
             '<h2>Apps</h2><ul>' +
             '<li><b>Microsoft Edge</b> - the browser described above.</li>' +
-            '<li><b>Emu VPN</b> - relay tunnel that decides how pages are fetched.</li>' +
-            '<li><b>Microsoft Store</b> - installs six real games that persist across reloads.</li>' +
+            '<li><b>Orion VPN</b> - relay tunnel that decides how pages are fetched.</li>' +
+            '<li><b>Orion Store</b> - installs six real games that persist across reloads.</li>' +
             '<li><b>File Explorer, Notepad, Settings, Calculator, Terminal, Photos, Task Manager</b>.</li></ul>')
         };
       }
     },
 
     'news.emu': {
-      title: 'Emu News', favicon: 'globe',
+      title: 'Orion News', favicon: 'globe',
       render: function () {
         var stories = [
           ['Technology', 'Browser-based desktop hits 60 fps on a laptop from 2016', 'Turns out most of an operating system UI is rectangles with rounded corners.'],
@@ -140,14 +140,14 @@
           ['Business', 'Startup raises seed round to put a taskbar on everything', 'The taskbar will be centred, obviously.'],
           ['Sport', 'Minesweeper record broken on a simulated machine', 'Officials are reviewing whether the flag counter counts.']
         ];
-        var html = '<h1>Emu News</h1><p class="muted">' + new Date().toDateString() + ' &middot; fictional headlines</p>';
+        var html = '<h1>Orion News</h1><p class="muted">' + new Date().toDateString() + ' &middot; fictional headlines</p>';
         stories.forEach(function (s) {
           html += '<div class="card"><div class="muted" style="font-size:11.5px;text-transform:uppercase;letter-spacing:.5px">' +
             U.esc(s[0]) + '</div><b style="font-size:16px">' + U.esc(s[1]) + '</b><p>' + U.esc(s[2]) + '</p></div>';
         });
         html += '<p>For real news the engine can render, try ' +
           link('https://news.ycombinator.com', 'Hacker News') + '.</p>';
-        return { title: 'Emu News - Today', html: pageShell(html) };
+        return { title: 'Orion News - Today', html: pageShell(html) };
       }
     },
 
@@ -156,7 +156,7 @@
       render: function () {
         var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         var now = new Date().getDay();
-        var html = '<h1>Emu Forecast</h1><div class="card" style="display:flex;align-items:center;gap:24px">' +
+        var html = '<h1>Orion Forecast</h1><div class="card" style="display:flex;align-items:center;gap:24px">' +
           '<div style="font-size:54px;font-weight:600">21&deg;</div><div><b>Partly cloudy</b>' +
           '<div class="muted">Feels like 20&deg; &middot; Humidity 48% &middot; Wind 11 km/h</div></div></div><div class="card">';
         for (var i = 0; i < 7; i++) {
@@ -164,7 +164,7 @@
             '<span>' + days[(now + i) % 7] + (i === 0 ? ' (today)' : '') + '</span><span>' +
             (18 + ((i * 3) % 7)) + '&deg; / ' + (9 + i % 4) + '&deg;</span></div>';
         }
-        return { title: 'Weather - Emu Forecast', html: pageShell(html + '</div>') };
+        return { title: 'Weather - Orion Forecast', html: pageShell(html + '</div>') };
       }
     },
 
@@ -225,7 +225,7 @@
       }
       if (!r.results.length && !r.wiki.length && !r.answer) {
         html = '<div class="card"><b>No results came back.</b>' +
-          '<p>The search relay may be rate limiting. Turning on <b>Emu VPN</b> often helps, or try again in a moment.</p>' +
+          '<p>The search relay may be rate limiting. Turning on <b>Orion VPN</b> often helps, or try again in a moment.</p>' +
           (r.errors.length ? '<p class="muted">Providers that failed: ' + U.esc(r.errors.join(', ')) + '</p>' : '') +
           '</div>';
       } else if (r.errors.length) {
@@ -293,7 +293,7 @@
             '<div class="e-row"><span class="t">Failed fetches</span><span class="when">' + st2.errors + '</span></div>' +
             '<div class="e-row"><span class="t">Cached pages</span><span class="when">' + Net.cacheSize() + '</span></div>' +
             '<p><button class="btn" data-act="clear-cache">Clear cache</button> ' +
-            '<button class="btn" data-act="open-vpn">Open Emu VPN</button></p></div>'
+            '<button class="btn" data-act="open-vpn">Open Orion VPN</button></p></div>'
         };
       }
       case 'settings': {
@@ -303,11 +303,11 @@
             '<div class="e-set"><div class="lbl"><b>Home page</b><small>Opened by the home button and new windows</small></div>' +
               '<input class="ex-search" style="width:230px" data-act="homepage" value="' + U.esc(st.homepage) + '"></div>' +
             '<div class="e-set"><div class="lbl"><b>How pages are rendered</b>' +
-              '<small>Engine renders the page here; Reader shows text only; Compatibility uses an iframe</small></div>' +
+              '<small>App runs the real site; Engine renders it here without scripts; Reader is text only</small></div>' +
               '<select class="st-select" data-act="mode">' +
-              ['engine:Engine (render here)', 'reader:Reader', 'compat:Compatibility (iframe)'].map(function (o) {
+              ['app:App (run the real site)', 'engine:Engine (render here)', 'reader:Reader'].map(function (o) {
                 var kv = o.split(':');
-                return '<option value="' + kv[0] + '"' + (st.mode === kv[0] ? ' selected' : '') + '>' + kv[1] + '</option>';
+                return '<option value="' + kv[0] + '"' + (st.render === kv[0] ? ' selected' : '') + '>' + kv[1] + '</option>';
               }).join('') + '</select></div>' +
             '<div class="e-set"><div class="lbl"><b>Load images</b><small>Routed through the relay</small></div>' +
               '<div class="sw' + (st.images ? ' on' : '') + '" data-act="images"></div></div>' +
@@ -361,9 +361,9 @@
         'Documents are fetched, stripped of scripts and frames, rewritten and painted here - no iframe. ' +
         'Search results come from live APIs.</div>' +
         '<div class="ntp-card"><span class="k">Tunnel</span><b>' +
-        (vpn ? 'Emu VPN is connected' : 'Emu VPN is off') + '</b>' +
+        (vpn ? 'Orion VPN is connected' : 'Orion VPN is off') + '</b>' +
         (vpn ? 'Pages are being fetched through the relay, so more sites load.'
-             : 'Sites that block cross-origin reads may fail. Open Emu VPN to route through a relay.') +
+             : 'Sites that block cross-origin reads may fail. Open Orion VPN to route through a relay.') +
         '</div></div></div>';
   }
 
@@ -545,17 +545,26 @@
 
       if (p.kind === 'source') { renderSource(tab, p.target); return; }
 
-      // A real page on the real internet.
-      var mode = tab.mode || st.mode || 'engine';
+      // A real page on the real internet. App mode runs the site's own code
+      // in a frame, which is the only way games and web apps actually work;
+      // the engine is for reading pages that refuse to be framed.
+      var mode = tab.mode || st.siteModes[p.host] || st.render || 'app';
+      if (mode === 'app') { renderFrame(tab, url, p.host); return; }
       if (Emu.state.net.killSwitch && !Emu.state.net.connected) {
         renderMessage(tab, 'warning', 'Blocked by the VPN kill switch',
-          'Emu VPN is not connected and the kill switch is on, so real sites are not being fetched.',
-          [['open-vpn', 'Open Emu VPN', true], ['killswitch-off', 'Turn the kill switch off', false]], url);
+          'Orion VPN is not connected and the kill switch is on, so real sites are not being fetched.',
+          [['open-vpn', 'Open Orion VPN', true], ['killswitch-off', 'Turn the kill switch off', false]], url);
         finish(tab);
         return;
       }
-      if (mode === 'compat') return renderFrame(tab, url);
       renderEngine(tab, url, mode === 'reader');
+    }
+
+    /** Remember how a particular site should be opened next time. */
+    function setSiteMode(host, mode) {
+      if (!host) return;
+      st.siteModes[host] = mode;
+      Emu.save();
     }
 
     /** Pages that ship with the emulator. */
@@ -623,8 +632,8 @@
         renderMessage(tab, 'warning', 'This page could not be fetched',
           Emu.state.net.connected
             ? 'The relay could not retrieve it (' + err.message + '). It may be rate limiting, or the site may block relays.'
-            : 'A direct fetch failed (' + err.message + '). Real sites usually need the relay - open Emu VPN and connect.',
-          [['open-vpn', 'Open Emu VPN', !Emu.state.net.connected], ['retry', 'Try again', false],
+            : 'A direct fetch failed (' + err.message + '). Real sites usually need the relay - open Orion VPN and connect.',
+          [['open-vpn', 'Open Orion VPN', !Emu.state.net.connected], ['retry', 'Try again', false],
            ['reader', 'Try reader mode', false], ['open-external', 'Open in system browser', false]], url);
         finish(tab);
       });
@@ -642,19 +651,56 @@
       });
     }
 
-    function renderFrame(tab, url) {
+    /**
+     * App mode: the site loads in a real frame and runs its own JavaScript,
+     * WebGL, audio and pointer lock. This is what games need.
+     */
+    function renderFrame(tab, url, host) {
       var frame = document.createElement('iframe');
       frame.className = 'edge-frame';
-      frame.setAttribute('referrerpolicy', 'no-referrer');
+      // Delegate the permissions interactive sites actually use.
+      frame.setAttribute('allow',
+        'fullscreen; autoplay; gamepad; pointer-lock; accelerometer; gyroscope; microphone; camera; clipboard-write');
+      frame.setAttribute('allowfullscreen', 'true');
       frame.src = url;
       tab.pane.appendChild(frame);
       tab.root = null;
-      tab.title = (parseUrl(url).host) || url;
+      tab.title = host || parseUrl(url).host || url;
       tab.favicon = 'globe';
       record(tab.title, url);
-      status('Compatibility mode: the site is embedded, so it can refuse to appear.');
+      status('App mode · the site is running its own code');
+
+      var bar = U.el('<div class="edge-infobar app-bar">' + Icons.get('info') +
+        '<span class="sp">Running in app mode, so the site\'s own code works. ' +
+        'If the page stays blank, it refuses to be embedded.</span>' +
+        '<button data-act="use-engine">Render it here instead</button>' +
+        '<button data-act="open-external">Open in system browser</button>' +
+        '<button data-act="dismiss-bar">Dismiss</button></div>');
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]');
+        if (!b) return;
+        if (b.dataset.act === 'dismiss-bar') { bar.remove(); sizeFrame(); return; }
+        if (b.dataset.act === 'open-external') { openExternal(url); return; }
+        if (b.dataset.act === 'use-engine') {
+          setSiteMode(host, 'engine');
+          tab.mode = 'engine';
+          navigate(tab, url, false);
+        }
+      });
+      tab.pane.appendChild(bar);
+      bar.style.cssText = 'position:absolute;left:0;right:0;top:0;z-index:5';
+
+      function sizeFrame() {
+        var h = bar.parentNode ? bar.offsetHeight : 0;
+        frame.style.top = h + 'px';
+        frame.style.height = 'calc(100% - ' + h + 'px)';
+      }
+      sizeFrame();
+      // The bar is for the first visit only; games want the whole window.
+      setTimeout(function () { if (bar.parentNode) { bar.remove(); sizeFrame(); } }, 9000);
+
       frame.addEventListener('load', function () { finish(tab); });
-      setTimeout(function () { finish(tab); }, 5000);
+      setTimeout(function () { finish(tab); }, 4000);
     }
 
     function renderMessage(tab, icon, title, body, actions, url) {
@@ -796,7 +842,7 @@
     function onLocalChange(e, tab) {
       var t = e.target;
       if (t.dataset.act === 'homepage') { st.homepage = t.value.trim() || NEWTAB; Emu.save(); }
-      if (t.dataset.act === 'mode') { st.mode = t.value; Emu.save(); }
+      if (t.dataset.act === 'mode') { st.render = t.value; Emu.save(); }
     }
 
     function wireNewTab(tab) {
@@ -815,7 +861,7 @@
     }
 
     function doDownload(name, from) {
-      var body = 'Windows 11 Emulator - keyboard shortcuts\r\n\r\n' +
+      var body = 'Orion - keyboard shortcuts\r\n\r\n' +
         'Win\t\t\tStart menu\r\nWin+D\t\tShow desktop\r\nWin+E\t\tFile Explorer\r\n' +
         'Win+S\t\tSearch\r\nWin+Tab\t\tTask View\r\nWin+A\t\tQuick Settings\r\n' +
         'Win+N\t\tNotifications\r\nWin+W\t\tWidgets\r\nWin+Arrows\tSnap windows\r\n' +
@@ -1050,7 +1096,9 @@
 
     function openMenu(anchor) {
       var r = anchor.getBoundingClientRect();
-      var mode = active.mode || st.mode || 'engine';
+      var host = parseUrl(active.url).host;
+      var mode = active.mode || st.siteModes[host] || st.render || 'app';
+      function pick(m) { return function () { active.mode = m; setSiteMode(host, m); navigate(active, active.url, false); }; }
       global.Shell.contextMenu([
         { label: 'New tab', icon: 'plus', key: 'Ctrl+T', action: function () { newTab(NEWTAB); } },
         { label: 'New window', icon: 'globe', action: function () { Emu.launch('edge'); } },
@@ -1059,9 +1107,9 @@
         { label: 'Zoom in', icon: 'zoomIn', key: 'Ctrl++', action: function () { setZoom(0.1); } },
         { label: 'Zoom out', icon: 'zoomOut', key: 'Ctrl+-', action: function () { setZoom(-0.1); } },
         { sep: true },
-        { label: (mode === 'engine' ? '✓ ' : '') + 'Engine rendering', icon: 'apps', action: function () { active.mode = 'engine'; navigate(active, active.url, false); } },
-        { label: (mode === 'reader' ? '✓ ' : '') + 'Reader mode', icon: 'reader', action: function () { active.mode = 'reader'; navigate(active, active.url, false); } },
-        { label: (mode === 'compat' ? '✓ ' : '') + 'Compatibility (iframe)', icon: 'monitor', action: function () { active.mode = 'compat'; navigate(active, active.url, false); } },
+        { label: (mode === 'app' ? '✓ ' : '') + 'App mode (run the site)', icon: 'monitor', action: pick('app') },
+        { label: (mode === 'engine' ? '✓ ' : '') + 'Engine rendering', icon: 'apps', action: pick('engine') },
+        { label: (mode === 'reader' ? '✓ ' : '') + 'Reader mode', icon: 'reader', action: pick('reader') },
         { label: 'View source', icon: 'code', action: function () { navigate(active, 'view-source:' + active.url, true); } },
         { sep: true },
         { label: 'Favourites', icon: 'star', action: function () { navigate(active, 'edge://favorites', true); } },

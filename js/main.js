@@ -39,7 +39,7 @@
     // Welcome notifications, once the desktop is actually visible.
     setTimeout(function () {
       if (!Emu.state.notifications.length) {
-        Emu.notify('Welcome to Windows 11 Emulator',
+        Emu.notify('Welcome to Orion',
           'Press the Windows key for Start, or open Microsoft Edge to browse. Right-click the desktop for more.', 'info');
         setTimeout(function () {
           Emu.notify('Microsoft Edge', 'Tip: visit docs.emu inside Edge for every shortcut and feature.', 'edge');

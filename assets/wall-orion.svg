@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="wbg" cx="50%" cy="46%" r="78%">
+      <stop offset="0%" stop-color="#1b1b4d"/>
+      <stop offset="45%" stop-color="#0d0d2b"/>
+      <stop offset="100%" stop-color="#050512"/>
+    </radialGradient>
+    <linearGradient id="wstar" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6d3bf5"/>
+      <stop offset="50%" stop-color="#3b6cf6"/>
+      <stop offset="100%" stop-color="#22a7ff"/>
+    </linearGradient>
+    <linearGradient id="wring" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#4c1d95" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#22a7ff" stop-opacity=".9"/>
+    </linearGradient>
+    <filter id="wglow" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="46"/>
+    </filter>
+    <filter id="wsoft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#wbg)"/>
+
+  <!-- distant stars -->
+  <g fill="#ffffff">
+    <circle cx="180" cy="140" r="1.7" opacity=".8"/><circle cx="410" cy="90" r="1.2" opacity=".55"/>
+    <circle cx="300" cy="300" r="1.4" opacity=".6"/><circle cx="120" cy="520" r="1.1" opacity=".45"/>
+    <circle cx="1420" cy="180" r="1.8" opacity=".75"/><circle cx="1280" cy="330" r="1.2" opacity=".5"/>
+    <circle cx="1520" cy="620" r="1.5" opacity=".6"/><circle cx="980" cy="120" r="1.3" opacity=".55"/>
+    <circle cx="700" cy="80" r="1.1" opacity=".45"/><circle cx="1150" cy="760" r="1.4" opacity=".5"/>
+    <circle cx="380" cy="780" r="1.6" opacity=".6"/><circle cx="860" cy="820" r="1.2" opacity=".45"/>
+    <circle cx="60" cy="300" r="1.3" opacity=".5"/><circle cx="1580" cy="420" r="1.2" opacity=".5"/>
+  </g>
+
+  <!-- glow behind the mark -->
+  <circle cx="800" cy="430" r="230" fill="#3b6cf6" opacity=".30" filter="url(#wglow)"/>
+  <circle cx="800" cy="430" r="120" fill="#8b5cf6" opacity=".22" filter="url(#wglow)"/>
+
+  <!-- the Orion mark -->
+  <g transform="translate(800 430) scale(3.1) translate(-50 -50)" filter="url(#wsoft)" opacity=".97">
+    <path d="M36.5 15.4A38 38 0 0 0 36.5 84.6" fill="none" stroke="url(#wring)"
+          stroke-width="8" stroke-linecap="round"/>
+    <path d="M63.5 15.4A38 38 0 0 1 63.5 84.6" fill="none" stroke="url(#wring)"
+          stroke-width="8" stroke-linecap="round"/>
+    <path d="M50 2C52.4 26 57 40.5 71 45.4C81 48.9 88 49.4 98 50C88 50.6 81 51.1 71 54.6
+             C57 59.5 52.4 74 50 98C47.6 74 43 59.5 29 54.6C19 51.1 12 50.6 2 50
+             C12 49.4 19 48.9 29 45.4C43 40.5 47.6 26 50 2 Z" fill="url(#wstar)"/>
+  </g>
+
+  <!-- sweeping orbit -->
+  <ellipse cx="800" cy="470" rx="620" ry="180" fill="none" stroke="url(#wring)"
+           stroke-width="2" opacity=".22" transform="rotate(-14 800 470)"/>
+  <ellipse cx="800" cy="470" rx="470" ry="132" fill="none" stroke="url(#wring)"
+           stroke-width="1.5" opacity=".16" transform="rotate(-14 800 470)"/>
+</svg>

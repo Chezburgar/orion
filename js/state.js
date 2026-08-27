@@ -7,8 +7,8 @@
   var DEFAULTS = {
     user: 'Chase',
     theme: 'dark',
-    accent: '#0078d4',
-    wallpaper: 'assets/wall-bloom.svg',
+    accent: '#4f46e5',
+    wallpaper: 'assets/wall-orion.svg',
     volume: 65,
     brightness: 100,
     transparency: true,
@@ -16,7 +16,8 @@
     edge: {
       homepage: 'edge://newtab',
       searchEngine: 'bing',
-      mode: 'engine',
+      render: 'app',
+      siteModes: {},
       images: true,
       styles: true,
       allowEmbedding: true,
@@ -31,7 +32,7 @@
     },
     net: {
       connected: false,
-      relay: 'corsproxy',
+      relay: 'corssh',
       location: 'auto',
       killSwitch: false,
       autoConnect: false,
@@ -42,6 +43,7 @@
       seenDisclosure: false
     },
     installed: [],
+    games: [],
     notifications: [],
     recent: [],
     desktopIcons: null
@@ -222,6 +224,7 @@
   };
 
   Emu.WALLPAPERS = [
+    { name: 'Orion', value: 'assets/wall-orion.svg' },
     { name: 'Bloom', value: 'assets/wall-bloom.svg' },
     { name: 'Flow', value: 'assets/wall-flow.svg' },
     { name: 'Glow', value: 'assets/wall-dark.svg' },
@@ -230,7 +233,7 @@
     { name: 'Ink', value: '#0f172a' }
   ];
 
-  Emu.ACCENTS = ['#0078d4', '#4cc2ff', '#00b7c3', '#10893e', '#7a7574', '#8764b8',
+  Emu.ACCENTS = ['#4f46e5', '#3b6cf6', '#22a7ff', '#8b5cf6', '#0078d4', '#4cc2ff', '#00b7c3', '#10893e', '#7a7574', '#8764b8',
     '#c239b3', '#e3008c', '#ea005e', '#ca5010', '#ef6950', '#498205'];
 
   global.Emu = Emu;

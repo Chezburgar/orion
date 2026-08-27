@@ -369,9 +369,9 @@
       '<div class="w-row"><span>Disk (C:)</span><span>' + U.fmtBytes(VFS.sizeOf(VFS.get('C:'))) + '</span></div>' +
       '<div class="w-row"><span>Battery</span><span>100%</span></div></div>' +
       '<div class="widget wide"><h4>Top stories</h4>' +
-      [['Browser-based desktop hits 60 fps', 'Emu News'],
+      [['Browser-based desktop hits 60 fps', 'Orion News'],
        ['Everything you can do in this emulator', 'Docs'],
-       ['Minesweeper record broken again', 'Emu Games']].map(function (n) {
+       ['Minesweeper record broken again', 'Orion Games']].map(function (n) {
         return '<div class="w-news" data-news="' + U.esc(n[1]) + '"><i></i><div><b>' + U.esc(n[0]) + '</b>' +
           '<div class="muted" style="font-size:11px">' + U.esc(n[1]) + '</div></div></div>';
       }).join('') + '</div>' +
@@ -383,7 +383,7 @@
     els.widgets.addEventListener('click', function (e) {
       var n = e.target.closest('[data-news]');
       if (n) {
-        var map = { 'Emu News': 'https://news.emu', 'Docs': 'https://docs.emu', 'Emu Games': 'https://games.emu' };
+        var map = { 'Orion News': 'https://news.emu', 'Docs': 'https://docs.emu', 'Orion Games': 'https://games.emu' };
         Emu.apps.edge.open(map[n.dataset.news] || 'https://news.emu');
         closeFlyouts();
       }
@@ -546,7 +546,7 @@
     if (on) {
       var loc = (global.Net.LOCATIONS.filter(function (l) { return l.id === Emu.state.net.location; })[0] || {});
       el.innerHTML = Icons.get('shield');
-      el.title = 'Emu VPN - connected via ' + (loc.city || 'relay');
+      el.title = 'Orion VPN - connected via ' + (loc.city || 'relay');
     }
   }
 
@@ -558,7 +558,7 @@
     $('#trayChevron').innerHTML = Icons.get('chevronUp');
     $('#trayChevron').addEventListener('click', function (e) {
       Shell.contextMenu([
-        { label: 'Windows Security', icon: 'shield', action: function () { Emu.launch('settings', { page: 'privacy' }); } },
+        { label: 'Orion Security', icon: 'shield', action: function () { Emu.launch('settings', { page: 'privacy' }); } },
         { label: 'Task Manager', icon: 'taskmgr', action: function () { Emu.launch('taskmgr'); } },
         { label: 'Terminal', icon: 'terminal', action: function () { Emu.launch('terminal'); } }
       ], e.clientX - 100, e.clientY - 130);
