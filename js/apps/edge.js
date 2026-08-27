@@ -490,7 +490,9 @@
       var shown = /^(internal|site|source)$/.test(p.kind) ? 'local' : (active.mode || 'app');
       var chip = U.$('.e-mode', win.body);
       if (chip) {
-        chip.textContent = shown === 'local' ? 'Orion' : shown === 'app' ? 'App'
+        chip.textContent = shown === 'local' ? 'Orion'
+          : shown === 'proxy' ? 'Proxy'
+          : shown === 'app' ? (active.viaProxy ? 'Proxy' : 'App')
           : shown === 'reader' ? 'Reader' : 'Engine';
         chip.className = 'e-mode mode-' + shown;
         chip.title = shown === 'app' ? 'Running the real site'
@@ -566,7 +568,34 @@
       // in a frame, which is the only way games and web apps actually work;
       // the engine is for reading pages that refuse to be framed.
       var mode = tab.mode || 'app';
-      if (mode === 'app') { renderFrame(tab, url, p.host); return; }
+      if (mode === 'app') {
+        var Px = global.OrionProxy;
+        // Games and other known-good sites must never be routed through the
+        // proxy - a direct frame is faster and always works for them.
+        if (Px && !Px.isProtected(url) && Px.likelyBlocked(url) && Px.config().enabled) {
+          Px.start().then(function (ok) {
+            if (ok && tab.url === url) renderFrame(tab, url, p.host, true);
+            else renderFrame(tab, url, p.host, false);
+          });
+          return;
+        }
+        renderFrame(tab, url, p.host, false);
+        return;
+      }
+      if (mode === 'proxy') {
+        global.OrionProxy.start().then(function (ok) {
+          if (tab.url !== url) return;
+          if (ok) renderFrame(tab, url, p.host, true);
+          else {
+            renderMessage(tab, 'warning', 'The proxy is not available',
+              global.OrionProxy.state.error || 'The proxy could not start.',
+              [['retry', 'Try again', true], ['use-direct', 'Load it directly', false],
+               ['open-external', 'Open in system browser', false]], url);
+            finish(tab);
+          }
+        });
+        return;
+      }
       if (Emu.state.net.killSwitch && !Emu.state.net.connected) {
         renderMessage(tab, 'warning', 'Blocked by the VPN kill switch',
           'Orion VPN is not connected and the kill switch is on, so real sites are not being fetched.',
@@ -643,7 +672,7 @@
           Emu.state.net.connected
             ? 'The relay could not retrieve it (' + err.message + '). It may be rate limiting, or the site may block relays.'
             : 'A direct fetch failed (' + err.message + '). Real sites usually need the relay - open Orion VPN and connect.',
-          [['open-vpn', 'Open Orion VPN', !Emu.state.net.connected], ['retry', 'Try again', false],
+          [['use-proxy', 'Try the proxy', true], ['retry', 'Try again', false],
            ['reader', 'Try reader mode', false], ['open-external', 'Open in system browser', false]], url);
         finish(tab);
       });
@@ -665,23 +694,32 @@
      * App mode: the site loads in a real frame and runs its own JavaScript,
      * WebGL, audio and pointer lock. This is what games need.
      */
-    function renderFrame(tab, url, host) {
+    function renderFrame(tab, url, host, viaProxy) {
+      var proxied = viaProxy ? global.OrionProxy.url(url) : null;
+      if (viaProxy && !proxied) viaProxy = false;
       var frame = document.createElement('iframe');
       frame.className = 'edge-frame';
       // Delegate the permissions interactive sites actually use.
       frame.setAttribute('allow',
         'fullscreen; autoplay; gamepad; pointer-lock; accelerometer; gyroscope; microphone; camera; clipboard-write');
       frame.setAttribute('allowfullscreen', 'true');
-      frame.src = url;
+      frame.src = proxied || url;
       tab.pane.appendChild(frame);
       tab.root = null;
+      tab.viaProxy = !!proxied;
       tab.title = host || parseUrl(url).host || url;
       tab.favicon = 'globe';
       record(tab.title, url);
-      status('App mode · the site is running its own code');
+      status(proxied
+        ? 'Proxy · routed through your proxy so the site can be framed'
+        : 'App mode · the site is running its own code');
 
+      var canProxy = global.OrionProxy && !global.OrionProxy.isProtected(url) && global.OrionProxy.config().enabled;
       var bar = U.el('<div class="edge-infobar app-bar">' + Icons.get('info') +
-        '<span class="sp">Running the real site. Big games can take a while to appear.</span>' +
+        '<span class="sp">' + (proxied
+          ? 'Loaded through your proxy.'
+          : 'Running the real site. Big games can take a while to appear.') + '</span>' +
+        (canProxy && !proxied ? '<button data-act="use-proxy">Refused to load? Use the proxy</button>' : '') +
         '<button data-act="open-external">Open in system browser</button>' +
         '<button data-act="dismiss-bar">Dismiss</button></div>');
       bar.addEventListener('click', function (e) {
@@ -689,7 +727,7 @@
         if (!b) return;
         if (b.dataset.act === 'dismiss-bar') { bar.remove(); sizeFrame(); return; }
         if (b.dataset.act === 'open-external') { openExternal(url); return; }
-
+        if (b.dataset.act === 'use-proxy') { tab.mode = 'proxy'; navigate(tab, url, false); return; }
       });
       tab.pane.appendChild(bar);
       bar.style.cssText = 'position:absolute;left:0;right:0;top:0;z-index:5';
@@ -824,6 +862,8 @@
         if (a === 'open-external') { openExternal(url || tab.url); return; }
         if (a === 'retry') { navigate(tab, url || tab.url, false); return; }
         if (a === 'reader') { tab.mode = 'reader'; navigate(tab, url || tab.url, false); return; }
+        if (a === 'use-proxy') { tab.mode = 'proxy'; navigate(tab, url || tab.url, false); return; }
+        if (a === 'use-direct') { tab.mode = null; navigate(tab, url || tab.url, false); return; }
         if (a === 'open-vpn') { Emu.launch('vpn'); return; }
         if (a === 'killswitch-off') { Emu.state.net.killSwitch = false; Emu.save(); navigate(tab, url || tab.url, false); return; }
         if (a === 'clear-history') { st.history = []; Emu.save(); navigate(tab, tab.url, false); return; }
@@ -1122,6 +1162,8 @@
         { label: 'Zoom out', icon: 'zoomOut', key: 'Ctrl+-', action: function () { setZoom(-0.1); } },
         { sep: true },
         { label: (mode === 'app' ? '✓ ' : '') + 'App mode (run the site)', icon: 'monitor', action: pick('app') },
+        { label: (mode === 'proxy' ? '✓ ' : '') + 'Through the proxy', icon: 'plug',
+          disabled: !!(global.OrionProxy && global.OrionProxy.isProtected(active.url)), action: pick('proxy') },
         { label: (mode === 'engine' ? '✓ ' : '') + 'Engine rendering', icon: 'apps', action: pick('engine') },
         { label: (mode === 'reader' ? '✓ ' : '') + 'Reader mode', icon: 'reader', action: pick('reader') },
         { label: 'View source', icon: 'code', action: function () { navigate(active, 'view-source:' + active.url, true); } },
