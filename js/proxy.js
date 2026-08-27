@@ -388,20 +388,40 @@
     return order.filter(Boolean).filter(function (b, i, a) { return a.indexOf(b) === i; });
   }
 
-  /** Prove the proxy can fetch something before calling it ready. */
+  /**
+   * Prove the proxy can actually serve a page. This loads the probe in a
+   * hidden frame rather than fetching it: the engines handle navigations,
+   * and a plain fetch of a service URL does not exercise the same path.
+   */
   function verifyThrough(buildUrl) {
     var probe = buildUrl('https://example.com/');
     if (!probe) return Promise.resolve(false);
-    var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 20000);
-    return fetch(probe, { signal: ctrl.signal }).then(function (r) {
-      clearTimeout(timer);
-      return r.text();
-    }).then(function (t) {
-      return /Example Domain/i.test(t);
-    }).catch(function () {
-      clearTimeout(timer);
-      return false;
+    return new Promise(function (resolve) {
+      var done = false;
+      var f = document.createElement('iframe');
+      f.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:400px;height:300px';
+      function finish(ok) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { f.remove(); } catch (e) {}
+        resolve(ok);
+      }
+      var timer = setTimeout(function () { finish(false); }, 25000);
+      f.addEventListener('load', function () {
+        // Give the engine a moment to swap in the real document.
+        setTimeout(function () {
+          var ok = false;
+          try {
+            var d = f.contentDocument;
+            var text = (d && d.body ? d.body.innerText : '') || '';
+            ok = /Example Domain/i.test(text);
+          } catch (e) { ok = false; }
+          finish(ok);
+        }, 2500);
+      });
+      f.src = probe;
+      document.body.appendChild(f);
     });
   }
 
