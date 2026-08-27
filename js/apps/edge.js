@@ -570,12 +570,15 @@
       var mode = tab.mode || 'app';
       if (mode === 'app') {
         var Px = global.OrionProxy;
-        // Games and other known-good sites must never be routed through the
-        // proxy - a direct frame is faster and always works for them.
-        if (Px && !Px.isProtected(url) && Px.likelyBlocked(url) && Px.config().enabled) {
-          Px.start().then(function (ok) {
-            if (ok && tab.url === url) renderFrame(tab, url, p.host, true);
-            else renderFrame(tab, url, p.host, false);
+        // Sites a filtered network blocks, or that are known to refuse
+        // framing, go straight through the proxy. Everything else tries
+        // direct first, which is faster when the network allows it.
+        if (Px && !Px.isProtected(url) && Px.config().enabled &&
+            (Px.preferProxy(url) || Px.likelyBlocked(url))) {
+          status('Starting the proxy…');
+          Px.startFor(url).then(function (ok) {
+            if (tab.url !== url) return;
+            renderFrame(tab, url, p.host, !!ok);
           });
           return;
         }
@@ -583,7 +586,8 @@
         return;
       }
       if (mode === 'proxy') {
-        global.OrionProxy.start().then(function (ok) {
+        status('Starting the proxy…');
+        global.OrionProxy.startFor(url).then(function (ok) {
           if (tab.url !== url) return;
           if (ok) renderFrame(tab, url, p.host, true);
           else {
@@ -695,7 +699,7 @@
      * WebGL, audio and pointer lock. This is what games need.
      */
     function renderFrame(tab, url, host, viaProxy) {
-      var proxied = viaProxy ? global.OrionProxy.url(url) : null;
+      var proxied = viaProxy ? global.OrionProxy.urlFor(url) : null;
       if (viaProxy && !proxied) viaProxy = false;
       var frame = document.createElement('iframe');
       frame.className = 'edge-frame';

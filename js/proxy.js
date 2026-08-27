@@ -8,8 +8,15 @@
 
   var Emu = global.Emu, U = Emu.util;
 
-  /** Sites that must never be routed through the proxy. */
-  var NEVER = ['deadshot.io', 'kartbros.io', 'chezburgar.github.io', 'ubgone.github.io'];
+  /** Only Orion itself must never be proxied - that would just recurse. */
+  var NEVER = [];
+
+  /**
+   * Sites to send through the proxy without trying direct first. Filtered
+   * networks (school iboss/Securly and the like) block these by name, so the
+   * direct frame fails before it starts; the proxy is the working path.
+   */
+  var PREFER_PROXY = ['deadshot.io', 'kartbros.io'];
 
   /** Sites known to refuse framing, so the proxy is used without a wasted try. */
   var FRAME_BLOCKED = ['google.com', 'www.google.com', 'github.com', 'youtube.com',
@@ -17,10 +24,17 @@
     'instagram.com', 'facebook.com', 'discord.com', 'netflix.com', 'amazon.com'];
 
   var state = { ready: false, starting: null, error: null, wisp: null, sw: false };
+  var scram = { ready: false, starting: null, error: null, wisp: null, sw: false, controller: null };
+
+  /** Sites Ultraviolet cannot render properly; Scramjet handles these. */
+  var UV_BREAKS = ['deadshot.io'];
 
   function cfg() {
     var p = Emu.state.proxy || (Emu.state.proxy = {});
     if (!p.assets) p.assets = '/PRUXYZ';
+    if (!p.scramAssets) p.scramAssets = '/Scramjet-App';
+    if (!p.siteEngine) p.siteEngine = {};
+    if (p.always === undefined) p.always = false;
     if (!p.wisp) p.wisp = 'wss://wisp.mercurywork.shop/';
     if (!p.wispFallbacks) {
       p.wispFallbacks = ['wss://anura.pro/', 'wss://nebulaproxy.io/wisp/', 'wss://wisp.terbiumon.top/wisp/'];
@@ -77,8 +91,19 @@
 
     /** Never proxy these, whatever else is going on. */
     isProtected: function (url) {
+      // Proxying Orion through itself would loop.
+      if (String(url).indexOf(location.origin + base()) === 0) return true;
       var h = hostOf(url);
       return NEVER.some(function (n) { return h === n || h.endsWith('.' + n); });
+    },
+
+    /** Should this go straight through the proxy? */
+    preferProxy: function (url) {
+      var p = cfg();
+      if (p.always) return true;
+      var h = hostOf(url);
+      if (p.siteEngine[h] === 'direct') return false;
+      return PREFER_PROXY.some(function (n) { return h === n || h.endsWith('.' + n); });
     },
 
     /** Worth skipping the direct attempt for. */
@@ -164,7 +189,104 @@
     },
 
     probeWisp: probeWisp,
-    xorEncode: xorEncode
+    xorEncode: xorEncode,
+
+    /**
+     * Which engine to use for a host. Ultraviolet is the default; Scramjet is
+     * for sites UV cannot render - it keeps the cross-origin isolation headers
+     * that threaded WASM games need.
+     */
+    engineFor: function (url) {
+      var h = hostOf(url);
+      var p = cfg();
+      if (p.siteEngine[h]) return p.siteEngine[h];
+      return UV_BREAKS.some(function (n) { return h === n || h.endsWith('.' + n); }) ? 'scramjet' : 'uv';
+    },
+
+    setEngineFor: function (url, engine) {
+      var h = hostOf(url);
+      if (!h) return;
+      cfg().siteEngine[h] = engine;
+      Emu.save();
+    },
+
+    /** Start whichever engine a URL needs. Resolves false, never rejects. */
+    startFor: function (url) {
+      return Proxy.engineFor(url) === 'scramjet' ? Proxy.startScramjet() : Proxy.start();
+    },
+
+    urlFor: function (target) {
+      if (Proxy.isProtected(target)) return null;
+      return Proxy.engineFor(target) === 'scramjet'
+        ? Proxy.scramUrl(target)
+        : Proxy.url(target);
+    },
+
+    scramUrl: function (target) {
+      if (!scram.ready || !scram.controller) return null;
+      try { return scram.controller.encodeUrl(target); }
+      catch (e) { return base() + '/scram/service/' + encodeURIComponent(target); }
+    },
+
+    scramState: scram,
+
+    startScramjet: function () {
+      if (scram.ready) return Promise.resolve(true);
+      if (scram.starting) return scram.starting;
+      var p = cfg();
+      if (!p.enabled) return Promise.resolve(false);
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        scram.error = 'The proxy needs HTTPS.';
+        return Promise.resolve(false);
+      }
+
+      scram.starting = loadScript(p.scramAssets + '/scram/scramjet.all.js').then(function () {
+        if (typeof global.$scramjetLoadController !== 'function') {
+          throw new Error('The Scramjet runtime did not load.');
+        }
+        var ctrl = global.$scramjetLoadController();
+        var controller = new ctrl.ScramjetController({
+          files: {
+            wasm: p.scramAssets + '/scram/scramjet.wasm.wasm',
+            all: p.scramAssets + '/scram/scramjet.all.js',
+            sync: p.scramAssets + '/scram/scramjet.sync.js'
+          },
+          prefix: base() + '/scram/service/'
+        });
+        scram.controller = controller;
+        return controller.init();
+      }).then(function () {
+        return navigator.serviceWorker.register(
+          base() + '/scram/sw.js?assets=' + encodeURIComponent(p.scramAssets),
+          { scope: base() + '/scram/service/' }
+        );
+      }).then(function (reg) {
+        scram.sw = true;
+        return waitActivated(reg);
+      }).then(function () {
+        return loadScript(p.assets + '/baremux/index.js');
+      }).then(function () {
+        return firstLive([p.wisp].concat(p.wispFallbacks || []));
+      }).then(function (wisp) {
+        if (!wisp) throw new Error('No proxy backend answered.');
+        scram.wisp = wisp;
+        var conn = new global.BareMux.BareMuxConnection(p.assets + '/baremux/worker.js');
+        return conn.setTransport(p.assets + '/libcurl/index.mjs', [{ wisp: wisp, websocket: wisp }]);
+      }).then(function () {
+        scram.ready = true;
+        scram.error = null;
+        Emu.emit('proxy');
+        return true;
+      }).catch(function (e) {
+        scram.ready = false;
+        scram.error = e.message || String(e);
+        scram.starting = null;
+        Emu.emit('proxy');
+        return false;
+      });
+
+      return scram.starting;
+    }
   };
 
   /** Resolve once the registration has an activated worker. */
