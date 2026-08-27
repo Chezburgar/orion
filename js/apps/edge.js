@@ -1168,6 +1168,16 @@
         { label: (mode === 'app' ? '✓ ' : '') + 'App mode (run the site)', icon: 'monitor', action: pick('app') },
         { label: (mode === 'proxy' ? '✓ ' : '') + 'Through the proxy', icon: 'plug',
           disabled: !!(global.OrionProxy && global.OrionProxy.isProtected(active.url)), action: pick('proxy') },
+        { label: 'Proxy engine: ' + (global.OrionProxy ? (global.OrionProxy.engineFor(active.url) === 'scramjet' ? 'Scramjet' : 'Ultraviolet') : '-') +
+            ' (switch)', icon: 'refresh', action: function () {
+          var Px = global.OrionProxy;
+          var next = Px.engineFor(active.url) === 'scramjet' ? 'uv' : 'scramjet';
+          Px.setEngineFor(active.url, next);
+          Emu.notify('Microsoft Edge', 'Using ' + (next === 'scramjet' ? 'Scramjet' : 'Ultraviolet') +
+            ' for this site.', 'plug');
+          active.mode = 'proxy';
+          navigate(active, active.url, false);
+        } },
         { label: (mode === 'engine' ? '✓ ' : '') + 'Engine rendering', icon: 'apps', action: pick('engine') },
         { label: (mode === 'reader' ? '✓ ' : '') + 'Reader mode', icon: 'reader', action: pick('reader') },
         { label: 'View source', icon: 'code', action: function () { navigate(active, 'view-source:' + active.url, true); } },

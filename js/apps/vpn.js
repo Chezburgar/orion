@@ -135,10 +135,20 @@
         '<input class="ex-search" style="width:230px" data-act="wisp" value="' +
         U.esc((global.OrionProxy && global.OrionProxy.config().wisp) || '') + '"></div>' +
 
-        '<div class="e-set"><div class="lbl"><b>Proxy files</b>' +
+        '<div class="e-set"><div class="lbl"><b>Ultraviolet files</b>' +
         '<small>Path to the Ultraviolet deployment on this domain</small></div>' +
         '<input class="ex-search" style="width:230px" data-act="assets" value="' +
         U.esc((global.OrionProxy && global.OrionProxy.config().assets) || '') + '"></div>' +
+
+        '<div class="e-set"><div class="lbl"><b>Scramjet files</b>' +
+        '<small>Used for sites Ultraviolet cannot render, such as deadshot.io</small></div>' +
+        '<input class="ex-search" style="width:230px" data-act="scramAssets" value="' +
+        U.esc((global.OrionProxy && global.OrionProxy.config().scramAssets) || '') + '"></div>' +
+
+        '<div class="e-set"><div class="lbl"><b>Send every site through the proxy</b>' +
+        '<small>Turn on if your network filters most sites</small></div>' +
+        '<div class="sw' + ((global.OrionProxy && global.OrionProxy.config().always) ? ' on' : '') +
+        '" data-act="proxy-always"></div></div>' +
 
         '<div class="e-set"><div class="lbl"><b>Restart the proxy</b>' +
         '<small>Re-registers the worker and finds a live backend</small></div>' +
@@ -249,6 +259,13 @@
         } else { render(); }
         return;
       }
+      if (act.dataset.act === 'proxy-always') {
+        var pa = global.OrionProxy.config();
+        pa.always = !pa.always;
+        Emu.save();
+        paneSettings();
+        return;
+      }
       if (act.dataset.act === 'proxy-toggle') {
         var pc = global.OrionProxy.config();
         pc.enabled = !pc.enabled;
@@ -289,9 +306,9 @@
 
     win.body.addEventListener('change', function (e) {
       var a = e.target.dataset.act;
-      if (a === 'wisp' || a === 'assets') {
+      if (a === 'wisp' || a === 'assets' || a === 'scramAssets') {
         var pc = global.OrionProxy.config();
-        pc[a === 'wisp' ? 'wisp' : 'assets'] = e.target.value.trim();
+        pc[a] = e.target.value.trim();
         Emu.save();
         addLog('Proxy ' + a + ' set to ' + e.target.value.trim());
         return;

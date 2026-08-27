@@ -104,10 +104,18 @@ needed) plus full web results via the reader relay. Clicking a result opens that
 Sites that refuse to be framed (`X-Frame-Options`, `frame-ancestors`) are routed through an
 Ultraviolet deployment, which serves them same-origin so they render and their scripts run.
 
-**Games always bypass it.** `deadshot.io`, `kartbros.io` and the GitHub Pages game hosts are
-on a never-proxy list: a direct frame is faster and more reliable for them, and no setting or
-failure can push them onto the proxy path. Everything else tries direct first; known
-frame-blockers skip straight to the proxy; the info bar and the … menu offer it on demand.
+Two engines, because one is not enough:
+
+- **Ultraviolet** handles most sites, including `kartbros.io`.
+- **Scramjet** handles the ones UV mangles. UV strips the cross-origin isolation headers that
+  threaded-WASM games need, so `deadshot.io` loads under UV but its own loader dies with
+  "Couldn't load the game" — on every backend. Under Scramjet it renders properly.
+
+Sites are routed per host and you can flip the engine for the current site from the … menu.
+`deadshot.io` and `kartbros.io` are sent straight through the proxy, because filtered networks
+(school iboss, Securly and the like) block them by name and the direct frame never gets a
+chance. Everything else tries direct first. If your network filters nearly everything, turn on
+**Send every site through the proxy** in Orion VPN → Settings.
 
 Orion supplies its own `uv/uv.config.js` and `uv/sw.js` because the stock config hardcodes
 `prefix: "/uv/service/"`, which only works at a domain root — under a Pages repo path the
