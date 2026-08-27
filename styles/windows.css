@@ -1,0 +1,80 @@
+/* ===== Window chrome ===== */
+.window-layer{position:absolute;inset:0 0 var(--taskbar-h) 0}
+
+.win{position:absolute;display:flex;flex-direction:column;min-width:320px;min-height:200px;
+  background:var(--layer-solid);border:1px solid var(--stroke-strong);border-radius:var(--r-lg);
+  box-shadow:var(--shadow);overflow:hidden;pointer-events:auto;
+  animation:winOpen .18s var(--ease)}
+@keyframes winOpen{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.win.closing{animation:winClose .14s var(--ease) forwards}
+@keyframes winClose{to{opacity:0;transform:scale(.94)}}
+.win.minimizing{animation:winMin .16s var(--ease) forwards}
+@keyframes winMin{to{opacity:0;transform:scale(.7) translateY(40%)}}
+.win.win-restoring{animation:winRestore .17s var(--ease)}
+@keyframes winRestore{from{opacity:0;transform:scale(.82) translateY(24%)}to{opacity:1;transform:none}}
+.win.inactive{box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.win.inactive .win-title{color:var(--text-3)}
+.win.maximized{border-radius:0;border:0}
+.win.dragging,.win.resizing{transition:none;will-change:left,top,width,height}
+.win.snapping{transition:left .16s var(--ease),top .16s var(--ease),width .16s var(--ease),height .16s var(--ease)}
+
+.win-titlebar{height:32px;flex:none;display:flex;align-items:stretch;background:var(--layer-solid);
+  border-bottom:1px solid transparent;-webkit-user-select:none}
+.win.has-tabs .win-titlebar{height:40px;background:transparent;border-bottom:0}
+.win-drag{flex:1;display:flex;align-items:center;gap:8px;padding-left:12px;min-width:0;cursor:default}
+.win-drag svg{width:16px;height:16px;flex:none}
+.win-title{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win-slot{flex:1;min-width:0;display:flex;align-items:stretch}
+.win-controls{display:flex;flex:none;align-self:flex-start}
+.win-controls button{width:46px;height:32px;display:grid;place-items:center;transition:background .1s linear}
+.win.has-tabs .win-controls button{height:40px}
+.win-controls svg{width:10px;height:10px;color:var(--text)}
+.win-controls .wc-min:hover,.win-controls .wc-max:hover{background:var(--card-hover)}
+.win-controls .wc-close:hover{background:#c42b1c}
+.win-controls .wc-close:hover svg{color:#fff}
+
+.win-body{flex:1;min-height:0;position:relative;background:var(--layer-solid);overflow:hidden;display:flex;flex-direction:column}
+.win.busy::after{content:"";position:absolute;inset:0;cursor:progress}
+
+/* resize handles */
+.rz{position:absolute;z-index:5}
+.rz-n{top:-3px;left:8px;right:8px;height:6px;cursor:ns-resize}
+.rz-s{bottom:-3px;left:8px;right:8px;height:6px;cursor:ns-resize}
+.rz-w{left:-3px;top:8px;bottom:8px;width:6px;cursor:ew-resize}
+.rz-e{right:-3px;top:8px;bottom:8px;width:6px;cursor:ew-resize}
+.rz-nw{left:-3px;top:-3px;width:12px;height:12px;cursor:nwse-resize}
+.rz-ne{right:-3px;top:-3px;width:12px;height:12px;cursor:nesw-resize}
+.rz-sw{left:-3px;bottom:-3px;width:12px;height:12px;cursor:nesw-resize}
+.rz-se{right:-3px;bottom:-3px;width:12px;height:12px;cursor:nwse-resize}
+.win.maximized .rz{display:none}
+
+/* Snap layouts flyout (hover on maximize) */
+.snap-flyout{position:absolute;z-index:820;padding:10px;border-radius:var(--r-lg);background:var(--acrylic);
+  backdrop-filter:blur(50px);border:1px solid var(--stroke-strong);box-shadow:var(--shadow);
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;animation:flyIn .12s var(--ease)}
+.snap-opt{width:112px;height:70px;display:grid;gap:3px;padding:3px;border-radius:var(--r-sm);
+  background:var(--card);border:1px solid var(--stroke)}
+.snap-opt div{background:var(--text-3);border-radius:3px;opacity:.5;transition:.1s}
+.snap-opt div:hover{background:var(--accent);opacity:1}
+.snap-l2{grid-template-columns:1fr 1fr}
+.snap-l3{grid-template-columns:1fr 1fr 1fr}
+.snap-l4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.snap-l2b{grid-template-columns:2fr 1fr}
+
+/* Dialogs */
+.dlg-backdrop{position:absolute;inset:0;z-index:850;background:rgba(0,0,0,.45);display:grid;place-items:center;
+  animation:flyIn .14s var(--ease)}
+.dlg{width:min(420px,calc(100vw - 40px));border-radius:var(--r-lg);background:var(--layer-solid);
+  border:1px solid var(--stroke-strong);box-shadow:var(--shadow);overflow:hidden}
+.dlg h3{margin:0;padding:20px 22px 6px;font-size:19px;font-weight:600}
+.dlg p{margin:0;padding:0 22px 20px;font-size:13px;color:var(--text-2);line-height:1.5}
+.dlg .dlg-body{padding:0 22px 20px}
+.dlg-actions{display:flex;gap:8px;padding:22px;background:var(--card-active);border-top:1px solid var(--stroke)}
+.dlg-actions button{flex:1;height:32px;border-radius:var(--r-sm);background:var(--card);
+  border:1px solid var(--stroke-strong);font-size:13px;cursor:default}
+.dlg-actions button:hover{background:var(--card-hover)}
+.dlg-actions button.primary{background:var(--accent);border-color:transparent;color:#fff}
+.dlg-actions button.primary:hover{filter:brightness(1.1)}
+.dlg input[type=text]{width:100%;height:32px;padding:0 10px;border-radius:var(--r-sm);background:var(--card);
+  border:1px solid var(--stroke-strong);border-bottom:2px solid var(--text-3);outline:0;user-select:text}
+.dlg input[type=text]:focus{border-bottom-color:var(--accent)}

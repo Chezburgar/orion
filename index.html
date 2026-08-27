@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Windows 11 Emulator</title>
+<meta name="description" content="A Windows 11 desktop emulator with Microsoft Edge, running entirely in the browser.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='14' height='14' x='2' y='2' fill='%230078d4'/%3E%3Crect width='14' height='14' x='17' y='2' fill='%230078d4'/%3E%3Crect width='14' height='14' x='2' y='17' fill='%230078d4'/%3E%3Crect width='14' height='14' x='17' y='17' fill='%230078d4'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/shell.css">
+<link rel="stylesheet" href="styles/windows.css">
+<link rel="stylesheet" href="styles/apps.css">
+</head>
+<body>
+
+<!-- ============ BOOT ============ -->
+<div id="boot" class="screen boot">
+  <div class="boot-logo">
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="boot-spinner"><i></i></div>
+  <div class="boot-text">Starting Windows</div>
+</div>
+
+<!-- ============ LOCK ============ -->
+<div id="lock" class="screen lock hidden">
+  <div class="lock-clock">
+    <div id="lockTime" class="lock-time">9:41</div>
+    <div id="lockDate" class="lock-date">Monday, January 1</div>
+  </div>
+  <div class="lock-user">
+    <div class="lock-avatar"></div>
+    <div class="lock-name">Chase</div>
+    <button id="signIn" class="lock-signin">Sign in</button>
+  </div>
+  <div class="lock-hint">Click anywhere or press any key</div>
+</div>
+
+<!-- ============ DESKTOP ============ -->
+<div id="desktop" class="screen desktop hidden">
+  <div id="wallpaper" class="wallpaper"></div>
+  <div id="iconLayer" class="icon-layer"></div>
+
+  <div id="windowLayer" class="window-layer"></div>
+  <div id="snapPreview" class="snap-preview hidden"></div>
+
+  <!-- Start menu -->
+  <div id="startMenu" class="flyout start-menu hidden">
+    <div class="start-search">
+      <span class="si"></span>
+      <input id="startSearch" type="text" placeholder="Search for apps, settings, and documents" spellcheck="false">
+    </div>
+    <div class="start-section">
+      <div class="start-head"><span>Pinned</span><button class="pill" data-all-apps>All apps &rsaquo;</button></div>
+      <div id="startPinned" class="start-grid"></div>
+    </div>
+    <div class="start-section" id="recSection">
+      <div class="start-head"><span>Recommended</span></div>
+      <div id="startRecommended" class="start-rec"></div>
+    </div>
+    <div class="start-footer">
+      <button class="start-user"><span class="avatar"></span><span>Chase</span></button>
+      <button class="start-power" id="powerBtn" title="Power"></button>
+    </div>
+  </div>
+
+  <!-- Search overlay -->
+  <div id="searchPanel" class="flyout search-panel hidden">
+    <div class="search-top">
+      <span class="si"></span>
+      <input id="searchInput" type="text" placeholder="Type here to search" spellcheck="false">
+    </div>
+    <div id="searchResults" class="search-results"></div>
+  </div>
+
+  <!-- Widgets -->
+  <div id="widgetsPanel" class="flyout widgets-panel hidden"></div>
+
+  <!-- Quick settings -->
+  <div id="quickPanel" class="flyout quick-panel hidden">
+    <div class="quick-grid" id="quickGrid"></div>
+    <div class="quick-slider">
+      <span class="qs-ico" data-ico="volume"></span>
+      <input id="volumeSlider" type="range" min="0" max="100" value="65">
+      <span id="volumeVal" class="qs-val">65</span>
+    </div>
+    <div class="quick-slider">
+      <span class="qs-ico" data-ico="brightness"></span>
+      <input id="brightSlider" type="range" min="30" max="100" value="100">
+      <span id="brightVal" class="qs-val">100</span>
+    </div>
+    <div class="quick-foot">
+      <span id="batteryText">100%</span>
+      <button class="icon-btn" data-open-settings title="All settings"></button>
+    </div>
+  </div>
+
+  <!-- Notification center + calendar -->
+  <div id="notifPanel" class="flyout notif-panel hidden">
+    <div class="notif-head"><span>Notifications</span><button class="pill" id="clearNotifs">Clear all</button></div>
+    <div id="notifList" class="notif-list"></div>
+    <div class="cal">
+      <div class="cal-head">
+        <button class="icon-btn" id="calPrev"></button>
+        <span id="calTitle">January 2026</span>
+        <button class="icon-btn" id="calNext"></button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <!-- Task view -->
+  <div id="taskView" class="task-view hidden">
+    <div class="tv-windows" id="tvWindows"></div>
+    <div class="tv-desks" id="tvDesks"></div>
+  </div>
+
+  <!-- Context menu -->
+  <div id="contextMenu" class="context-menu hidden"></div>
+
+  <!-- Toasts -->
+  <div id="toastLayer" class="toast-layer"></div>
+
+  <!-- Taskbar -->
+  <div id="taskbar" class="taskbar">
+    <div class="tb-left" id="tbLeft"></div>
+    <div class="tb-center" id="tbCenter"></div>
+    <div class="tb-right">
+      <button class="tray-btn" id="trayChevron" title="Show hidden icons"></button>
+      <button class="tray-btn tray-group" id="trayQuick" title="Network, Sound, Battery">
+        <span data-ico="wifi"></span><span data-ico="volume"></span><span data-ico="battery"></span>
+      </button>
+      <button class="tray-clock" id="trayClock">
+        <span id="clockTime">9:41 AM</span>
+        <span id="clockDate">1/1/2026</span>
+      </button>
+      <button class="tray-btn tray-bell" id="trayBell" title="Notifications"><span class="badge hidden" id="notifBadge">0</span></button>
+      <button class="show-desktop" id="showDesktop" title="Show desktop"></button>
+    </div>
+  </div>
+
+  <!-- Power / shutdown overlay -->
+  <div id="powerOverlay" class="screen power-overlay hidden">
+    <div class="boot-spinner"><i></i></div>
+    <div class="boot-text" id="powerText">Shutting down</div>
+  </div>
+</div>
+
+<script src="js/icons.js"></script>
+<script src="js/state.js"></script>
+<script src="js/vfs.js"></script>
+<script src="js/wm.js"></script>
+<script src="js/apps/edge.js"></script>
+<script src="js/apps/explorer.js"></script>
+<script src="js/apps/notepad.js"></script>
+<script src="js/apps/settings.js"></script>
+<script src="js/apps/calculator.js"></script>
+<script src="js/apps/terminal.js"></script>
+<script src="js/apps/extras.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

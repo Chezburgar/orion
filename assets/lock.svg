@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1026"/>
+      <stop offset="45%" stop-color="#3b2a6b"/>
+      <stop offset="72%" stop-color="#b45c8a"/>
+      <stop offset="100%" stop-color="#f0a97c"/>
+    </linearGradient>
+    <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2b2350"/><stop offset="100%" stop-color="#140f2c"/>
+    </linearGradient>
+    <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#150f30"/><stop offset="100%" stop-color="#080614"/>
+    </linearGradient>
+    <filter id="hz" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#s)"/>
+  <circle cx="1120" cy="600" r="90" fill="#ffd9a0" opacity=".85" filter="url(#hz)"/>
+  <path d="M0,640 L260,470 L470,600 L700,430 L980,640 L1200,520 L1600,700 L1600,900 L0,900 Z" fill="url(#m1)" opacity=".95"/>
+  <path d="M0,760 L300,620 L560,740 L840,600 L1120,760 L1380,660 L1600,780 L1600,900 L0,900 Z" fill="url(#m2)"/>
+</svg>
