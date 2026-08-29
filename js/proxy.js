@@ -54,6 +54,13 @@
     return p;
   }
 
+  /** The configured proxy address, without a trailing slash. */
+  function externalBase() {
+    var v = cfg().external || '';
+    while (v.charAt(v.length - 1) === '/') v = v.slice(0, -1);
+    return v;
+  }
+
   /** Orion's own base path, e.g. "/orion". */
   function base() {
     return location.pathname.replace(/\/[^/]*$/, '').replace(/\/$/, '');
@@ -132,6 +139,11 @@
     externalUrl: function (target) {
       var p = cfg();
       if (!p.enabled || !p.external) return null;
+
+      if (p.externalEncoding === 'rammerhead') {
+        if (!p.rhSession) return null;          // startFor fetches it first
+        return externalBase() + '/' + p.rhSession + '/' + target;
+      }
       var trimmed = p.external;
       while (trimmed.charAt(trimmed.length - 1) === '/') trimmed = trimmed.slice(0, -1);
       var tpl = p.external.indexOf('%s') >= 0 ? p.external : trimmed + '/%s';
@@ -142,6 +154,37 @@
     },
 
     hasExternal: function () { var p = cfg(); return !!(p.enabled && p.external); },
+
+    /**
+     * Ask a Rammerhead deployment for a session id, the same call its own home
+     * page makes. Cached per host, since a session survives many pages.
+     */
+    ensureSession: function () {
+      var p = cfg();
+      if (p.externalEncoding !== 'rammerhead') return Promise.resolve(true);
+      if (p.rhSession && p.rhSessionHost === externalBase()) return Promise.resolve(true);
+      return fetch(externalBase() + '/newsession', { cache: 'no-store' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('newsession returned HTTP ' + r.status);
+          return r.text();
+        })
+        .then(function (id) {
+          id = (id || '').trim();
+          // A session id is a short opaque token; anything else means we hit
+          // an error page rather than the endpoint.
+          if (!id || id.length > 120 || !/^[A-Za-z0-9_-]+$/.test(id)) {
+            throw new Error('unexpected session reply');
+          }
+          p.rhSession = id;
+          p.rhSessionHost = externalBase();
+          Emu.save();
+          return true;
+        })
+        .catch(function (e) {
+          state.error = 'Could not start a session on your proxy: ' + e.message;
+          return false;
+        });
+    },
 
     /** Proxied URL for a target, or null if the proxy cannot be used. */
     url: function (target) {
@@ -230,9 +273,16 @@
       add('Build', true, Emu.BUILD || '?');
       if (Proxy.hasExternal()) {
         add('Self-hosted proxy', true, cfg().external);
-        return fetch(Proxy.externalUrl('https://example.com/'), { method: 'GET', mode: 'no-cors' })
-          .then(function () { add('Proxy reachable', true, 'responded'); return out; })
-          .catch(function (e) { add('Proxy reachable', false, e.message); return out; });
+        return Proxy.ensureSession().then(function (ok) {
+          if (cfg().externalEncoding === 'rammerhead') {
+            add('Proxy session', ok, ok ? cfg().rhSession : (state.error || 'no session'));
+          }
+          var probe = Proxy.externalUrl('https://example.com/');
+          if (!probe) { add('Proxy reachable', false, 'could not build a URL'); return out; }
+          return fetch(probe, { method: 'GET', mode: 'no-cors' })
+            .then(function () { add('Proxy reachable', true, 'responded'); return out; })
+            .catch(function (e) { add('Proxy reachable', false, e.message); return out; });
+        });
       }
       add('HTTPS', location.protocol === 'https:', location.protocol);
       add('Service workers', 'serviceWorker' in navigator, 'serviceWorker' in navigator ? 'supported' : 'missing');
@@ -305,8 +355,10 @@
      * Resolves the engine name that worked, or false.
      */
     startFor: function (url) {
-      // Nothing to start for a self-hosted proxy - it is just a URL.
-      if (Proxy.hasExternal()) return Promise.resolve('external');
+      // A self-hosted proxy needs no engine, but Rammerhead needs a session.
+      if (Proxy.hasExternal()) {
+        return Proxy.ensureSession().then(function (ok) { return ok ? 'external' : false; });
+      }
       var pref = Proxy.engineFor(url);
       var alt = pref === 'scramjet' ? 'uv' : 'scramjet';
       var runPref = pref === 'scramjet' ? Proxy.startScramjet : Proxy.start;

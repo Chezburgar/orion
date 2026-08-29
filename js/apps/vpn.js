@@ -131,15 +131,15 @@
         '" data-act="proxy-toggle"></div></div>' +
 
         '<div class="e-set"><div class="lbl"><b>Your own proxy (recommended)</b>' +
-        '<small>Paste the address of a proxy you host. Use %s where the encoded URL goes, ' +
-        'e.g. https://you.up.railway.app/service/%s — this replaces everything below it.</small></div>' +
+        '<small>Paste the address of a proxy you host — this replaces everything below it. ' +
+        'For Rammerhead just the base address; otherwise use %s where the encoded URL goes.</small></div>' +
         '<input class="ex-search" style="width:230px" data-act="external" placeholder="https://you.up.railway.app/service/%s" value="' +
         U.esc((global.OrionProxy && global.OrionProxy.config().external) || '') + '"></div>' +
 
         '<div class="e-set"><div class="lbl"><b>How your proxy encodes URLs</b>' +
-        '<small>Ultraviolet uses XOR; Scramjet and most others use plain</small></div>' +
+        '<small>Rammerhead for a self-hosted server-side proxy; Ultraviolet uses XOR</small></div>' +
         '<select class="st-select" data-act="externalEncoding">' +
-        ['xor:Ultraviolet (XOR)', 'plain:Plain', 'base64:Base64'].map(function (o) {
+        ['rammerhead:Rammerhead (session)', 'xor:Ultraviolet (XOR)', 'plain:Plain', 'base64:Base64'].map(function (o) {
           var kv = o.split(':');
           var cur = (global.OrionProxy && global.OrionProxy.config().externalEncoding) || 'xor';
           return '<option value="' + kv[0] + '"' + (cur === kv[0] ? ' selected' : '') + '>' + kv[1] + '</option>';
@@ -345,6 +345,8 @@
       if (a === 'external' || a === 'externalEncoding') {
         var pe = global.OrionProxy.config();
         pe[a] = e.target.value.trim();
+        pe.rhSession = null;          // a session belongs to one deployment
+        pe.rhSessionHost = null;
         Emu.save();
         addLog(a === 'external'
           ? (pe.external ? 'Using your own proxy: ' + pe.external : 'Back to the built-in proxy')
