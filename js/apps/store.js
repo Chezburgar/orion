@@ -109,16 +109,18 @@
       return '<div class="store-tile" data-detail="' + id + '">' +
         '<div class="store-art">' + Icons.get(Games.art(id, g)) + '</div>' +
         '<b>' + U.esc(g.name) + '</b>' +
-        '<small class="muted">' + U.esc(g.cat) + ' &middot; Free</small>' +
+        '<small class="muted">' + U.esc(g.cat) + ' &middot; ' + (g.proxied ? 'via proxy' : 'Free') + '</small>' +
         stars(g.rating) +
         '<div class="store-actions" data-stop>' + action + '</div>' +
         '</div>';
     }
 
     function addTile() {
+      // Adding publishes to everyone, so it is the owner's call alone.
+      if (!global.Auth || !Auth.isOwner()) return '';
       return '<div class="store-tile store-add" data-addgame>' +
         '<div class="store-art">' + Icons.get('plus') + '</div>' +
-        '<b>Add a game</b><small class="muted">Any game URL</small>' +
+        '<b>Add a game</b><small class="muted">Published for everyone</small>' +
         '<div class="store-actions"><button class="btn">Add by URL</button></div></div>';
     }
 
@@ -195,6 +197,11 @@
             ? '<button class="btn primary" data-open="' + detail + '">Play</button>' +
               '<button class="btn" data-uninstall="' + detail + '">Uninstall</button>'
             : '<button class="btn primary" data-install="' + detail + '">Get</button>') +
+        (g.shared && Auth.isOwner()
+          ? '<button class="btn" data-toggleproxy="' + detail + '">' +
+              (g.proxied ? 'Stop using the proxy' : 'Open through the proxy') + '</button>' +
+            '<button class="btn danger" data-unpublish="' + detail + '">Remove for everyone</button>'
+          : '') +
         (g.custom ? '<button class="btn" data-forget="' + detail + '">Remove from Store</button>' : '') +
         '</div>' +
         '<div class="store-facts">' +
@@ -208,15 +215,59 @@
 
     function onProgress(id) { if (detail === id) renderDetail(); else render(); }
 
+    /** Publishing adds the game to everyone's Store, so it is owner-only. */
     function askForGame() {
-      WM.prompt('Add a game', 'Paste the URL of the game', 'https://', win).then(function (url) {
-        if (!url || !/\./.test(url)) return;
-        WM.prompt('Add a game', 'What should it be called?', '', win).then(function (name) {
-          if (!name) return;
-          var g = Games.addCustom(name.trim(), url.trim());
-          Emu.notify('Orion Store', '"' + g.name + '" added to the Store.', 'orionstore');
+      if (!global.Auth || !Auth.isOwner()) {
+        WM.alert('Orion Store', 'Only the owner can add games to the Store.', win);
+        return;
+      }
+      var back = U.el('<div class="dlg-backdrop"><div class="dlg">' +
+        '<h3>Add a game</h3>' +
+        '<p>This publishes the game to the Store for everyone.</p>' +
+        '<div class="dlg-body"><form class="gate-form" autocomplete="off">' +
+          '<label>Name<input name="name" maxlength="60" placeholder="Kart Bros" required></label>' +
+          '<label>URL<input name="url" placeholder="https://example.com/game/" required></label>' +
+          '<label>Category<input name="cat" placeholder="Action" value="Added"></label>' +
+          '<label>Description<textarea name="desc" rows="2" maxlength="400"></textarea></label>' +
+          '<label class="dlg-check"><input type="checkbox" name="proxied"> ' +
+            'Open through the proxy (for sites your network blocks)</label>' +
+          '<div class="gate-err hidden" data-err></div>' +
+        '</form></div>' +
+        '<div class="dlg-actions"><button data-x="cancel">Cancel</button>' +
+        '<button class="primary" data-x="add">Publish</button></div></div></div>');
+      win.el.appendChild(back);
+      var form = back.querySelector('form');
+
+      back.addEventListener('click', function (ev) {
+        var b = ev.target.closest('[data-x]');
+        if (!b) return;
+        if (b.dataset.x === 'cancel') { back.remove(); return; }
+
+        var name = form.name.value.trim();
+        var url = form.url.value.trim();
+        var box = form.querySelector('[data-err]');
+        if (!name || !/^https?:/i.test(url)) {
+          box.textContent = 'A name and a full https:// URL are required.';
+          box.classList.remove('hidden');
+          return;
+        }
+        b.disabled = true;
+        b.textContent = 'Publishing…';
+        Games.addShared(name, url, {
+          cat: form.cat.value.trim(),
+          desc: form.desc.value.trim(),
+          proxied: form.proxied.checked
+        }).then(function () {
+          back.remove();
+          Emu.notify('Orion Store', '"' + name + '" published to the Store for everyone.', 'orionstore');
           page = 'games';
           render();
+        }).catch(function (err) {
+          b.disabled = false;
+          b.textContent = 'Publish';
+          box.textContent = /unauthor/i.test(err.message)
+            ? 'The owner key was not accepted.' : err.message;
+          box.classList.remove('hidden');
         });
       });
     }
@@ -265,10 +316,39 @@
         return;
       }
 
+      var tp = e.target.closest('[data-toggleproxy]');
+      if (tp) {
+        var gid = tp.dataset.toggleproxy;
+        var cur = Games.get(gid);
+        tp.disabled = true;
+        Games.setProxied(gid, !cur.proxied).then(function () {
+          Emu.notify('Orion Store', cur.name + (cur.proxied ? ' now opens directly.' : ' now opens through the proxy.'), 'orionstore');
+          render();
+        }).catch(function (err) { WM.alert('Orion Store', err.message, win); });
+        return;
+      }
+
+      var up = e.target.closest('[data-unpublish]');
+      if (up) {
+        var uid = up.dataset.unpublish;
+        WM.confirm('Remove for everyone', 'Take this game out of the Store for all users?', win)
+          .then(function (ok) {
+            if (!ok) return;
+            if (isInstalled(uid)) {
+              Games.unregister(uid);
+              Emu.state.installed = Emu.state.installed.filter(function (x) { return x !== uid; });
+              Emu.save();
+            }
+            return Games.removeShared(uid).then(function () { detail = null; render(); });
+          }).catch(function (err) { WM.alert('Orion Store', err.message, win); });
+        return;
+      }
+
       var det = e.target.closest('[data-detail]');
       if (det && !e.target.closest('[data-stop]')) { detail = det.dataset.detail; render(); }
     });
 
+    if (global.Games.refresh) global.Games.refresh().then(render);
     render();
     return win;
   }

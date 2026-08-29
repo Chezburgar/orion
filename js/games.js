@@ -34,12 +34,56 @@
     }
   };
 
+  /** Catalogue shared by everyone, fetched from the server. */
+  var shared = {};
+
+  function rpc(fn, body) {
+    return fetch(Auth.CFG.url + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: {
+        'apikey': Auth.CFG.key, 'Authorization': 'Bearer ' + Auth.CFG.key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body || {})
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        var p = null;
+        try { p = t ? JSON.parse(t) : null; } catch (e) { p = t; }
+        if (!r.ok) throw new Error((p && (p.message || p.hint)) || ('HTTP ' + r.status));
+        return p;
+      });
+    });
+  }
+
+  /** Pull the shared catalogue; falls back to whatever is cached in state. */
+  function refresh() {
+    return rpc('orion_games_list', {}).then(function (rows) {
+      shared = {};
+      (rows || []).forEach(function (r) {
+        shared[r.id] = {
+          id: r.id, name: r.name, url: r.url, cat: r.cat, size: r.size,
+          rating: Number(r.rating) || 4.5, desc: r.descr || '',
+          proxied: !!r.proxied, art: [r.art1, r.art2], shared: true
+        };
+      });
+      Emu.state.sharedGames = shared;
+      Emu.save();
+      Emu.emit('apps');
+      return shared;
+    }).catch(function () {
+      shared = Emu.state.sharedGames || {};
+      return shared;
+    });
+  }
+
   /** Games the user added themselves live in state. */
   function custom() { return Emu.state.games || (Emu.state.games = []); }
 
   function all() {
     var out = {};
     Object.keys(CATALOG).forEach(function (k) { out[k] = CATALOG[k]; });
+    var sh = Object.keys(shared).length ? shared : (Emu.state.sharedGames || {});
+    Object.keys(sh).forEach(function (k) { out[k] = sh[k]; });
     custom().forEach(function (g) { out[g.id] = g; });
     return out;
   }
@@ -102,14 +146,27 @@
 
     function mount() {
       stage.innerHTML = '';
-      loadEl.textContent = 'Loading…';
+      loadEl.textContent = g.proxied ? 'Starting the proxy…' : 'Loading…';
       loadEl.classList.remove('hidden');
+      // Games flagged "open through the proxy" need the tunnel up first.
+      if (g.proxied && global.OrionProxy) {
+        global.OrionProxy.startFor(g.url).then(function (ok) {
+          var via = ok ? global.OrionProxy.urlFor(g.url) : null;
+          mountFrame(via || g.url);
+        });
+        return;
+      }
+      mountFrame(g.url);
+    }
+
+    function mountFrame(target) {
+      loadEl.textContent = 'Loading…';
       var f = document.createElement('iframe');
       f.className = 'gw-frame';
       // Delegate the capabilities games actually need.
       f.setAttribute('allow', 'fullscreen; autoplay; gamepad; pointer-lock; accelerometer; gyroscope; clipboard-write');
       f.setAttribute('allowfullscreen', 'true');
-      f.src = g.url;
+      f.src = target;
       f.addEventListener('load', function () {
         loadEl.textContent = 'Ready';
         setTimeout(function () { loadEl.classList.add('hidden'); }, 1200);
@@ -169,7 +226,29 @@
     Emu.save();
   }
 
+  function addShared(name, url, opts) {
+    opts = opts || {};
+    return rpc('orion_games_add', {
+      p_key: Auth.ownerKey(), p_name: name, p_url: url,
+      p_cat: opts.cat || 'Added', p_descr: opts.desc || ('Added from ' + url),
+      p_proxied: !!opts.proxied, p_art1: opts.art1 || '', p_art2: opts.art2 || ''
+    }).then(refresh);
+  }
+
+  function removeShared(id) {
+    return rpc('orion_games_remove', { p_key: Auth.ownerKey(), p_id: id }).then(refresh);
+  }
+
+  function setProxied(id, on) {
+    return rpc('orion_games_set_proxied', { p_key: Auth.ownerKey(), p_id: id, p_proxied: !!on })
+      .then(refresh);
+  }
+
   global.Games = {
+    refresh: refresh,
+    addShared: addShared,
+    removeShared: removeShared,
+    setProxied: setProxied,
     catalog: CATALOG,
     list: all,
     get: get,
@@ -182,6 +261,8 @@
   };
 
   // Restore installed games after the built-in apps have registered.
+  refresh();
+
   function restore() {
     // Drop anything installed that no longer exists (e.g. the old built-ins).
     Emu.state.installed = (Emu.state.installed || []).filter(function (id) { return !!get(id); });

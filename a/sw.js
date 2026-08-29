@@ -1,17 +1,14 @@
-/* Orion's proxy service worker entry point.
- *
- * Registered by Orion with a scope of <base>/uv/service/, which is where the
- * browser will send every proxied request. The Ultraviolet runtime itself is
- * pulled from whichever deployment the ?assets= parameter names (same origin),
- * so Orion does not carry its own copy.
+/* Orion proxy worker (Ultraviolet engine).
+ * Scope is <base>/a/s/ - see config.js for why the stock naming is avoided.
  */
 'use strict';
 
 var params = new URL(self.location).searchParams;
-self.__ORION_PROXY_ASSETS = params.get('assets') || self.location.pathname.replace(/\/uv\/[^/]*$/, '');
+self.__ORION_PROXY_ASSETS = params.get('assets') ||
+  self.location.pathname.replace(/\/[^/]*\/[^/]*$/, '');
 
 importScripts(self.__ORION_PROXY_ASSETS + '/uv/uv.bundle.js');
-importScripts('./uv.config.js');
+importScripts('./config.js');
 importScripts(self.__ORION_PROXY_ASSETS + '/uv/uv.sw.js');
 
 var sw = new UVServiceWorker();

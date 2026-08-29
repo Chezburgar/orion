@@ -97,9 +97,11 @@
       + '<path d="M6 4h13l7 7v17H6z" fill="url(#npg)" stroke="#c3cfdb"/>'
       + '<path d="M19 4v7h7z" fill="#c3cfdb"/>'
       + '<g stroke="#4a90d9" stroke-width="1.6" stroke-linecap="round"><path d="M10 15h12M10 19h12M10 23h8"/></g>',
-    settings: '<defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fb4c8"/><stop offset="1" stop-color="#6d8296"/></linearGradient></defs>'
-      + '<path d="M16 4.2c1 0 2 .1 2.9.4l.6 3.1 2.3 1.3 3-1a12 12 0 0 1 2.9 5l-2.4 2v2.6l2.4 2a12 12 0 0 1-2.9 5l-3-1-2.3 1.3-.6 3.1a12 12 0 0 1-5.8 0l-.6-3.1-2.3-1.3-3 1a12 12 0 0 1-2.9-5l2.4-2v-2.6l-2.4-2a12 12 0 0 1 2.9-5l3 1 2.3-1.3.6-3.1c.9-.3 1.9-.4 2.9-.4z" fill="url(#sg)"/>'
-      + '<circle cx="16" cy="16" r="4.6" fill="#2b3a47"/><circle cx="16" cy="16" r="2.8" fill="#8fa5b8"/>',
+    settings: '<defs><linearGradient id="sgA" x1="0" y1="0" x2="1" y2="1">'
+      + '<stop offset="0" stop-color="#c3ccd6"/><stop offset="1" stop-color="#7c8b9b"/></linearGradient></defs>'
+      + '<path d="M13.4 3h5.2l.7 3.4 2.6 1.5 3.3-1.1 2.6 4.5-2.6 2.3v3l2.6 2.3-2.6 4.5-3.3-1.1-2.6 1.5-.7 3.4h-5.2l-.7-3.4-2.6-1.5-3.3 1.1-2.6-4.5 2.6-2.3v-3L4.5 11.3l2.6-4.5 3.3 1.1 2.6-1.5z" fill="url(#sgA)"/>'
+      + '<circle cx="16" cy="16" r="5.4" fill="#222b35"/><circle cx="16" cy="16" r="2.9" fill="#aebccb"/>',
+
     calculator: '<rect x="5" y="3" width="22" height="26" rx="3" fill="#2f3b46"/>'
       + '<rect x="7.6" y="5.6" width="16.8" height="6" rx="1.4" fill="#0f1a24"/>'
       + '<text x="22.4" y="10.4" text-anchor="end" font-size="4.6" fill="#6de7c8" font-family="monospace">1024</text>'
@@ -150,19 +152,12 @@
       + '</g>',
 
     orionstore: '<defs>'
-      + '<linearGradient id="sB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#161340"/><stop offset=".45" stop-color="#2a1c6b"/><stop offset="1" stop-color="#8b3ce8"/></linearGradient>'
-      + '<linearGradient id="sH" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5b2bc4"/><stop offset="1" stop-color="#a855f7"/></linearGradient>'
-      + '<linearGradient id="sO" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3b82f6"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>'
-      + '<g transform="scale(0.32)">'
-      + '<ellipse cx="50" cy="55" rx="45" ry="17" fill="none" stroke="url(#sO)" stroke-width="4" transform="rotate(-20 50 55)"/>'
-      + '<path d="M36 36V27a14 14 0 0 1 28 0v9" fill="none" stroke="url(#sH)" stroke-width="6"/>'
-      + '<g transform="rotate(-4 50 58)">'
-      + '<path d="M28 34h44a5 5 0 0 1 5 5.4l-3.6 40A7 7 0 0 1 66.4 86H33.6a7 7 0 0 1-7-6.6l-3.6-40A5 5 0 0 1 28 34Z" fill="url(#sB)"/>'
-      + '<path d="M50 40c1.5 13.6 4.3 17.6 17.6 19.2C54.3 60.8 51.5 64.8 50 78.4 48.5 64.8 45.7 60.8 32.4 59.2 45.7 57.6 48.5 53.6 50 40Z" fill="#fff"/>'
-      + '<path d="M35.5 41c.6 4.6 1.7 6 6 6.6-4.3.6-5.4 2-6 6.6-.6-4.6-1.7-6-6-6.6 4.3-.6 5.4-2 6-6.6Z" fill="#fff" opacity=".95"/>'
-      + '<circle cx="66" cy="74" r="2.6" fill="#fff"/></g>'
-      + '<path d="M8.6 60.9A45 17 -20 0 0 91.4 49.1" fill="none" stroke="url(#sO)" stroke-width="4" stroke-linecap="round"/>'
-      + '</g>',
+      + '<linearGradient id="obA" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1b1650"/><stop offset=".55" stop-color="#4c2ba0"/><stop offset="1" stop-color="#9d4bf0"/></linearGradient>'
+      + '<linearGradient id="obB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>'
+      + '<path d="M11.5 11V9.2a4.5 4.5 0 0 1 9 0V11" fill="none" stroke="#8b5cf6" stroke-width="2.6" stroke-linecap="round"/>'
+      + '<path d="M7.6 10.4h16.8a2.6 2.6 0 0 1 2.6 2.9l-1.5 12.4a3 3 0 0 1-3 2.6H9.5a3 3 0 0 1-3-2.6L5 13.3a2.6 2.6 0 0 1 2.6-2.9Z" fill="url(#obA)"/>'
+      + '<path d="M16 13.4c1.2 5.2 2.4 6.4 7.2 7.4-4.8 1-6 2.2-7.2 7.4-1.2-5.2-2.4-6.4-7.2-7.4 4.8-1 6-2.2 7.2-7.4Z" fill="#fff"/>'
+      + '<ellipse cx="16" cy="19" rx="14.5" ry="5.6" fill="none" stroke="url(#obB)" stroke-width="2.2" transform="rotate(-20 16 19)" opacity=".95"/>',
 
     vpn: '<defs><linearGradient id="vpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#0e7490"/></linearGradient></defs>'
       + '<path d="M16 3.2 5.6 7.2v8.2c0 6.4 4.4 10.9 10.4 13.4 6-2.5 10.4-7 10.4-13.4V7.2z" fill="url(#vpg)"/>'

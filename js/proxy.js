@@ -123,7 +123,7 @@
     /** Proxied URL for a target, or null if the proxy cannot be used. */
     url: function (target) {
       if (!state.ready || Proxy.isProtected(target)) return null;
-      return base() + '/uv/service/' + xorEncode(target);
+      return base() + '/a/s/' + xorEncode(target);
     },
 
     /**
@@ -147,8 +147,8 @@
 
       state.starting = preflight(p.assets + '/uv/uv.bundle.js').then(function () {
         return navigator.serviceWorker.register(
-        base() + '/uv/sw.js?assets=' + encodeURIComponent(p.assets),
-        { scope: base() + '/uv/service/' });
+        base() + '/a/sw.js?assets=' + encodeURIComponent(p.assets),
+        { scope: base() + '/a/s/' });
       }).then(function (reg) {
         state.sw = true;
         // Not navigator.serviceWorker.ready: that waits for a worker
@@ -162,7 +162,7 @@
         if (!wisp) throw new Error('No proxy backend answered. All wisp servers appear to be down.');
         state.wisp = wisp;
         return setupTransport('uv', wisp, function (u) {
-          return base() + '/uv/service/' + xorEncode(u);
+          return base() + '/a/s/' + xorEncode(u);
         });
       }).then(function (tb) {
         state.transportBase = tb;
@@ -189,9 +189,54 @@
       if (!('serviceWorker' in navigator)) return Promise.resolve();
       return navigator.serviceWorker.getRegistrations().then(function (regs) {
         return Promise.all(regs.filter(function (r) {
-          return (r.scope || '').indexOf('/uv/service/') >= 0;
+          return /[/](a|b)[/]s[/]/.test(r.scope || '');
         }).map(function (r) { return r.unregister(); }));
       }).then(function () { Emu.emit('proxy'); });
+    },
+
+    /**
+     * Walk every step the proxy depends on and report what happened, so a
+     * failure on someone else's network can be read off a screenshot instead
+     * of guessed at.
+     */
+    diagnose: function () {
+      var p = cfg();
+      var out = [];
+      function add(step, ok, detail) { out.push({ step: step, ok: ok, detail: detail || '' }); }
+
+      add('Build', true, Emu.BUILD || '?');
+      add('HTTPS', location.protocol === 'https:', location.protocol);
+      add('Service workers', 'serviceWorker' in navigator, 'serviceWorker' in navigator ? 'supported' : 'missing');
+
+      var files = [
+        ['Ultraviolet bundle', p.assets + '/uv/uv.bundle.js'],
+        ['Scramjet bundle', p.scramAssets + '/scram/scramjet.all.js'],
+        ['BareMux (UV copy)', p.assets + '/baremux/index.js'],
+        ['BareMux (SJ copy)', p.scramAssets + '/baremux/index.js'],
+        ['Orion worker A', base() + '/a/sw.js'],
+        ['Orion worker B', base() + '/b/sw.js']
+      ];
+
+      return Promise.all(files.map(function (f) {
+        return fetch(f[1], { method: 'GET', cache: 'no-store' })
+          .then(function (r) { add(f[0], r.ok, 'HTTP ' + r.status); })
+          .catch(function (e) { add(f[0], false, 'blocked: ' + e.message); });
+      })).then(function () {
+        var backends = [p.wisp].concat(p.wispFallbacks || []);
+        return Promise.all(backends.map(function (w) {
+          return probeWisp(w, 7000).then(function (ok) { add('Backend ' + w, ok, ok ? 'reachable' : 'no answer'); });
+        }));
+      }).then(function () {
+        return Proxy.startScramjet().then(function (ok) {
+          add('Scramjet engine', ok, ok ? ('ready via ' + (scram.transportBase || '?')) : (scram.error || 'failed'));
+        });
+      }).then(function () {
+        return Proxy.start().then(function (ok) {
+          add('Ultraviolet engine', ok, ok ? ('ready via ' + (state.transportBase || '?')) : (state.error || 'failed'));
+        });
+      }).then(function () {
+        return out;
+      });
     },
 
     probeWisp: probeWisp,
@@ -275,7 +320,7 @@
     scramUrl: function (target) {
       if (!scram.ready || !scram.controller) return null;
       try { return scram.controller.encodeUrl(target); }
-      catch (e) { return base() + '/scram/service/' + encodeURIComponent(target); }
+      catch (e) { return base() + '/b/s/' + encodeURIComponent(target); }
     },
 
     scramState: scram,
@@ -303,14 +348,14 @@
             all: p.scramAssets + '/scram/scramjet.all.js',
             sync: p.scramAssets + '/scram/scramjet.sync.js'
           },
-          prefix: base() + '/scram/service/'
+          prefix: base() + '/b/s/'
         });
         scram.controller = controller;
         return controller.init();
       }).then(function () {
         return navigator.serviceWorker.register(
-          base() + '/scram/sw.js?assets=' + encodeURIComponent(p.scramAssets),
-          { scope: base() + '/scram/service/' }
+          base() + '/b/sw.js?assets=' + encodeURIComponent(p.scramAssets),
+          { scope: base() + '/b/s/' }
         );
       }).then(function (reg) {
         scram.sw = true;

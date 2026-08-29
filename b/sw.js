@@ -1,10 +1,5 @@
-/* Orion's Scramjet service worker.
- *
- * Scramjet is the newer proxy engine and handles sites that Ultraviolet
- * mangles - notably ones using threaded WASM or workers, which break when UV
- * strips the cross-origin isolation headers.
- *
- * Scramjet is by MercuryWorkshop.
+/* Orion proxy worker (Scramjet engine).
+ * Scope is <base>/b/s/. Scramjet is by MercuryWorkshop.
  */
 'use strict';
 

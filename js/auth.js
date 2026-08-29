@@ -101,6 +101,7 @@
 
   var Auth = {
     ROLES: ROLES,
+    CFG: CFG,
     state: state,
     deviceId: deviceId,
 

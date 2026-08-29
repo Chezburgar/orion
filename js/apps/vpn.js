@@ -154,6 +154,10 @@
         '<small>Re-registers the worker and finds a live backend</small></div>' +
         '<button class="btn" data-act="proxy-restart">Restart</button></div>' +
 
+        '<div class="e-set"><div class="lbl"><b>Proxy diagnostics</b>' +
+        '<small>Checks every step and shows exactly which one fails</small></div>' +
+        '<button class="btn" data-act="proxy-diag">Run</button></div>' +
+
         '<div class="vpn-note warn">' + Icons.get('warning') +
         '<span><b>Read this once.</b> When the tunnel is on, the address of every real page you open in ' +
         'Edge is sent to a third-party relay service, which fetches it for you. That service can see what ' +
@@ -174,6 +178,22 @@
           return '<div class="vpn-log-row ' + l.cls + '"><span class="t">' +
             new Date(l.t).toLocaleTimeString() + '</span>' + U.esc(l.msg) + '</div>';
         }).join('') : '<p class="muted">Nothing yet.</p>') + '</div>');
+    }
+
+    function paneDiagnostics() {
+      setPane('<div class="vpn-note">' + Icons.get('info') +
+        '<span>Running every check. This takes up to a minute.</span></div>' +
+        '<div class="vpn-log" data-diag><div class="vpn-log-row">Working…</div></div>');
+      global.OrionProxy.diagnose().then(function (rows) {
+        var host = U.$('[data-diag]', win.body);
+        if (!host) return;
+        host.innerHTML = rows.map(function (r) {
+          return '<div class="vpn-log-row ' + (r.ok ? 'g' : 'r') + '">' +
+            (r.ok ? '[ok]  ' : '[FAIL] ') + U.esc(r.step) +
+            (r.detail ? ' — ' + U.esc(r.detail) : '') + '</div>';
+        }).join('') +
+        '<div class="vpn-log-row d">Screenshot this if something failed.</div>';
+      });
     }
 
     var timer = null;
@@ -292,6 +312,7 @@
         });
       }
       if (act.dataset.act === 'clearcache') { Net.clearCache(); addLog('Page cache cleared'); paneSettings(); }
+      if (act.dataset.act === 'proxy-diag') { paneDiagnostics(); return; }
       if (act.dataset.act === 'proxy-restart') {
         act.textContent = 'Starting…';
         global.OrionProxy.stop()
