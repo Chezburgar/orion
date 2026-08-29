@@ -198,7 +198,8 @@
               '<button class="btn" data-uninstall="' + detail + '">Uninstall</button>'
             : '<button class="btn primary" data-install="' + detail + '">Get</button>') +
         (g.shared && Auth.isOwner()
-          ? '<button class="btn" data-toggleproxy="' + detail + '">' +
+          ? '<button class="btn" data-logo="' + detail + '">Change logo</button>' +
+            '<button class="btn" data-toggleproxy="' + detail + '">' +
               (g.proxied ? 'Stop using the proxy' : 'Open through the proxy') + '</button>' +
             '<button class="btn danger" data-unpublish="' + detail + '">Remove for everyone</button>'
           : '') +
@@ -313,6 +314,22 @@
         VFS.save();
         VFS.emitChange(VFS.DESKTOP);
         Emu.notify('Orion Store', app.name + ' pinned to the desktop.', 'orionstore');
+        return;
+      }
+
+      var lg = e.target.closest('[data-logo]');
+      if (lg) {
+        var lid = lg.dataset.logo;
+        U.pickImage(96).then(function (data) {
+          if (!data) return;
+          lg.disabled = true;
+          lg.textContent = 'Uploading…';
+          Games.setIcon(lid, data).then(function () {
+            Emu.notify('Orion Store', 'Logo updated for everyone.', 'orionstore');
+            Emu.emit('apps');
+            render();
+          }).catch(function (err) { WM.alert('Orion Store', err.message, win); render(); });
+        });
         return;
       }
 

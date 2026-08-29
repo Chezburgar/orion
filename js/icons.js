@@ -159,6 +159,9 @@
       + '<path d="M16 13.4c1.2 5.2 2.4 6.4 7.2 7.4-4.8 1-6 2.2-7.2 7.4-1.2-5.2-2.4-6.4-7.2-7.4 4.8-1 6-2.2 7.2-7.4Z" fill="#fff"/>'
       + '<ellipse cx="16" cy="19" rx="14.5" ry="5.6" fill="none" stroke="url(#obB)" stroke-width="2.2" transform="rotate(-20 16 19)" opacity=".95"/>',
 
+    youtube: '<rect x="2" y="6" width="28" height="20" rx="5.5" fill="#e23b2e"/>'
+      + '<path d="M13.4 11.6 21.4 16l-8 4.4z" fill="#fff"/>',
+
     vpn: '<defs><linearGradient id="vpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#0e7490"/></linearGradient></defs>'
       + '<path d="M16 3.2 5.6 7.2v8.2c0 6.4 4.4 10.9 10.4 13.4 6-2.5 10.4-7 10.4-13.4V7.2z" fill="url(#vpg)"/>'
       + '<path d="m10.8 16.2 3.6 3.6 7-7.2" fill="none" stroke="#eafff6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -192,6 +195,10 @@
   var Icons = {
     /** Returns SVG markup for a named icon. */
     get: function (name) {
+      if (typeof name === 'string' && name.slice(0, 5) === 'data:') {
+        return '<img src="' + name.replace(/"/g, '&quot;') +
+          '" alt="" style="width:100%;height:100%;object-fit:contain;display:block">';
+      }
       if (A[name]) return wrap(A[name], '0 0 32 32');
       if (S[name]) {
         return wrap(S[name], '0 0 24 24',

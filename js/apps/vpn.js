@@ -130,6 +130,21 @@
         '<div class="sw' + ((global.OrionProxy && global.OrionProxy.config().enabled) ? ' on' : '') +
         '" data-act="proxy-toggle"></div></div>' +
 
+        '<div class="e-set"><div class="lbl"><b>Your own proxy (recommended)</b>' +
+        '<small>Paste the address of a proxy you host. Use %s where the encoded URL goes, ' +
+        'e.g. https://you.up.railway.app/service/%s — this replaces everything below it.</small></div>' +
+        '<input class="ex-search" style="width:230px" data-act="external" placeholder="https://you.up.railway.app/service/%s" value="' +
+        U.esc((global.OrionProxy && global.OrionProxy.config().external) || '') + '"></div>' +
+
+        '<div class="e-set"><div class="lbl"><b>How your proxy encodes URLs</b>' +
+        '<small>Ultraviolet uses XOR; Scramjet and most others use plain</small></div>' +
+        '<select class="st-select" data-act="externalEncoding">' +
+        ['xor:Ultraviolet (XOR)', 'plain:Plain', 'base64:Base64'].map(function (o) {
+          var kv = o.split(':');
+          var cur = (global.OrionProxy && global.OrionProxy.config().externalEncoding) || 'xor';
+          return '<option value="' + kv[0] + '"' + (cur === kv[0] ? ' selected' : '') + '>' + kv[1] + '</option>';
+        }).join('') + '</select></div>' +
+
         '<div class="e-set"><div class="lbl"><b>Proxy backend</b>' +
         '<small>Public wisp servers come and go; Orion uses the first that answers</small></div>' +
         '<input class="ex-search" style="width:230px" data-act="wisp" value="' +
@@ -279,14 +294,15 @@
         } else { render(); }
         return;
       }
-      if (act.dataset.act === 'proxy-always') {
+      var act = e.target.closest('[data-act]');
+      if (act && act.dataset.act === 'proxy-always') {
         var pa = global.OrionProxy.config();
         pa.always = !pa.always;
         Emu.save();
         paneSettings();
         return;
       }
-      if (act.dataset.act === 'proxy-toggle') {
+      if (act && act.dataset.act === 'proxy-toggle') {
         var pc = global.OrionProxy.config();
         pc.enabled = !pc.enabled;
         Emu.save();
@@ -301,7 +317,6 @@
         paneSettings();
         return;
       }
-      var act = e.target.closest('[data-act]');
       if (!act) return;
       if (act.dataset.act === 'toggle') toggle();
       if (act.dataset.act === 'probe') {
@@ -327,6 +342,16 @@
 
     win.body.addEventListener('change', function (e) {
       var a = e.target.dataset.act;
+      if (a === 'external' || a === 'externalEncoding') {
+        var pe = global.OrionProxy.config();
+        pe[a] = e.target.value.trim();
+        Emu.save();
+        addLog(a === 'external'
+          ? (pe.external ? 'Using your own proxy: ' + pe.external : 'Back to the built-in proxy')
+          : 'Proxy encoding set to ' + pe.externalEncoding, 'g');
+        paneSettings();
+        return;
+      }
       if (a === 'wisp' || a === 'assets' || a === 'scramAssets') {
         var pc = global.OrionProxy.config();
         pc[a] = e.target.value.trim();

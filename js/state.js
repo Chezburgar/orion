@@ -3,7 +3,7 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-08-28.19';
+  var BUILD = '2026-08-28.20';
 
   var DEFAULTS = {
     user: 'Chase',
@@ -45,6 +45,7 @@
       seenDisclosure: false
     },
     rebranded: false,
+    appIcons: {},
     installed: [],
     games: [],
     notifications: [],
@@ -160,6 +161,43 @@
         t = setTimeout(function () { fn.apply(c, a); }, ms || 120);
       };
     },
+    /**
+     * Ask for an image file and hand back a small square PNG data URL.
+     * Downscaling here keeps logos well under any storage limit.
+     */
+    pickImage: function (maxPx) {
+      return new Promise(function (resolve) {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.addEventListener('change', function () {
+          var file = input.files && input.files[0];
+          if (!file) return resolve(null);
+          var reader = new FileReader();
+          reader.onload = function () {
+            var img = new Image();
+            img.onload = function () {
+              var size = maxPx || 96;
+              var c = document.createElement('canvas');
+              c.width = c.height = size;
+              var ctx = c.getContext('2d');
+              // contain, centred, transparent background
+              var scale = Math.min(size / img.width, size / img.height);
+              var w = img.width * scale, h = img.height * scale;
+              ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+              try { resolve(c.toDataURL('image/png')); }
+              catch (e) { resolve(null); }
+            };
+            img.onerror = function () { resolve(null); };
+            img.src = reader.result;
+          };
+          reader.onerror = function () { resolve(null); };
+          reader.readAsDataURL(file);
+        });
+        input.click();
+      });
+    },
+
     /** Lighten/darken a hex colour by amt (-1..1). */
     shade: function (hex, amt) {
       var n = parseInt(hex.slice(1), 16);

@@ -63,7 +63,7 @@
         shared[r.id] = {
           id: r.id, name: r.name, url: r.url, cat: r.cat, size: r.size,
           rating: Number(r.rating) || 4.5, desc: r.descr || '',
-          proxied: !!r.proxied, art: [r.art1, r.art2], shared: true
+          proxied: !!r.proxied, art: [r.art1, r.art2], shared: true, icon: r.icon || null
         };
       });
       Emu.state.sharedGames = shared;
@@ -92,6 +92,7 @@
 
   // ------------------------------------------------------------- tile art
   function artFor(id, g) {
+    if (g && g.icon) return g.icon;
     var name = 'game-' + id;
     if (Icons.has(name)) return name;
     var c = g.art || palette(id);
@@ -239,6 +240,14 @@
     return rpc('orion_games_remove', { p_key: Auth.ownerKey(), p_id: id }).then(refresh);
   }
 
+  function setIcon(id, dataUrl) {
+    return rpc('orion_games_set_icon', { p_key: Auth.ownerKey(), p_id: id, p_icon: dataUrl })
+      .then(function () {
+        Icons.add('game-' + id, null);   // drop the generated tile
+        return refresh();
+      });
+  }
+
   function setProxied(id, on) {
     return rpc('orion_games_set_proxied', { p_key: Auth.ownerKey(), p_id: id, p_proxied: !!on })
       .then(refresh);
@@ -249,6 +258,7 @@
     addShared: addShared,
     removeShared: removeShared,
     setProxied: setProxied,
+    setIcon: setIcon,
     catalog: CATALOG,
     list: all,
     get: get,

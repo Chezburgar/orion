@@ -46,6 +46,11 @@
       p.wispFallbacks = ['wss://anura.pro/', 'wss://nebulaproxy.io/wisp/', 'wss://wisp.terbiumon.top/wisp/'];
     }
     if (p.enabled === undefined) p.enabled = true;
+    // A self-hosted proxy is far simpler than running engines in the browser:
+    // no service worker, no transport, no public backend. Set this and Orion
+    // just points a frame at your server.
+    if (p.external === undefined) p.external = '';
+    if (!p.externalEncoding) p.externalEncoding = 'xor';
     return p;
   }
 
@@ -119,6 +124,24 @@
     },
 
     available: function () { return cfg().enabled && state.ready; },
+
+    /**
+     * URL on a self-hosted proxy. The template carries %s where the encoded
+     * address goes, e.g. https://you.up.railway.app/service/%s
+     */
+    externalUrl: function (target) {
+      var p = cfg();
+      if (!p.enabled || !p.external) return null;
+      var trimmed = p.external;
+      while (trimmed.charAt(trimmed.length - 1) === '/') trimmed = trimmed.slice(0, -1);
+      var tpl = p.external.indexOf('%s') >= 0 ? p.external : trimmed + '/%s';
+      var enc = p.externalEncoding === 'plain' ? encodeURIComponent(target)
+        : p.externalEncoding === 'base64' ? btoa(target).replace(/=+$/, '')
+        : xorEncode(target);
+      return tpl.replace('%s', enc);
+    },
+
+    hasExternal: function () { var p = cfg(); return !!(p.enabled && p.external); },
 
     /** Proxied URL for a target, or null if the proxy cannot be used. */
     url: function (target) {
@@ -205,6 +228,12 @@
       function add(step, ok, detail) { out.push({ step: step, ok: ok, detail: detail || '' }); }
 
       add('Build', true, Emu.BUILD || '?');
+      if (Proxy.hasExternal()) {
+        add('Self-hosted proxy', true, cfg().external);
+        return fetch(Proxy.externalUrl('https://example.com/'), { method: 'GET', mode: 'no-cors' })
+          .then(function () { add('Proxy reachable', true, 'responded'); return out; })
+          .catch(function (e) { add('Proxy reachable', false, e.message); return out; });
+      }
       add('HTTPS', location.protocol === 'https:', location.protocol);
       add('Service workers', 'serviceWorker' in navigator, 'serviceWorker' in navigator ? 'supported' : 'missing');
 
@@ -276,6 +305,8 @@
      * Resolves the engine name that worked, or false.
      */
     startFor: function (url) {
+      // Nothing to start for a self-hosted proxy - it is just a URL.
+      if (Proxy.hasExternal()) return Promise.resolve('external');
       var pref = Proxy.engineFor(url);
       var alt = pref === 'scramjet' ? 'uv' : 'scramjet';
       var runPref = pref === 'scramjet' ? Proxy.startScramjet : Proxy.start;
@@ -303,6 +334,7 @@
 
     urlFor: function (target) {
       if (Proxy.isProtected(target)) return null;
+      if (Proxy.hasExternal()) return Proxy.externalUrl(target);
       var want = Proxy.engineFor(target);
       if (want === 'scramjet' && scram.ready) return Proxy.scramUrl(target);
       if (want === 'uv' && state.ready) return Proxy.url(target);

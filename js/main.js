@@ -49,6 +49,11 @@
   }
 
   function start() {
+    // Custom logos replace an app's built-in icon everywhere it is drawn.
+    Object.keys(Emu.state.appIcons || {}).forEach(function (id) {
+      if (Emu.apps[id]) Emu.apps[id].icon = Emu.state.appIcons[id];
+    });
+
     Emu.applyTheme();
     Shell.init();
     checkForUpdate();

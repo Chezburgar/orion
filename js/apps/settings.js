@@ -88,8 +88,11 @@
               var a = Emu.apps[id];
               return '<div class="st-card">' + Icons.get(a.icon) +
                 '<div class="lbl"><b>' + U.esc(a.name) + '</b><small>' + U.esc(a.desc || '') + '</small></div>' +
+                '<button class="btn" data-icon-app="' + id + '">Logo</button>' +
                 '<button class="btn" data-open-app="' + id + '">Open</button></div>';
             }).join('') +
+            '<p class="muted" style="font-size:11.5px">Logos you set are stored on this device. ' +
+            '<span class="lnk" data-act="reset-icons">Reset all logos</span></p>' +
             '<h3>Default apps</h3>' +
             card('edge', 'Web browser', 'Microsoft Edge (emulated)', '<span class="muted">Default</span>') +
             card('notepad', 'Text editor', 'Notepad', '<span class="muted">Default</span>');
@@ -160,6 +163,21 @@
       var a = e.target.closest('[data-accent]');
       if (a) { s.accent = a.dataset.accent; Emu.save(); Emu.applyTheme(); render(); return; }
 
+      var ia = e.target.closest('[data-icon-app]');
+      if (ia) {
+        var appId = ia.dataset.iconApp;
+        U.pickImage(96).then(function (data) {
+          if (!data) return;
+          Emu.state.appIcons[appId] = data;
+          if (Emu.apps[appId]) Emu.apps[appId].icon = data;
+          Emu.save();
+          Emu.emit('apps');
+          Emu.notify('Settings', Emu.apps[appId].name + ' logo updated.', 'settings');
+          render();
+        });
+        return;
+      }
+
       var oa = e.target.closest('[data-open-app]');
       if (oa) { Emu.launch(oa.dataset.openApp); return; }
 
@@ -170,6 +188,13 @@
         if (k === 'transparency') { s.transparency = !s.transparency; }
         else { s.quick[k] = !s.quick[k]; if (k === 'airplane' && s.quick.airplane) { s.quick.wifi = false; s.quick.bluetooth = false; } }
         Emu.save(); Emu.applyTheme(); Emu.emit('quick'); render();
+        return;
+      }
+      if (k === 'reset-icons') {
+        Emu.state.appIcons = {};
+        Emu.save();
+        Emu.notify('Settings', 'App logos reset. Reload to see the originals.', 'settings');
+        render();
         return;
       }
       if (k === 'lock') { global.Shell.lock(); return; }
