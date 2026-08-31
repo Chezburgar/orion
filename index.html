@@ -7,14 +7,17 @@
 <meta name="description" content="A Windows 11 desktop emulator with Microsoft Edge, running entirely in the browser.">
 <meta name="color-scheme" content="dark light">
 <link rel="icon" href="assets/orion.svg">
-<link rel="stylesheet" href="styles/base.css?v=21">
-<link rel="stylesheet" href="styles/shell.css?v=21">
-<link rel="stylesheet" href="styles/windows.css?v=21">
-<link rel="stylesheet" href="styles/apps.css?v=21">
-<link rel="stylesheet" href="styles/features.css?v=21">
-<link rel="stylesheet" href="styles/games.css?v=21">
-<link rel="stylesheet" href="styles/access.css?v=21">
-<link rel="stylesheet" href="styles/youtube.css?v=21">
+<link rel="stylesheet" href="styles/base.css?v=22">
+<link rel="stylesheet" href="styles/shell.css?v=22">
+<link rel="stylesheet" href="styles/windows.css?v=22">
+<link rel="stylesheet" href="styles/apps.css?v=22">
+<link rel="stylesheet" href="styles/features.css?v=22">
+<link rel="stylesheet" href="styles/games.css?v=22">
+<link rel="stylesheet" href="styles/access.css?v=22">
+<link rel="stylesheet" href="styles/youtube.css?v=22">
+<link rel="stylesheet" href="styles/office.css?v=22">
+<link rel="stylesheet" href="styles/tour.css?v=22">
+<link rel="stylesheet" href="styles/mac.css?v=22">
 </head>
 <body>
 
@@ -51,6 +54,22 @@
 <!-- ============ DESKTOP ============ -->
 <div id="desktop" class="screen desktop hidden">
   <div id="wallpaper" class="wallpaper"></div>
+  <!-- Mac style menu bar (hidden in Windows style) -->
+  <div id="macBar">
+    <button data-mb="orion" title="Start"><img class="mb-logo" src="assets/orion.svg" alt="Orion"></button>
+    <button class="mb-app" id="macAppName" data-mb="orion">Orion</button>
+    <button data-mb="settings">Settings</button>
+    <button data-mb="min">Window</button>
+    <span class="mb-spacer"></span>
+    <span class="mb-right">
+      <button data-mb="search" title="Search"></button>
+      <button data-mb="quick" title="Control centre"></button>
+      <button data-mb="bell" title="Notifications"></button>
+      <button data-mb="orion" id="macUser">Orion</button>
+      <span id="macClock">9:41</span>
+    </span>
+  </div>
+
   <div id="iconLayer" class="icon-layer"></div>
 
   <div id="windowLayer" class="window-layer"></div>
@@ -159,26 +178,29 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=21"></script>
-<script src="js/state.js?v=21"></script>
-<script src="js/net.js?v=21"></script>
-<script src="js/proxy.js?v=21"></script>
-<script src="js/auth.js?v=21"></script>
-<script src="js/vfs.js?v=21"></script>
-<script src="js/wm.js?v=21"></script>
-<script src="js/games.js?v=21"></script>
-<script src="js/apps/edge.js?v=21"></script>
-<script src="js/apps/vpn.js?v=21"></script>
-<script src="js/apps/store.js?v=21"></script>
-<script src="js/apps/access.js?v=21"></script>
-<script src="js/apps/youtube.js?v=21"></script>
-<script src="js/apps/explorer.js?v=21"></script>
-<script src="js/apps/notepad.js?v=21"></script>
-<script src="js/apps/settings.js?v=21"></script>
-<script src="js/apps/calculator.js?v=21"></script>
-<script src="js/apps/terminal.js?v=21"></script>
-<script src="js/apps/extras.js?v=21"></script>
-<script src="js/shell.js?v=21"></script>
-<script src="js/main.js?v=21"></script>
+<script src="js/icons.js?v=22"></script>
+<script src="js/state.js?v=22"></script>
+<script src="js/net.js?v=22"></script>
+<script src="js/proxy.js?v=22"></script>
+<script src="js/auth.js?v=22"></script>
+<script src="js/vfs.js?v=22"></script>
+<script src="js/wm.js?v=22"></script>
+<script src="js/games.js?v=22"></script>
+<script src="js/apps/edge.js?v=22"></script>
+<script src="js/apps/vpn.js?v=22"></script>
+<script src="js/apps/store.js?v=22"></script>
+<script src="js/apps/access.js?v=22"></script>
+<script src="js/apps/youtube.js?v=22"></script>
+<script src="js/apps/office.js?v=22"></script>
+<script src="js/apps/creative.js?v=22"></script>
+<script src="js/apps/explorer.js?v=22"></script>
+<script src="js/apps/notepad.js?v=22"></script>
+<script src="js/apps/settings.js?v=22"></script>
+<script src="js/apps/calculator.js?v=22"></script>
+<script src="js/apps/terminal.js?v=22"></script>
+<script src="js/apps/extras.js?v=22"></script>
+<script src="js/shell.js?v=22"></script>
+<script src="js/tour.js?v=22"></script>
+<script src="js/main.js?v=22"></script>
 </body>
 </html>

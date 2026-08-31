@@ -75,9 +75,14 @@
       e.preventDefault();
     });
 
+    // First run gets the setup wizard and the tour instead of a bare desktop.
+    Emu.on('shell:ready', function () {
+      if (global.Tour && global.Tour.pending()) setTimeout(function () { global.Tour.run(); }, 700);
+    });
+
     // Welcome notifications, once the desktop is actually visible.
     setTimeout(function () {
-      if (!Emu.state.notifications.length) {
+      if (Emu.state.setupDone && !Emu.state.notifications.length) {
         Emu.notify('Welcome to Orion',
           'Press the Windows key for Start, or open Microsoft Edge to browse. Right-click the desktop for more.', 'info');
         setTimeout(function () {

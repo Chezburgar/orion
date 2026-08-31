@@ -15,6 +15,22 @@
   var Shell = {
     desk: 0,
 
+    /**
+     * Swap the shell between the Windows and Mac layouts. Only chrome
+     * changes - every app, window and setting is identical either way, so
+     * this is a class on <html> plus the extra Mac menu bar.
+     */
+    setUiStyle: function (style, quiet) {
+      style = style === 'mac' ? 'mac' : 'win';
+      Emu.state.ui = style;
+      document.documentElement.setAttribute('data-ui', style);
+      if (!quiet) Emu.save();
+      syncMacBar();
+      Emu.emit('ui', style);
+      return style;
+    },
+    uiStyle: function () { return Emu.state.ui === 'mac' ? 'mac' : 'win'; },
+
     init: function () {
       els = {
         desktop: $('#desktop'), boot: $('#boot'), lock: $('#lock'),
@@ -26,6 +42,7 @@
       };
 
       WM.init();
+      Shell.setUiStyle(Emu.state.ui || 'win', true);
       buildTaskbar();
       buildStart();
       renderIcons();
@@ -34,10 +51,12 @@
       tickClock();
       setInterval(tickClock, 1000);
 
-      Emu.on('win:open', function (w) { w.desk = activeDesk; syncTaskbar(); });
-      Emu.on('win:close', syncTaskbar);
-      Emu.on('win:focus', syncTaskbar);
+      Emu.on('win:open', function (w) { w.desk = activeDesk; syncTaskbar(); syncMacBar(); });
+      Emu.on('win:close', function () { syncTaskbar(); syncMacBar(); });
+      Emu.on('win:focus', function () { syncTaskbar(); syncMacBar(); });
       Emu.on('win:change', syncTaskbar);
+      Emu.on('user', syncMacBar);
+      wireMacBar();
       Emu.on('vfs', function (p) { if (!p || p === VFS.DESKTOP) renderIcons(); });
       Emu.on('notify', function (n) { toast(n); syncBadge(); });
       Emu.on('notify:changed', function () { if (openFlyout === 'notif') renderNotifs(); syncBadge(); });
@@ -66,7 +85,10 @@
     unlock: function () {
       els.lock.classList.add('lifting');
       els.desktop.classList.remove('hidden');
-      setTimeout(function () { els.lock.classList.add('hidden'); }, 450);
+      setTimeout(function () {
+        els.lock.classList.add('hidden');
+        Emu.emit('shell:ready');
+      }, 450);
     },
 
     shutdown: function (mode) {
@@ -575,7 +597,46 @@
     var now = new Date();
     $('#clockTime').textContent = U.fmtTime(now);
     $('#clockDate').textContent = U.fmtShortDate(now);
+    var mc = $('#macClock');
+    if (mc) mc.textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) +
+      '  ' + U.fmtTime(now);
     if (!els.lock.classList.contains('hidden')) updateLockClock(now);
+  }
+
+  /** The Mac menu bar names the focused app; it is inert in Windows style. */
+  function syncMacBar() {
+    var name = $('#macAppName');
+    if (!name) return;
+    var w = WM.focused;
+    name.textContent = w && Emu.apps[w.appId] ? Emu.apps[w.appId].name : 'Orion';
+    var owner = $('#macUser');
+    if (owner) owner.textContent = Emu.state.user || 'Orion';
+  }
+
+  /**
+   * The Mac bar reuses the same panels as the Windows tray - there is one
+   * set of quick settings and one notification centre, drawn in both skins.
+   */
+  function wireMacBar() {
+    var bar = $('#macBar');
+    if (!bar) return;
+    { var ico = { search: 'search', quick: 'wifi', bell: 'bell' };
+      Object.keys(ico).forEach(function (k) {
+        var b = bar.querySelector('[data-mb="' + k + '"]');
+        if (b) b.innerHTML = Icons.get(ico[k]);
+      }); }
+    bar.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-mb]');
+      if (!b) return;
+      var k = b.dataset.mb;
+      if (k === 'orion') toggleFlyout('start');
+      else if (k === 'quick') toggleFlyout('quick');
+      else if (k === 'bell') { toggleFlyout('notif'); if (openFlyout === 'notif') renderNotifs(); }
+      else if (k === 'search') { toggleFlyout('search'); if (openFlyout === 'search') $('#searchInput').focus(); }
+      else if (k === 'settings') { closeFlyouts(); Emu.launch('settings'); }
+      else if (k === 'close' && WM.focused) WM.focused.close();
+      else if (k === 'min' && WM.focused) WM.minimize(WM.focused);
+    });
   }
 
   function updateLockClock(now) {

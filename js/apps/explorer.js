@@ -42,6 +42,7 @@
     var view = 'grid';
     var selected = [];
     var filter = '';
+    var shown = [];
 
     win.body.innerHTML =
       '<div class="ex">' +
@@ -137,9 +138,28 @@
               '<span class="muted">' + (e.node.type === 'dir' ? '' : U.fmtBytes(VFS.sizeOf(e.node))) + '</span></div>';
           }).join('');
       }
-      status.innerHTML = '<span>' + list.length + ' item' + (list.length === 1 ? '' : 's') + '</span>' +
+      shown = list;
+      renderStatus();
+    }
+
+    function renderStatus() {
+      var n = shown.length;
+      status.innerHTML = '<span>' + n + ' item' + (n === 1 ? '' : 's') + '</span>' +
         (selected.length ? '<span>' + selected.length + ' selected</span>' : '') +
         '<span style="margin-left:auto">' + U.esc(path) + '</span>';
+    }
+
+    /**
+     * Selecting must never rebuild the list. A rebuild swaps out the row under
+     * the pointer between the two halves of a double-click, so the browser has
+     * no shared element left to fire dblclick on and nothing ever opens. Toggle
+     * the class on the rows that are already there instead.
+     */
+    function paintSelection() {
+      U.$$('[data-path]', files).forEach(function (row) {
+        row.classList.toggle('selected', selected.indexOf(row.dataset.path) >= 0);
+      });
+      renderStatus();
     }
 
     function open(p) {
@@ -154,6 +174,11 @@
         else WM.alert('File Explorer', 'This app cannot run in the emulator.', win);
         return;
       }
+      // Orion Office and Draw own their own extensions.
+      var office = global.OfficeApps && global.OfficeApps.forExt(node.ext);
+      if (office) { Emu.launch(office, { path: p }); return; }
+      if (node.ext === 'odraw') { Emu.launch('draw', { path: p }); return; }
+
       if (node.ext === 'img' || /^(png|jpe?g|gif|svg|webp)$/.test(node.ext || '')) {
         Emu.launch('photos', { path: p });
         return;
@@ -185,10 +210,10 @@
           var i = selected.indexOf(item.dataset.path);
           i >= 0 ? selected.splice(i, 1) : selected.push(item.dataset.path);
         } else selected = [item.dataset.path];
-        render();
+        paintSelection();
         return;
       }
-      if (files.contains(e.target)) { selected = []; render(); }
+      if (files.contains(e.target)) { selected = []; paintSelection(); }
     });
 
     files.addEventListener('dblclick', function (e) {

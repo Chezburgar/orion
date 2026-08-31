@@ -20,6 +20,7 @@
 
   var OWNER_KEY = 'orion.owner.key';
   var DEVICE_KEY = 'orion.device.id';
+  var ROLE_KEY = 'orion.owner.role';
 
   /**
    * A public IP identifies a network, not a device - every phone and laptop
@@ -44,7 +45,8 @@
     { id: 'employee', label: 'Employee' }
   ];
 
-  var state = { ip: null, device: null, status: 'unknown', name: '', role: '', note: '', owner: false, error: null };
+  var state = { ip: null, device: null, status: 'unknown', name: '', role: '', note: '',
+    owner: false, adminRole: '', roleName: '', error: null };
 
   // ------------------------------------------------------------------ api
   function rpc(fn, body) {
@@ -106,9 +108,57 @@
     deviceId: deviceId,
 
     ownerKey: function () { try { return localStorage.getItem(OWNER_KEY) || ''; } catch (e) { return ''; } },
-    setOwnerKey: function (k) {
-      try { k ? localStorage.setItem(OWNER_KEY, k) : localStorage.removeItem(OWNER_KEY); } catch (e) {}
+    setOwnerKey: function (k, role) {
+      try {
+        if (k) localStorage.setItem(OWNER_KEY, k); else localStorage.removeItem(OWNER_KEY);
+        if (role) localStorage.setItem(ROLE_KEY, role); else localStorage.removeItem(ROLE_KEY);
+      } catch (e) {}
       state.owner = !!k;
+      state.adminRole = k ? (role || '') : '';
+    },
+
+    /**
+     * 'owner', 'admin' or ''. Cached from the last whoami so the UI can draw
+     * before the round trip finishes. Least privilege while it is unknown -
+     * the server is the one that actually decides, so a wrongly hidden button
+     * costs nothing and a wrongly shown one just errors.
+     */
+    role: function () {
+      if (!Auth.ownerKey()) return '';
+      try { return localStorage.getItem(ROLE_KEY) || 'admin'; } catch (e) { return 'admin'; }
+    },
+    roleLabel: function () {
+      var r = Auth.role();
+      return r === 'owner' ? 'Owner' : r === 'admin' ? 'Administrator' : 'Not signed in';
+    },
+    isSignedIn: function () { return !!Auth.ownerKey(); },
+
+    /** Ask the server what this key actually is, and cache it. */
+    whoami: function () {
+      var k = Auth.ownerKey();
+      if (!k) return Promise.resolve({ role: null });
+      return rpc('orion_admin_whoami', { p_key: k }).then(function (res) {
+        var role = res && res.role;
+        if (!role) { Auth.setOwnerKey(''); return { role: null }; }
+        try { localStorage.setItem(ROLE_KEY, role); } catch (e) {}
+        state.adminRole = role;
+        state.roleName = (res && res.label) || '';
+        return res;
+      });
+    },
+
+    // ----------------------------------------------------- administrators
+    adminsList: function () {
+      return rpc('orion_admins_list', { p_key: Auth.ownerKey() });
+    },
+    adminsAdd: function (label, role) {
+      return rpc('orion_admins_add', { p_key: Auth.ownerKey(), p_label: label, p_role: role || 'admin' });
+    },
+    adminsSetActive: function (id, active) {
+      return rpc('orion_admins_set_active', { p_key: Auth.ownerKey(), p_id: id, p_active: !!active });
+    },
+    adminsRemove: function (id) {
+      return rpc('orion_admins_remove', { p_key: Auth.ownerKey(), p_id: id });
     },
 
     /** Work out where this device stands. */
@@ -144,10 +194,12 @@
     },
 
     // --------------------------------------------------------------- owner
+    /** Accepts the owner key or any active administrator key. */
     verifyOwner: function (key) {
-      return rpc('orion_admin_list', { p_key: key }).then(function (rows) {
-        Auth.setOwnerKey(key);
-        return rows || [];
+      return rpc('orion_admin_whoami', { p_key: key }).then(function (res) {
+        if (!res || !res.role) throw new Error('unauthorised');
+        Auth.setOwnerKey(key, res.role);
+        return res;
       });
     },
     list: function () {
@@ -162,6 +214,7 @@
       return rpc('orion_admin_revoke', { p_key: Auth.ownerKey(), p_id: id });
     },
 
+    /** "Signed in as staff" - kept under the old name for the Store. */
     isOwner: function () { return !!Auth.ownerKey(); },
     configured: function () { return /^https:\/\/.+\.supabase\.co$/.test(CFG.url) && CFG.key.length > 20; },
 
@@ -245,10 +298,10 @@
         function ownerPrompt() {
           var body = document.getElementById('gateBody');
           body.innerHTML =
-            '<h2>Owner sign in</h2>' +
-            '<p class="gate-sub">Enter the owner key to manage access from this device.</p>' +
+            '<h2>Owner or admin sign in</h2>' +
+            '<p class="gate-sub">Enter the owner key, or an administrator key the owner gave you.</p>' +
             '<form class="gate-form" autocomplete="off">' +
-              '<label>Owner key<input name="key" placeholder="orion-xxxxx-xxxxx-xxxxx" required></label>' +
+              '<label>Access key<input name="key" placeholder="orion-xxxxx-xxxxx-xxxxx" required></label>' +
               '<div class="gate-err hidden" data-err></div>' +
               '<div class="gate-actions"><button class="btn primary" type="submit">Sign in</button>' +
               '<button class="btn" type="button" data-a="back">Back</button></div>' +
@@ -269,8 +322,9 @@
           var btn = f.querySelector('button[type="submit"]');
           if (f.key) {
             btn.disabled = true; btn.textContent = 'Checking…';
-            Auth.verifyOwner(f.key.value.trim()).then(function () {
-              Emu.notify('Orion', 'Signed in as the owner on this device.', 'shield');
+            Auth.verifyOwner(f.key.value.trim()).then(function (who) {
+              Emu.notify('Orion', 'Signed in as ' +
+                (who.role === 'owner' ? 'the owner' : 'an administrator') + ' on this device.', 'shield');
               done();
             }).catch(function (err) {
               btn.disabled = false; btn.textContent = 'Sign in';

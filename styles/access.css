@@ -76,3 +76,38 @@
 /* checkbox rows inside dialogs */
 .dlg-check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-2)}
 .dlg-check input{width:16px;height:16px;flex:none}
+
+/* ---------- Orion Admin: tabs, administrators, system ---------- */
+.acc-tabs{display:flex;align-items:center;gap:4px;padding:8px 12px;flex:none;
+  border-bottom:1px solid var(--stroke);background:var(--card-active)}
+.acc-maintab{height:30px;padding:0 14px;border-radius:var(--r-sm);color:var(--text-2);font-size:13px}
+.acc-maintab:hover{background:var(--card-hover);color:var(--text)}
+.acc-maintab.active{background:var(--card);color:var(--text);font-weight:600;
+  box-shadow:inset 0 -2px 0 var(--accent)}
+.acc-maintab b{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 5px;
+  margin-left:6px;border-radius:9px;background:var(--accent);color:#fff;font-size:10.5px}
+.acc-me{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3)}
+.acc-me svg{width:14px;height:14px}
+
+.adm-row{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:var(--r-md);
+  background:var(--card);border:1px solid var(--stroke);margin-bottom:9px;flex-wrap:wrap}
+.adm-row.off{opacity:.6}
+.adm-row.adm-root{border-style:dashed}
+.adm-row .acc-who{flex:1;min-width:150px}
+.adm-row .acc-actions{margin:0;width:auto}
+.adm-key{display:block;padding:12px 14px;border-radius:var(--r-sm);background:var(--card-active);
+  border:1px solid var(--stroke);font:15px/1.4 Consolas,monospace;letter-spacing:.04em;
+  user-select:all;word-break:break-all;text-align:center}
+.acc-note{padding:6px 4px 0;font-size:12px;line-height:1.6}
+.acc-actions.wrap{flex-wrap:wrap}
+
+.acc-sys{display:flex;flex-direction:column;gap:12px}
+.sys-card{padding:14px 16px;border-radius:var(--r-md);background:var(--card);border:1px solid var(--stroke)}
+.sys-card>b{display:block;margin-bottom:10px;font-size:13.5px}
+.sys-kv{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:12.5px;color:var(--text-2)}
+.sys-kv span{min-width:140px}
+.sys-kv code{font:12px Consolas,monospace;color:var(--text)}
+.sys-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.sys-table th,.sys-table td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--stroke)}
+.sys-table th:not(:first-child),.sys-table td:not(:first-child){text-align:center;width:82px}
+.sys-table th{color:var(--text-3);font-size:11.5px;font-weight:600}

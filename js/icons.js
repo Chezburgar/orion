@@ -80,7 +80,26 @@
     zoomIn: '<circle cx="10.6" cy="10.6" r="6"/><path d="M15 15l5.4 5.4M10.6 8.2v4.8M8.2 10.6h4.8"/>',
     zoomOut: '<circle cx="10.6" cy="10.6" r="6"/><path d="M15 15l5.4 5.4M8.2 10.6h4.8"/>',
     code: '<path d="m8.6 8.4-4.6 3.6 4.6 3.6M15.4 8.4l4.6 3.6-4.6 3.6M13.4 5l-2.8 14"/>',
-    plug: '<path d="M9 3v5M15 3v5"/><path d="M6.6 8h10.8v3.4a5.4 5.4 0 0 1-10.8 0z"/><path d="M12 16.8V21"/>'
+    plug: '<path d="M9 3v5M15 3v5"/><path d="M6.6 8h10.8v3.4a5.4 5.4 0 0 1-10.8 0z"/><path d="M12 16.8V21"/>',
+
+    // Editing toolbars (Write, Draw, Photo)
+    undo: '<path d="M4 9.6h9.4a5.4 5.4 0 0 1 0 10.8H7"/><path d="M8 4.6 3.4 9.6 8 14.6"/>',
+    redo: '<path d="M20 9.6h-9.4a5.4 5.4 0 0 0 0 10.8H17"/><path d="m16 4.6 4.6 5-4.6 5"/>',
+    strike: '<path d="M4.6 12h14.8"/><path d="M8 8.4a3.6 3.6 0 0 1 3.8-3.4c2.4 0 3.7 1.2 4.1 2.8M16.4 15a3.8 3.8 0 0 1-4.2 4c-2.6 0-4.2-1.4-4.5-3.2"/>',
+    numlist: '<path d="M9.6 6.6h10M9.6 12h10M9.6 17.4h10"/><path d="M4 5.2h1.4v3.6M4 17h2.4v3H4v-3M4 14.6h2.4l-2.4 2.4"/>',
+    alignleft: '<path d="M4 6.6h16M4 12h10M4 17.4h13"/>',
+    aligncenter: '<path d="M4 6.6h16M7 12h10M5.5 17.4h13"/>',
+    alignright: '<path d="M4 6.6h16M10 12h10M7 17.4h13"/>',
+    clearfmt: '<path d="M8 6h11M13.4 6 10 18"/><path d="m15.6 14.6 5 5m0-5-5 5"/>',
+    cursor: '<path d="m5 3.4 6.6 17 2.4-6.8 6.8-2.4z"/>',
+    shaperect: '<rect x="4" y="6" width="16" height="12" rx="1.6"/>',
+    shapeellipse: '<ellipse cx="12" cy="12" rx="8.4" ry="6.4"/>',
+    shapeline: '<path d="M4.6 19.4 19.4 4.6"/><circle cx="4.6" cy="19.4" r="1.6"/><circle cx="19.4" cy="4.6" r="1.6"/>',
+    pen: '<path d="M4 20s.8-3.6 2.4-5.2L16.6 4.6a2.4 2.4 0 0 1 3.4 3.4L9.8 18.2C8.2 19.8 4 20 4 20Z"/><path d="m15 6.2 3.4 3.4"/>',
+    text: '<path d="M5 6.4V4.6h14v1.8"/><path d="M12 4.6v14.8"/><path d="M9 19.4h6"/>',
+    eraser: '<path d="m9.4 19.4-4.8-4.8a1.8 1.8 0 0 1 0-2.6l8-8a1.8 1.8 0 0 1 2.6 0l4.2 4.2a1.8 1.8 0 0 1 0 2.6l-8.6 8.6z"/><path d="M9.4 19.4H20M8 8.6l6.4 6.4"/>',
+    bucket: '<path d="M6 10.4 12.6 3.8l7.2 7.2-6.6 6.6a1.8 1.8 0 0 1-2.6 0L6 13a1.8 1.8 0 0 1 0-2.6Z"/><path d="M4 8.6 8.8 13.4"/><path d="M20 15.4s2 2.6 2 4a2 2 0 0 1-4 0c0-1.4 2-4 2-4Z" fill="currentColor" stroke="none"/>',
+    dropper: '<path d="m14.6 4.8 4.6 4.6"/><path d="M17.8 3.4a2.4 2.4 0 0 1 3.4 3.4l-2 2-3.4-3.4z"/><path d="m14.4 7.4 2.2 2.2-8 8L4.4 19l1.4-4.2z"/>'
   };
 
   // Filled / colored app icons (32x32) ------------------------------------
@@ -185,7 +204,39 @@
       + '<path d="M16 6v20" stroke="#33465a" stroke-width="1.6" stroke-dasharray="2 3"/>'
       + '<rect x="5.6" y="10" width="2.8" height="9" rx="1.4" fill="#e2e8f0"/>'
       + '<rect x="23.6" y="13" width="2.8" height="9" rx="1.4" fill="#e2e8f0"/>'
-      + '<circle cx="17.4" cy="15" r="2.2" fill="#4ade80"/>'
+      + '<circle cx="17.4" cy="15" r="2.2" fill="#4ade80"/>',
+
+    // Orion Office and Orion Creative --------------------------------------
+    write: '<rect x="4" y="2.6" width="24" height="26.8" rx="3" fill="#f8fafc"/>'
+      + '<rect x="4" y="2.6" width="7" height="26.8" rx="3" fill="#2b579a"/>'
+      + '<path d="M13.4 9.6h11M13.4 14h11M13.4 18.4h11M13.4 22.8h7.4" stroke="#93a4bd" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<path d="M6 11.4 7.6 21l1.2-6 1.2 6L11.6 11.4" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>',
+    sheets: '<rect x="4" y="2.6" width="24" height="26.8" rx="3" fill="#f8fafc"/>'
+      + '<rect x="4" y="2.6" width="24" height="6.4" rx="3" fill="#1d7a4c"/>'
+      + '<rect x="4" y="6" width="24" height="3" fill="#1d7a4c"/>'
+      + '<path d="M12 9v20.4M20 9v20.4M4 15.6h24M4 22.2h24" stroke="#c9d6e3" stroke-width="1.4"/>'
+      + '<rect x="20" y="15.6" width="8" height="6.6" fill="#34d399" opacity=".5"/>',
+    slides: '<rect x="4" y="2.6" width="24" height="26.8" rx="3" fill="#f8fafc"/>'
+      + '<rect x="4" y="2.6" width="24" height="6.4" rx="3" fill="#c0492b"/>'
+      + '<rect x="4" y="6" width="24" height="3" fill="#c0492b"/>'
+      + '<rect x="7.6" y="12.4" width="16.8" height="10.6" rx="1.4" fill="#fde3d6" stroke="#e58f6f" stroke-width="1.2"/>'
+      + '<path d="M10.6 20.4 14 16.4l2.6 3 2.4-2.6 2.4 3.6z" fill="#c0492b"/>'
+      + '<path d="M10.6 25.8h10.8" stroke="#b8c4d2" stroke-width="1.6" stroke-linecap="round"/>',
+    notes: '<rect x="5" y="2.6" width="22" height="26.8" rx="3" fill="#f8fafc"/>'
+      + '<rect x="5" y="2.6" width="22" height="26.8" rx="3" fill="none" stroke="#dbe3ec" stroke-width="1.2"/>'
+      + '<rect x="20.4" y="2.6" width="6.6" height="26.8" rx="3" fill="#7b2fb5"/>'
+      + '<path d="M9.4 9.6h8.4M9.4 14h8.4M9.4 18.4h8.4M9.4 22.8h5" stroke="#a9b6c7" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<path d="M22.4 8.6h2.6M22.4 15h2.6M22.4 21.4h2.6" stroke="#e7d6f5" stroke-width="1.8" stroke-linecap="round"/>',
+    draw: '<rect x="3" y="3" width="26" height="26" rx="4" fill="#160f2e"/>'
+      + '<path d="M8 23.6s.6-4 2.2-5.6L20 8.2a2.6 2.6 0 0 1 3.8 3.6L14 21.6c-1.6 1.6-6 2-6 2Z" fill="#f59e0b"/>'
+      + '<path d="m18.4 9.8 3.8 3.8" stroke="#160f2e" stroke-width="1.6"/>'
+      + '<circle cx="10.4" cy="10.4" r="3" fill="none" stroke="#22d3ee" stroke-width="1.8"/>'
+      + '<rect x="18.6" y="19.4" width="6.4" height="6.4" rx="1.4" fill="none" stroke="#a855f7" stroke-width="1.8"/>',
+    photo: '<rect x="3" y="3" width="26" height="26" rx="4" fill="#0d1b2f"/>'
+      + '<circle cx="16" cy="16" r="9.4" fill="none" stroke="#31c5f4" stroke-width="1.6"/>'
+      + '<path d="M16 6.6a9.4 9.4 0 0 1 0 18.8z" fill="#31c5f4" opacity=".85"/>'
+      + '<circle cx="16" cy="16" r="3.6" fill="#0d1b2f"/>'
+      + '<circle cx="22.4" cy="9.6" r="1.6" fill="#fbbf24"/>'
   };
 
   function wrap(inner, vb, extra) {

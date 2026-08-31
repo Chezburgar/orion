@@ -1,0 +1,91 @@
+/* ===== Mac style skin =====
+   Nothing here changes what Orion can do - it only re-lays-out the shell:
+   a menu bar on top, a dock at the bottom, and traffic-light window buttons.
+   Every rule is scoped to [data-ui="mac"], so the Windows layout is the file
+   untouched.                                                               */
+
+#macBar{display:none}
+
+/* The dock floats, so windows must reserve more room than the Windows
+   taskbar needs. WM reads the window layer's own box for its bounds. */
+html[data-ui="mac"]{--taskbar-h:78px}
+
+html[data-ui="mac"] #macBar{
+  display:flex;align-items:center;gap:2px;position:absolute;top:0;left:0;right:0;height:26px;
+  z-index:600;padding:0 10px;font-size:12.5px;color:var(--text);
+  background:color-mix(in srgb,var(--acrylic,#1c1c1e) 82%,transparent);
+  backdrop-filter:blur(24px) saturate(160%);border-bottom:1px solid var(--stroke)}
+html[data-ui="mac"] #macBar .mb-logo{width:15px;height:15px;margin-right:6px}
+html[data-ui="mac"] #macBar button{height:20px;padding:0 9px;border-radius:5px;color:inherit;
+  font-size:12.5px;display:flex;align-items:center;gap:6px}
+html[data-ui="mac"] #macBar button:hover{background:var(--card-hover)}
+html[data-ui="mac"] #macBar .mb-app{font-weight:650}
+html[data-ui="mac"] #macBar .mb-spacer{flex:1}
+html[data-ui="mac"] #macBar .mb-right svg{width:14px;height:14px}
+html[data-ui="mac"] #macClock{font-variant-numeric:tabular-nums;padding:0 6px}
+
+/* Desktop content starts below the menu bar */
+html[data-ui="mac"] .icon-layer{top:34px}
+html[data-ui="mac"] .window-layer{top:26px}
+
+/* ---------- the dock ---------- */
+html[data-ui="mac"] #taskbar{
+  left:50%;right:auto;bottom:9px;transform:translateX(-50%);
+  width:auto;max-width:calc(100vw - 28px);height:60px;padding:0 9px;
+  border-radius:19px;border:1px solid var(--stroke);
+  background:color-mix(in srgb,var(--acrylic,#232326) 76%,transparent);
+  box-shadow:0 14px 40px rgba(0,0,0,.45);gap:4px;overflow:visible}
+html[data-ui="mac"] #taskbar .tb-left,
+html[data-ui="mac"] #taskbar .tb-center{position:static;transform:none;gap:3px;align-items:flex-end}
+html[data-ui="mac"] #taskbar .tb-right{gap:2px;margin-left:6px;padding-left:8px;
+  border-left:1px solid var(--stroke);align-items:center}
+
+/* Dock icons grow toward the cursor */
+html[data-ui="mac"] #taskbar .tb-btn{
+  width:46px;height:46px;border-radius:12px;padding:0;transition:transform .16s ease,margin .16s ease;
+  transform-origin:bottom center}
+html[data-ui="mac"] #taskbar .tb-btn svg,
+html[data-ui="mac"] #taskbar .tb-btn img{width:34px;height:34px}
+html[data-ui="mac"] #taskbar .tb-btn:hover{transform:scale(1.32) translateY(-5px);background:transparent}
+html[data-ui="mac"] #taskbar .tb-btn.open::after,
+html[data-ui="mac"] #taskbar .tb-app.active::after{
+  content:"";position:absolute;left:50%;bottom:1px;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--text);opacity:.85}
+html[data-ui="mac"] #taskbar .tb-btn.open{background:transparent}
+
+/* The clock and date live in the menu bar instead */
+html[data-ui="mac"] #trayClock,
+html[data-ui="mac"] #showDesktop{display:none}
+html[data-ui="mac"] .tray-btn{width:34px;height:34px;border-radius:9px}
+
+/* ---------- traffic lights ---------- */
+html[data-ui="mac"] .win{border-radius:11px}
+html[data-ui="mac"] .win-titlebar{flex-direction:row;height:36px;padding-left:12px}
+html[data-ui="mac"] .win-controls{order:-1;gap:8px;margin-right:12px;align-items:center;height:100%}
+html[data-ui="mac"] .win-controls button{
+  width:12px;height:12px;border-radius:50%;padding:0;flex:none;position:relative;
+  display:grid;place-items:center;border:none}
+html[data-ui="mac"] .win-controls button svg{display:none}
+/* Markup order is minimise, maximise, close; a Mac reads close, minimise, zoom */
+html[data-ui="mac"] .wc-close{background:#ff5f57;order:1}
+html[data-ui="mac"] .wc-min{background:#febc2e;order:2}
+html[data-ui="mac"] .wc-max{background:#28c840;order:3}
+html[data-ui="mac"] .win-controls button:hover{filter:brightness(1.14)}
+html[data-ui="mac"] .wc-close:hover::after{content:"×";font-size:11px;line-height:1;color:rgba(0,0,0,.55)}
+html[data-ui="mac"] .wc-min:hover::after{content:"–";font-size:11px;line-height:1;color:rgba(0,0,0,.55)}
+html[data-ui="mac"] .wc-max:hover::after{content:"+";font-size:10px;line-height:1;color:rgba(0,0,0,.55)}
+html[data-ui="mac"] .win-drag{justify-content:center}
+html[data-ui="mac"] .win-title{font-weight:600}
+html[data-ui="mac"] .win-drag svg,
+html[data-ui="mac"] .win-drag img{display:none}
+
+/* ---------- Start becomes a centred launcher ---------- */
+html[data-ui="mac"] .start-menu{
+  left:50%;bottom:80px;transform:translateX(-50%);width:min(640px,calc(100vw - 40px));
+  border-radius:18px}
+html[data-ui="mac"] .flyout.quick-panel,
+html[data-ui="mac"] .flyout.notif-panel{bottom:80px}
+html[data-ui="mac"] .search-panel{left:50%;transform:translateX(-50%);bottom:80px;border-radius:16px}
+
+/* Snap previews and maximised windows must clear the menu bar */
+html[data-ui="mac"] .snap-preview{top:26px}

@@ -153,14 +153,28 @@
       }
 
       if (page === 'apps') {
-        main.innerHTML = '<h3 class="store-h">Apps included with Orion</h3><div class="store-grid2">' +
-          Emu.appOrder.filter(function (id) { return !Emu.apps[id].game && !Emu.apps[id].hidden; }).map(function (id) {
-            var a = Emu.apps[id];
-            return '<div class="store-tile"><div class="store-art">' + Icons.get(a.icon) + '</div>' +
-              '<b>' + U.esc(a.name) + '</b><small class="muted">' + U.esc(a.desc || 'App') + '</small>' +
-              '<div class="store-actions"><button class="btn primary" data-open="' + id + '">Open</button>' +
-              '<button class="btn" data-pin="' + id + '">Pin</button></div></div>';
-          }).join('') + '</div>';
+        var appIds = Emu.appOrder.filter(function (id) { return !Emu.apps[id].game && !Emu.apps[id].hidden; });
+        function tile(id) {
+          var a = Emu.apps[id];
+          return '<div class="store-tile"><div class="store-art">' + Icons.get(a.icon) + '</div>' +
+            '<b>' + U.esc(a.name) + '</b><small class="muted">' + U.esc(a.desc || 'App') + '</small>' +
+            '<div class="store-actions"><button class="btn primary" data-open="' + id + '">Open</button>' +
+            '<button class="btn" data-pin="' + id + '">Pin</button></div></div>';
+        }
+        function suite(name) { return appIds.filter(function (id) { return Emu.apps[id].suite === name; }); }
+        var office = suite('office'), creative = suite('creative');
+        var rest = appIds.filter(function (id) { return !Emu.apps[id].suite; });
+
+        main.innerHTML =
+          (office.length ? '<h3 class="store-h">Orion Office</h3>' +
+            '<p class="store-lead">Documents, spreadsheets, decks and notes. Everything saves into ' +
+            'your Documents folder and reopens from File Explorer.</p>' +
+            '<div class="store-grid2">' + office.map(tile).join('') + '</div>' : '') +
+          (creative.length ? '<h3 class="store-h">Orion Creative</h3>' +
+            '<p class="store-lead">Vector illustration and image editing, both built into Orion. ' +
+            'Draw exports real SVG and PNG; Photo bakes its adjustments into the pixels.</p>' +
+            '<div class="store-grid2">' + creative.map(tile).join('') + '</div>' : '') +
+          '<h3 class="store-h">System</h3><div class="store-grid2">' + rest.map(tile).join('') + '</div>';
         return;
       }
 

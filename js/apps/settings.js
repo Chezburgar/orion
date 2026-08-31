@@ -70,7 +70,17 @@
           var accents = Emu.ACCENTS.map(function (a) {
             return '<div class="acc' + (s.accent === a ? ' sel' : '') + '" style="background:' + a + '" data-accent="' + a + '"></div>';
           }).join('');
-          return '<h2>Personalisation</h2><h3>Background</h3><div class="wall-grid">' + walls + '</div>' +
+          return '<h2>Personalisation</h2>' +
+            '<h3>System style</h3>' +
+            card('monitor', 'Shell layout',
+              'Windows keeps the taskbar and Start; Mac gives you a menu bar, a dock and traffic-light ' +
+              'window buttons. Apps and files are identical either way.',
+              '<select class="st-select" data-act="uistyle">' +
+              '<option value="win"' + (s.ui !== 'mac' ? ' selected' : '') + '>Windows style</option>' +
+              '<option value="mac"' + (s.ui === 'mac' ? ' selected' : '') + '>Mac style</option></select>') +
+            card('orion', 'Setup and tour', 'Run first-time setup and the guided tour again',
+              '<button class="btn" data-act="tour">Run it</button>') +
+            '<h3>Background</h3><div class="wall-grid">' + walls + '</div>' +
             '<h3>Colours</h3>' +
             card('moon', 'Choose your mode', 'Light or dark across the whole shell',
               '<select class="st-select" data-act="theme">' +
@@ -198,6 +208,7 @@
         return;
       }
       if (k === 'lock') { global.Shell.lock(); return; }
+      if (k === 'tour') { win.close(); if (global.Tour) global.Tour.run(true); return; }
       if (k === 'reset') {
         WM.confirm('Reset emulator', 'This deletes all files, settings and browsing data stored by the emulator in this browser. Continue?', win)
           .then(function (ok) { if (ok) Emu.reset(); });
@@ -230,6 +241,8 @@
       if (e.target.dataset.act === 'theme') {
         s.theme = e.target.value;
         Emu.save(); Emu.applyTheme();
+      } else if (e.target.dataset.act === 'uistyle') {
+        global.Shell.setUiStyle(e.target.value);
       }
     });
 
