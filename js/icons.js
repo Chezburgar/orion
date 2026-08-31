@@ -83,6 +83,9 @@
     plug: '<path d="M9 3v5M15 3v5"/><path d="M6.6 8h10.8v3.4a5.4 5.4 0 0 1-10.8 0z"/><path d="M12 16.8V21"/>',
 
     // Editing toolbars (Write, Draw, Photo)
+    bold: '<path d="M7.4 4.6h5.8a3.9 3.9 0 0 1 0 7.8H7.4zM7.4 12.4h6.7a4 4 0 0 1 0 8H7.4z" stroke-width="1.8"/>',
+    italic: '<path d="M15.4 4.6h-4.8M13.4 19.4H8.6M14.4 4.6 9.6 19.4"/>',
+    underline: '<path d="M7 4.6v6.8a5 5 0 0 0 10 0V4.6"/><path d="M5.6 20.4h12.8"/>',
     undo: '<path d="M4 9.6h9.4a5.4 5.4 0 0 1 0 10.8H7"/><path d="M8 4.6 3.4 9.6 8 14.6"/>',
     redo: '<path d="M20 9.6h-9.4a5.4 5.4 0 0 0 0 10.8H17"/><path d="m16 4.6 4.6 5-4.6 5"/>',
     strike: '<path d="M4.6 12h14.8"/><path d="M8 8.4a3.6 3.6 0 0 1 3.8-3.4c2.4 0 3.7 1.2 4.1 2.8M16.4 15a3.8 3.8 0 0 1-4.2 4c-2.6 0-4.2-1.4-4.5-3.2"/>',
@@ -246,9 +249,15 @@
   var Icons = {
     /** Returns SVG markup for a named icon. */
     get: function (name) {
+      // An uploaded logo is wrapped in the same <svg> box a built-in icon
+      // uses, so every "… svg { width: N }" rule in the stylesheets sizes it
+      // too. Returning a bare <img> left it unsized wherever the CSS targeted
+      // svg specifically, which is why custom logos came out the wrong size.
       if (typeof name === 'string' && name.slice(0, 5) === 'data:') {
-        return '<img src="' + name.replace(/"/g, '&quot;') +
-          '" alt="" style="width:100%;height:100%;object-fit:contain;display:block">';
+        var href = name.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        return wrap('<image href="' + href + '" xlink:href="' + href + '" ' +
+          'x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet"/>',
+          '0 0 32 32', 'xmlns:xlink="http://www.w3.org/1999/xlink"');
       }
       if (A[name]) return wrap(A[name], '0 0 32 32');
       if (S[name]) {

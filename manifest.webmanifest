@@ -1,0 +1,33 @@
+{
+  "name": "Orion",
+  "short_name": "Orion",
+  "description": "A desktop that runs in the browser: files, windows, a browser, a store and a full app suite.",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0a0f22",
+  "theme_color": "#0a0f22",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "assets/orion.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/orion-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Orion Write", "url": "./?open=write" },
+    { "name": "Orion Sheets", "url": "./?open=sheets" },
+    { "name": "Orion Store", "url": "./?open=store" }
+  ]
+}

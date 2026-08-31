@@ -57,6 +57,7 @@
     Emu.applyTheme();
     Shell.init();
     checkForUpdate();
+    if (global.Install) global.Install.register();
     Emu.onNotifAction('app:reload', function () {
       location.replace(location.pathname + '?b=' + Date.now());
     });

@@ -71,6 +71,27 @@
       }).join('') + '</div>';
   }
 
+  function stepInstall() {
+    var I = global.Install;
+    var body;
+    if (!I) {
+      body = '<p class="tw-note">Install support is not loaded.</p>';
+    } else if (I.installed()) {
+      body = '<div class="tw-installed">' + Icons.get('check') +
+        '<span>Orion is already installed on this device.</span></div>';
+    } else if (I.available()) {
+      body = '<button class="btn primary tw-install" data-install>Install Orion</button>' +
+        '<p class="tw-note">Your browser will ask you to confirm.</p>';
+    } else {
+      body = '<div class="tw-manual">' + Icons.get('info') + '<span>' + U.esc(I.hint()) + '</span></div>' +
+        '<p class="tw-note">The button appears here automatically if your browser offers to do it for you.</p>';
+    }
+    return '<h2>Add Orion to your device</h2>' +
+      '<p>Installed, Orion opens in its own window with no address bar, gets an icon in your ' +
+      'launcher or taskbar, and starts faster. It is the same Orion — nothing is downloaded ' +
+      'and your files stay in this browser.</p>' + body;
+  }
+
   function stepDone() {
     return '<div class="tw-hero ok">' + Icons.get('check') + '</div>' +
       '<h2>You are set up</h2>' +
@@ -84,6 +105,7 @@
     { render: stepLook },
     { render: stepStyle },
     { render: stepApps },
+    { render: stepInstall },
     { render: stepDone, next: 'Start the tour' }
   ];
 
@@ -150,6 +172,19 @@
         if (w) { Emu.state.wallpaper = w.dataset.wall; Emu.applyTheme(); Emu.save(); draw(); return; }
         var u = e.target.closest('.tw-style[data-ui]');
         if (u) { global.Shell.setUiStyle(u.dataset.ui); draw(); return; }
+
+        if (e.target.closest('[data-install]')) {
+          var btn = e.target.closest('[data-install]');
+          btn.disabled = true;
+          btn.textContent = 'Waiting for your browser…';
+          global.Install.prompt().then(function (outcome) {
+            if (outcome === 'accepted' || outcome === 'installed') { draw(); return; }
+            btn.disabled = false;
+            btn.textContent = outcome === 'dismissed' ? 'Install Orion' : 'Not offered by this browser';
+            if (outcome === 'unavailable') draw();
+          });
+          return;
+        }
 
         var b = e.target.closest('[data-a]');
         if (!b) return;

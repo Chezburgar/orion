@@ -3,7 +3,7 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-08-31.22';
+  var BUILD = '2026-08-31.23';
 
   var DEFAULTS = {
     user: 'Chase',
@@ -164,6 +164,30 @@
       };
     },
     /**
+     * Find the box that actually has pixels in it, so a logo saved with a
+     * wide transparent margin still fills its icon slot instead of sitting
+     * tiny in the middle. Falls back to the whole image if it is opaque.
+     */
+    trimBox: function (ctx, w, h) {
+      var data;
+      try { data = ctx.getImageData(0, 0, w, h).data; }
+      catch (e) { return { x: 0, y: 0, w: w, h: h }; }
+      var minX = w, minY = h, maxX = -1, maxY = -1;
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          if (data[(y * w + x) * 4 + 3] > 12) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < 0) return { x: 0, y: 0, w: w, h: h };
+      return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+    },
+
+    /**
      * Ask for an image file and hand back a small square PNG data URL.
      * Downscaling here keeps logos well under any storage limit.
      */
@@ -179,14 +203,26 @@
           reader.onload = function () {
             var img = new Image();
             img.onload = function () {
-              var size = maxPx || 96;
+              var size = maxPx || 128;
+
+              // Draw at natural size first so the empty margin can be measured
+              // and cropped away; a logo exported with padding otherwise ends
+              // up a fraction of the icon it was dropped into.
+              var nat = document.createElement('canvas');
+              nat.width = Math.max(1, img.width);
+              nat.height = Math.max(1, img.height);
+              var nctx = nat.getContext('2d', { willReadFrequently: true });
+              nctx.drawImage(img, 0, 0);
+              var box = util.trimBox(nctx, nat.width, nat.height);
+
               var c = document.createElement('canvas');
               c.width = c.height = size;
               var ctx = c.getContext('2d');
-              // contain, centred, transparent background
-              var scale = Math.min(size / img.width, size / img.height);
-              var w = img.width * scale, h = img.height * scale;
-              ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+              // contain the trimmed art, centred, on a transparent square
+              var pad = size * 0.04;
+              var scale = Math.min((size - pad * 2) / box.w, (size - pad * 2) / box.h);
+              var w = box.w * scale, h = box.h * scale;
+              ctx.drawImage(nat, box.x, box.y, box.w, box.h, (size - w) / 2, (size - h) / 2, w, h);
               try { resolve(c.toDataURL('image/png')); }
               catch (e) { resolve(null); }
             };

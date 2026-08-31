@@ -63,8 +63,21 @@
       Emu.on('user', function () { buildStart(); });
       Emu.on('theme', function () { renderIcons(); });
       Emu.on('apps', function () { buildStart(); syncTaskbar(); });
-      Emu.on('net', syncVpnTray);
+      Emu.on('net', function () { syncVpnTray(); syncMacStatus(); });
       syncVpnTray();
+
+      // Live device state, rather than the numbers the tray used to invent.
+      initPower();
+      ['online', 'offline'].forEach(function (ev) {
+        window.addEventListener(ev, function () {
+          renderQuick();
+          Emu.notify('Network', navigator.onLine ? 'Back online.' : 'This device lost its internet connection.',
+            navigator.onLine ? 'wifi' : 'warning');
+        });
+      });
+      if (navigator.connection && navigator.connection.addEventListener) {
+        navigator.connection.addEventListener('change', renderQuick);
+      }
     },
 
     // ---------------------------------------------------------- boot/lock
@@ -426,11 +439,72 @@
     { k: 'cast', name: 'Cast', icon: 'cast' }
   ];
 
+  // ---------------------------------------------------------- real power
+  // The tray used to print a hardcoded "100% - Plugged in". These read the
+  // actual device where the browser exposes it, and say so plainly when it
+  // does not, rather than inventing a number.
+  var power = { level: null, charging: false, supported: false };
+
+  function initPower() {
+    if (!navigator.getBattery) { renderQuick(); return; }
+    navigator.getBattery().then(function (b) {
+      power.supported = true;
+      function upd() {
+        power.level = Math.round(b.level * 100);
+        power.charging = !!b.charging;
+        renderQuick();
+        syncMacStatus();
+      }
+      ['levelchange', 'chargingchange'].forEach(function (ev) { b.addEventListener(ev, upd); });
+      upd();
+    }).catch(function () { renderQuick(); });
+  }
+
+  /** Battery glyph whose fill tracks the real charge level. */
+  function batteryGlyph() {
+    var lvl = power.supported && power.level != null ? power.level : 100;
+    var w = Math.max(1.5, 13 * lvl / 100);
+    var fill = power.charging ? '#34d399' : lvl <= 15 ? '#f87171' : lvl <= 30 ? '#fbbf24' : 'currentColor';
+    return '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+      '<rect x="2" y="7.6" width="17" height="8.8" rx="2.2"/>' +
+      '<path d="M21.2 10.6v2.8"/>' +
+      '<rect x="4" y="9.6" width="' + w.toFixed(1) + '" height="4.8" rx="1" fill="' + fill + '" stroke="none"/>' +
+      (power.charging
+        ? '<path d="M12.6 7.4 8.8 13h2.9l-.7 3.8 4-5.8h-3z" fill="#fff" stroke="var(--layer-solid)" stroke-width="1.1"/>'
+        : '') + '</svg>';
+  }
+
+  function powerText() {
+    if (!power.supported || power.level == null) {
+      return Emu.state.quick.saver ? 'Battery saver on' : 'No battery reported - on mains power';
+    }
+    return power.level + '%' + (power.charging ? ' - charging' : ' - on battery') +
+      (Emu.state.quick.saver ? ' - saver on' : '');
+  }
+
+  /** Real connectivity, not the simulated Wi-Fi switch. */
+  function online() { return navigator.onLine !== false; }
+
+  function netIconName() {
+    if (!online()) return 'globe';
+    if (!Emu.state.quick.wifi) return 'airplane';
+    return 'wifi';
+  }
+
+  function netText() {
+    if (!online()) return 'No internet connection';
+    var c = navigator.connection || {};
+    var kind = c.effectiveType ? ' - ' + c.effectiveType.toUpperCase() : '';
+    return (Emu.state.quick.wifi ? 'Connected' : 'Wi-Fi off (still online)') + kind;
+  }
+
   function renderQuick() {
     var s = Emu.state;
     $('#quickGrid').innerHTML = QUICK_TILES.map(function (t) {
       return '<div class="q-tile' + (s.quick[t.k] ? ' on' : '') + '" data-q="' + t.k + '">' +
-        Icons.get(t.icon) + '<span>' + t.name + '</span></div>';
+        (t.k === 'saver' ? batteryGlyph() : Icons.get(t.k === 'wifi' ? netIconName() : t.icon)) +
+        '<span>' + t.name + '</span></div>';
     }).join('');
     $('#volumeSlider').value = s.volume;
     $('#volumeVal').textContent = s.volume;
@@ -439,11 +513,15 @@
     $$('.qs-ico', els.quick).forEach(function (el) { el.innerHTML = Icons.get(el.dataset.ico); });
     $$('[data-ico]', $('#taskbar')).forEach(function (el) {
       var name = el.dataset.ico;
-      if (name === 'wifi' && !s.quick.wifi) name = 'airplane';
+      if (name === 'battery') { el.innerHTML = batteryGlyph(); return; }
+      if (name === 'wifi') name = netIconName();
       if (name === 'volume' && s.volume === 0) name = 'mute';
       el.innerHTML = Icons.get(name);
     });
-    $('#batteryText').textContent = s.quick.saver ? '100% - Battery saver on' : '100% - Plugged in';
+    var tq = $('#trayQuick');
+    if (tq) tq.title = [netText(), powerText(), 'Volume ' + s.volume + '%'].join(' · ');
+    $('#batteryText').textContent = powerText();
+    syncMacStatus();
   }
 
   function wireQuick() {
@@ -611,6 +689,29 @@
     name.textContent = w && Emu.apps[w.appId] ? Emu.apps[w.appId].name : 'Orion';
     var owner = $('#macUser');
     if (owner) owner.textContent = Emu.state.user || 'Orion';
+    syncMacStatus();
+  }
+
+  /**
+   * A Mac keeps status in the menu bar, not the dock. Putting battery, network
+   * and volume up here is also what stops the dock's right end being cramped -
+   * the whole tray is hidden there in this style.
+   */
+  function syncMacStatus() {
+    var box = $('#macStatus');
+    if (!box) return;
+    var s = Emu.state;
+    box.innerHTML = batteryGlyph() +
+      (power.supported && power.level != null ? '<b>' + power.level + '%</b>' : '') +
+      Icons.get(netIconName()) +
+      Icons.get(s.volume === 0 ? 'mute' : 'volume');
+    box.title = [netText(), powerText(), 'Volume ' + s.volume + '%'].join(' · ');
+    var vpn = $('#macVpn');
+    if (vpn) {
+      var on = s.net.connected;
+      vpn.classList.toggle('hidden', !on);
+      if (on) vpn.innerHTML = Icons.get('shield');
+    }
   }
 
   /**
@@ -634,6 +735,7 @@
       else if (k === 'bell') { toggleFlyout('notif'); if (openFlyout === 'notif') renderNotifs(); }
       else if (k === 'search') { toggleFlyout('search'); if (openFlyout === 'search') $('#searchInput').focus(); }
       else if (k === 'settings') { closeFlyouts(); Emu.launch('settings'); }
+      else if (k === 'vpn') { closeFlyouts(); Emu.launch('vpn'); }
       else if (k === 'close' && WM.focused) WM.focused.close();
       else if (k === 'min' && WM.focused) WM.minimize(WM.focused);
     });

@@ -8,6 +8,7 @@ const port = process.env.PORT || 4173;
 const types = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
   '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png',
+  '.webmanifest': 'application/manifest+json',
   '.ico': 'image/x-icon', '.md': 'text/markdown'
 };
 

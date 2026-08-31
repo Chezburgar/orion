@@ -2,12 +2,19 @@
 
 .of{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--layer-solid)}
 
-.of-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;flex:none;flex-wrap:wrap;
+/* One row that scrolls when the window is narrow. Wrapping left two or three
+   orphaned buttons on a second line, which read as a broken toolbar. */
+.of-bar{display:flex;align-items:center;gap:6px;padding:7px 10px;flex:none;flex-wrap:nowrap;
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;
   border-bottom:1px solid var(--stroke);background:var(--card-active)}
+.of-bar::-webkit-scrollbar{height:5px}
+.of-bar::-webkit-scrollbar-thumb{background:var(--stroke);border-radius:3px}
+.of-bar>*{flex:none}
 .of-sep{width:1px;height:20px;background:var(--stroke);margin:0 3px;flex:none}
 .of-sel{height:30px;border-radius:var(--r-sm);background:var(--card);border:1px solid var(--stroke);
-  color:var(--text);font:inherit;font-size:12.5px;padding:0 8px;max-width:150px}
-.of-sel.narrow{max-width:74px}
+  color:var(--text);font:inherit;font-size:12.5px;padding:0 8px;max-width:132px}
+.of-sel.narrow{max-width:66px}
+.of .btn{white-space:nowrap}
 .of-color{width:32px;height:30px;padding:2px;border:1px solid var(--stroke);border-radius:var(--r-sm);
   background:var(--card);cursor:pointer}
 .of .e-btn.on{background:var(--accent);color:#fff}

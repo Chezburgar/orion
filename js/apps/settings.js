@@ -80,6 +80,16 @@
               '<option value="mac"' + (s.ui === 'mac' ? ' selected' : '') + '>Mac style</option></select>') +
             card('orion', 'Setup and tour', 'Run first-time setup and the guided tour again',
               '<button class="btn" data-act="tour">Run it</button>') +
+            card('download', 'Install Orion as an app',
+              global.Install && global.Install.installed()
+                ? 'Already installed on this device'
+                : global.Install && global.Install.available()
+                  ? 'Opens in its own window, with an icon in your launcher'
+                  : global.Install ? global.Install.hint() : 'Not available here',
+              global.Install && global.Install.installed()
+                ? '<span class="muted">Installed</span>'
+                : '<button class="btn" data-act="install"' +
+                  (global.Install && global.Install.available() ? ' ' : ' disabled') + '>Install</button>') +
             '<h3>Background</h3><div class="wall-grid">' + walls + '</div>' +
             '<h3>Colours</h3>' +
             card('moon', 'Choose your mode', 'Light or dark across the whole shell',
@@ -209,6 +219,13 @@
       }
       if (k === 'lock') { global.Shell.lock(); return; }
       if (k === 'tour') { win.close(); if (global.Tour) global.Tour.run(true); return; }
+      if (k === 'install') {
+        global.Install.prompt().then(function (outcome) {
+          if (outcome === 'unavailable') WM.alert('Install Orion', global.Install.hint(), win);
+          render();
+        });
+        return;
+      }
       if (k === 'reset') {
         WM.confirm('Reset emulator', 'This deletes all files, settings and browsing data stored by the emulator in this browser. Continue?', win)
           .then(function (ok) { if (ok) Emu.reset(); });

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Maskable variant: the mark sits inside the 80% safe zone on an opaque
+       ground, so a launcher can crop it to a circle or squircle without
+       clipping the sparkle. -->
+  <defs>
+    <linearGradient id="mBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#141334"/>
+      <stop offset="100%" stop-color="#0a0f22"/>
+    </linearGradient>
+    <linearGradient id="mRing" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#12102e"/>
+      <stop offset="35%" stop-color="#4c1d95"/>
+      <stop offset="70%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#22a7ff"/>
+    </linearGradient>
+    <linearGradient id="mRingL" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#12102e"/>
+      <stop offset="55%" stop-color="#3b1f9e"/>
+      <stop offset="100%" stop-color="#6d3bf5"/>
+    </linearGradient>
+    <linearGradient id="mStar" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6d3bf5"/>
+      <stop offset="45%" stop-color="#3b5cf6"/>
+      <stop offset="100%" stop-color="#22a7ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="100" height="100" fill="url(#mBg)"/>
+
+  <g transform="translate(50 50) scale(0.62) translate(-50 -50)">
+    <path d="M36.5 15.4A38 38 0 0 0 36.5 84.6" fill="none" stroke="url(#mRingL)"
+          stroke-width="9.5" stroke-linecap="round"/>
+    <path d="M63.5 15.4A38 38 0 0 1 63.5 84.6" fill="none" stroke="url(#mRing)"
+          stroke-width="9.5" stroke-linecap="round"/>
+    <path d="M50 2
+             C52.4 26 57 40.5 71 45.4
+             C81 48.9 88 49.4 98 50
+             C88 50.6 81 51.1 71 54.6
+             C57 59.5 52.4 74 50 98
+             C47.6 74 43 59.5 29 54.6
+             C19 51.1 12 50.6 2 50
+             C12 49.4 19 48.9 29 45.4
+             C43 40.5 47.6 26 50 2 Z"
+          fill="url(#mStar)"/>
+  </g>
+</svg>
