@@ -151,6 +151,49 @@
         '</div>';
     }
 
+    /**
+     * Everything published to the shared Store, with the controls that decide
+     * where it shows up. Section is what moves an entry between the Store's
+     * Games and Apps pages for everyone.
+     */
+    function storePane() {
+      var Games = global.Games;
+      var list = Games ? Games.list() : {};
+      var rows = Object.keys(list).map(function (id) { return list[id]; })
+        .filter(function (g) { return g.shared; });
+
+      if (!Games) return '<div class="acc-list"><div class="acc-empty"><span>The Store is not loaded.</span></div></div>';
+
+      return '<div class="acc-bar">' +
+          '<b style="font-size:13px">Published to the Store</b>' +
+          '<span style="flex:1"></span>' +
+          '<button class="btn" data-act="reloadgames">Refresh</button>' +
+          '<button class="btn primary" data-act="openstore">Add in the Store</button>' +
+        '</div>' +
+        '<div class="acc-list">' +
+          (rows.length ? rows.map(function (g) {
+            var section = g.section === 'app' ? 'app' : 'game';
+            return '<div class="adm-row" data-game="' + U.esc(g.id) + '">' +
+              '<span class="adm-art">' + Icons.get(Games.art(g.id, g)) + '</span>' +
+              '<div class="acc-who"><b>' + U.esc(g.name) + '</b>' +
+                '<small>' + U.esc(g.cat || '') + ' · ' + U.esc((g.url.split('/')[2] || '')) +
+                (g.proxied ? ' · via proxy' : '') + '</small></div>' +
+              '<span class="acc-badge ' + (section === 'app' ? 'approved' : 'pending') + '">' + section + '</span>' +
+              '<div class="acc-actions">' +
+                '<button class="btn" data-gact="section">Move to ' +
+                  (section === 'app' ? 'Games' : 'Apps') + '</button>' +
+                '<button class="btn" data-gact="proxy">' +
+                  (g.proxied ? 'Stop using proxy' : 'Use proxy') + '</button>' +
+                '<button class="btn" data-gact="logo">Logo</button>' +
+                '<button class="btn danger" data-gact="remove">Remove</button>' +
+              '</div></div>';
+          }).join('')
+          : '<div class="acc-empty">' + Icons.get('orionstore') +
+            '<span>Nothing published yet</span>' +
+            '<small class="muted">Use <b>Add a game</b> in the Orion Store to publish one.</small></div>') +
+        '</div>';
+    }
+
     function systemPane() {
       var s = Emu.state;
       return '<div class="acc-list acc-sys">' +
@@ -185,7 +228,8 @@
       var pending = rows.filter(function (r) { return r.status === 'pending'; }).length;
       win.body.innerHTML = '<div class="acc">' +
         '<div class="acc-tabs">' +
-          [['devices', 'Devices', pending], ['admins', 'Administrators', 0], ['system', 'System', 0]]
+          [['devices', 'Devices', pending], ['admins', 'Administrators', 0],
+           ['store', 'Store', 0], ['system', 'System', 0]]
             .map(function (t) {
               return '<button class="acc-maintab' + (tab === t[0] ? ' active' : '') + '" data-tab="' + t[0] + '">' +
                 t[1] + (t[2] ? ' <b>' + t[2] + '</b>' : '') + '</button>';
@@ -193,7 +237,9 @@
           '<span style="flex:1"></span>' +
           '<span class="acc-me">' + Icons.get('shield') + U.esc(Auth.roleLabel()) + '</span>' +
         '</div>' +
-        (tab === 'devices' ? devicesPane() : tab === 'admins' ? adminsPane() : systemPane()) +
+        (tab === 'devices' ? devicesPane()
+          : tab === 'admins' ? adminsPane()
+          : tab === 'store' ? storePane() : systemPane()) +
         '<div class="ex-status"><span>' + rows.length + ' device' + (rows.length === 1 ? '' : 's') + ' on record</span>' +
         '<span style="margin-left:auto">Approval is per device, not per network</span></div>' +
       '</div>';
@@ -304,12 +350,58 @@
         return;
       }
 
+      // ---- published Store entries
+      var gact = e.target.closest('[data-gact]');
+      if (gact) {
+        var grow = gact.closest('[data-game]');
+        if (!grow || !global.Games) return;
+        var gid = grow.dataset.game;
+        var g = global.Games.get(gid);
+        if (!g) return;
+        var gk = gact.dataset.gact;
+        gact.disabled = true;
+
+        if (gk === 'section') {
+          var next = g.section === 'app' ? 'game' : 'app';
+          global.Games.setSection(gid, next).then(function () {
+            Emu.notify('Orion Admin', g.name + ' now shows under ' +
+              (next === 'app' ? 'Apps' : 'Games') + ' in the Store.', 'orionstore');
+            render();
+          }).catch(fail);
+        } else if (gk === 'proxy') {
+          global.Games.setProxied(gid, !g.proxied).then(render).catch(fail);
+        } else if (gk === 'logo') {
+          gact.disabled = false;
+          U.pickImage(128).then(function (url) {
+            if (!url) return;
+            global.Games.setIcon(gid, url).then(function () {
+              Emu.notify('Orion Admin', 'Logo updated for ' + g.name + '.', 'orionstore');
+              render();
+            }).catch(fail);
+          });
+        } else if (gk === 'remove') {
+          gact.disabled = false;
+          WM.confirm('Remove from the Store',
+            'Remove "' + g.name + '" for everyone? Anyone who installed it keeps it until they uninstall.', win)
+            .then(function (ok) {
+              if (!ok) return;
+              global.Games.removeShared(gid).then(render).catch(fail);
+            });
+        }
+        return;
+      }
+
       var act = e.target.closest('[data-act]');
       if (!act) return;
       var kind = act.dataset.act;
 
       if (kind === 'reload') return load();
       if (kind === 'reloadadmins') return loadAdmins();
+      if (kind === 'reloadgames') {
+        if (global.Games) global.Games.refresh().then(render).catch(fail);
+        return;
+      }
+      if (kind === 'openstore') { Emu.launch('store', { page: 'games' }); return; }
       if (kind === 'addadmin') return addAdmin();
       if (kind === 'tour') { win.close(); return global.Tour && global.Tour.run(true); }
       if (kind === 'style') {

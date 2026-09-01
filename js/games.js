@@ -63,7 +63,8 @@
         shared[r.id] = {
           id: r.id, name: r.name, url: r.url, cat: r.cat, size: r.size,
           rating: Number(r.rating) || 4.5, desc: r.descr || '',
-          proxied: !!r.proxied, art: [r.art1, r.art2], shared: true, icon: r.icon || null
+          proxied: !!r.proxied, art: [r.art1, r.art2], shared: true, icon: r.icon || null,
+          section: r.section === 'app' ? 'app' : 'game', sort: r.sort || 0
         };
       });
       Emu.state.sharedGames = shared;
@@ -180,13 +181,80 @@
       }, 8000);
     }
 
+    var shell = U.$('.gw', win.body);
+
+    /**
+     * Real full screen, not just a maximised window. Putting the .gw element
+     * itself into full screen takes the game and its own toolbar with it and
+     * leaves everything else - taskbar, dock, menu bar - behind, which is what
+     * "full screen" has to mean for a game. Maximising is the fallback for
+     * browsers that refuse the request.
+     */
+    // Where the browser refuses a real full screen, Orion fakes it: maximise
+    // the window and hide the taskbar, dock and menu bar, so the game still
+    // gets the whole display instead of sitting under the shell.
+    var immersive = false;
+
+    function setImmersive(on) {
+      immersive = on;
+      document.documentElement.classList.toggle('game-immersive', on);
+      if (on && !win.maxed) win.toggleMax();
+      syncFullBtn();
+    }
+
+    function goFull() {
+      var fn = shell.requestFullscreen || shell.webkitRequestFullscreen;
+      if (!fn) { setImmersive(true); return; }
+      try {
+        var r = fn.call(shell, { navigationUI: 'hide' });
+        if (r && r.catch) r.catch(function () { setImmersive(true); });
+      } catch (e) { setImmersive(true); }
+    }
+
+    function leaveFull() {
+      if (immersive) { setImmersive(false); return; }
+      var fn = document.exitFullscreen || document.webkitExitFullscreen;
+      if (fn) try { fn.call(document); } catch (e) {}
+    }
+
+    function isFull() {
+      if (immersive) return true;
+      var el = document.fullscreenElement || document.webkitFullscreenElement;
+      return !!el && (el === shell || shell.contains(el));
+    }
+
+    function syncFullBtn() {
+      var b = U.$('[data-g="full"]', win.body);
+      if (!b) return;
+      var on = isFull();
+      b.innerHTML = Icons.get(on ? 'restore' : 'maximize');
+      b.title = on ? 'Leave full screen (Esc)' : 'Full screen';
+      shell.classList.toggle('gw-full', on);
+    }
+
+    var onFsChange = function () { syncFullBtn(); };
+    document.addEventListener('fullscreenchange', onFsChange);
+
+    // Esc leaves the faked full screen too, matching what the real one does.
+    var onEsc = function (e) {
+      if (e.key === 'Escape' && immersive) { e.preventDefault(); setImmersive(false); }
+    };
+    document.addEventListener('keydown', onEsc, true);
+
     win.body.addEventListener('click', function (e) {
       var b = e.target.closest('[data-g]');
       if (!b) return;
       if (b.dataset.g === 'reload') mount();
-      if (b.dataset.g === 'full') win.toggleMax();
+      if (b.dataset.g === 'full') isFull() ? leaveFull() : goFull();
       if (b.dataset.g === 'ext') window.open(g.url, '_blank', 'noopener');
     });
+
+    win.onClose = function () {
+      if (isFull()) leaveFull();
+      document.documentElement.classList.remove('game-immersive');
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('keydown', onEsc, true);
+    };
 
     mount();
     Emu.pushRecent({ name: g.name, path: g.url, app: id });
@@ -259,6 +327,12 @@
       });
   }
 
+  /** Move a published entry between the Store Games and Apps sections. */
+  function setSection(id, section) {
+    return rpc('orion_games_set_section', { p_key: Auth.ownerKey(), p_id: id, p_section: section })
+      .then(refresh);
+  }
+
   function setProxied(id, on) {
     return rpc('orion_games_set_proxied', { p_key: Auth.ownerKey(), p_id: id, p_proxied: !!on })
       .then(refresh);
@@ -269,6 +343,7 @@
     addShared: addShared,
     removeShared: removeShared,
     setProxied: setProxied,
+    setSection: setSection,
     setIcon: setIcon,
     catalog: CATALOG,
     list: all,

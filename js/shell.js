@@ -186,7 +186,7 @@
    * browser leaves the label stranded on screen. Orion draws its own instead,
    * and hides it on every rebuild.
    */
-  var tipEl = null, tipFor = null;
+  var tipEl = null, tipFor = null, tipGuard = null;
 
   function showTip(btn) {
     var text = btn && btn.dataset.tip;
@@ -196,6 +196,14 @@
       els.desktop.appendChild(tipEl);
     }
     tipFor = btn;
+    // Whatever the label is attached to can be thrown away by a re-render at
+    // any moment - the Store rebuilds its tiles while installing, Start
+    // rebuilds on every app change. Rather than chase each caller, watch the
+    // element itself and drop the label the moment it leaves the document.
+    clearInterval(tipGuard);
+    tipGuard = setInterval(function () {
+      if (!tipFor || !tipFor.isConnected) hideTip();
+    }, 150);
     tipEl.textContent = text;
     tipEl.classList.add('on');
     var r = btn.getBoundingClientRect();
@@ -208,17 +216,25 @@
 
   function hideTip() {
     tipFor = null;
+    clearInterval(tipGuard);
+    tipGuard = null;
     if (tipEl) tipEl.classList.remove('on');
   }
 
+  /**
+   * Delegated on the document, so anything anywhere in Orion gets a label by
+   * adding data-tip. Native title= is deliberately avoided on anything that
+   * re-renders: the browser strands the bubble when the element it belongs to
+   * is replaced without a mouseleave.
+   */
   function wireTips() {
-    els.taskbar.addEventListener('pointerover', function (e) {
-      var b = e.target.closest('[data-tip]');
+    document.addEventListener('pointerover', function (e) {
+      var b = e.target.closest && e.target.closest('[data-tip]');
       if (b !== tipFor) b ? showTip(b) : hideTip();
+    }, true);
+    ['pointerdown', 'wheel', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, hideTip, true);
     });
-    els.taskbar.addEventListener('pointerleave', hideTip);
-    // Anything that can pull the button out from under the pointer
-    els.taskbar.addEventListener('pointerdown', hideTip);
     window.addEventListener('blur', hideTip);
     document.addEventListener('visibilitychange', hideTip);
   }
@@ -331,7 +347,7 @@
     });
     pinnedGrid.innerHTML = ids.map(function (id) {
       var a = Emu.apps[id];
-      return '<div class="start-app" data-app="' + id + '" title="' + U.esc(a.desc || a.name) + '">' +
+      return '<div class="start-app" data-app="' + id + '" data-tip="' + U.esc(a.desc || a.name) + '">' +
         Icons.get(a.icon) + '<span>' + U.esc(a.name) + '</span></div>';
     }).join('') || '<p class="muted" style="grid-column:1/-1;padding:12px">No apps match.</p>';
     $('[data-all-apps]').innerHTML = allApps ? '&lsaquo; Back' : 'All apps &rsaquo;';
@@ -567,7 +583,7 @@
       el.innerHTML = Icons.get(name);
     });
     var tq = $('#trayQuick');
-    if (tq) tq.title = [netText(), powerText(), 'Volume ' + s.volume + '%'].join(' · ');
+    if (tq) tq.dataset.tip = [netText(), powerText(), 'Volume ' + s.volume + '%'].join(' · ');
     $('#batteryText').textContent = powerText();
     syncMacStatus();
   }
@@ -770,7 +786,7 @@
   function wireMacBar() {
     var bar = $('#macBar');
     if (!bar) return;
-    { var ico = { search: 'search', quick: 'wifi', bell: 'bell' };
+    { var ico = { search: 'search', quick: 'wifi', bell: 'bell', settings: 'gear' };
       Object.keys(ico).forEach(function (k) {
         var b = bar.querySelector('[data-mb="' + k + '"]');
         if (b) b.innerHTML = Icons.get(ico[k]);
@@ -806,7 +822,7 @@
     if (on) {
       var loc = (global.Net.LOCATIONS.filter(function (l) { return l.id === Emu.state.net.location; })[0] || {});
       el.innerHTML = Icons.get('shield');
-      el.title = 'Orion VPN - connected via ' + (loc.city || 'relay');
+      el.dataset.tip = 'Orion VPN - connected via ' + (loc.city || 'relay');
     }
   }
 

@@ -13,18 +13,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Orion">
 <link rel="apple-touch-icon" href="assets/orion-maskable.svg">
-<link rel="stylesheet" href="styles/base.css?v=25">
-<link rel="stylesheet" href="styles/shell.css?v=25">
-<link rel="stylesheet" href="styles/windows.css?v=25">
-<link rel="stylesheet" href="styles/apps.css?v=25">
-<link rel="stylesheet" href="styles/features.css?v=25">
-<link rel="stylesheet" href="styles/games.css?v=25">
-<link rel="stylesheet" href="styles/access.css?v=25">
-<link rel="stylesheet" href="styles/youtube.css?v=25">
-<link rel="stylesheet" href="styles/office.css?v=25">
-<link rel="stylesheet" href="styles/tour.css?v=25">
-<link rel="stylesheet" href="styles/mac.css?v=25">
-<link rel="stylesheet" href="styles/music.css?v=25">
+<link rel="stylesheet" href="styles/base.css?v=26">
+<link rel="stylesheet" href="styles/shell.css?v=26">
+<link rel="stylesheet" href="styles/windows.css?v=26">
+<link rel="stylesheet" href="styles/apps.css?v=26">
+<link rel="stylesheet" href="styles/features.css?v=26">
+<link rel="stylesheet" href="styles/games.css?v=26">
+<link rel="stylesheet" href="styles/access.css?v=26">
+<link rel="stylesheet" href="styles/youtube.css?v=26">
+<link rel="stylesheet" href="styles/office.css?v=26">
+<link rel="stylesheet" href="styles/tour.css?v=26">
+<link rel="stylesheet" href="styles/mac.css?v=26">
+<link rel="stylesheet" href="styles/music.css?v=26">
 </head>
 <body>
 
@@ -65,8 +65,8 @@
   <div id="macBar">
     <button data-mb="orion" title="Start"><img class="mb-logo" src="assets/orion.svg" alt="Orion"></button>
     <button class="mb-app" id="macAppName" data-mb="orion">Orion</button>
-    <button data-mb="settings">Settings</button>
     <button data-mb="min">Window</button>
+    <button class="mb-gear" data-mb="settings" title="Settings"></button>
     <span class="mb-spacer"></span>
     <span class="mb-right">
       <button class="mb-vpn hidden" id="macVpn" data-mb="vpn" title="Orion VPN"></button>
@@ -165,17 +165,17 @@
     <div class="tb-left" id="tbLeft"></div>
     <div class="tb-center" id="tbCenter"></div>
     <div class="tb-right">
-      <button class="tray-btn tray-vpn hidden" id="trayVpn" title="Orion VPN"></button>
-      <button class="tray-btn" id="trayChevron" title="Show hidden icons"></button>
-      <button class="tray-btn tray-group" id="trayQuick" title="Network, Sound, Battery">
+      <button class="tray-btn tray-vpn hidden" id="trayVpn" data-tip="Orion VPN"></button>
+      <button class="tray-btn" id="trayChevron" data-tip="Show hidden icons"></button>
+      <button class="tray-btn tray-group" id="trayQuick" data-tip="Network, Sound, Battery">
         <span data-ico="wifi"></span><span data-ico="volume"></span><span data-ico="battery"></span>
       </button>
       <button class="tray-clock" id="trayClock">
         <span id="clockTime">9:41 AM</span>
         <span id="clockDate">1/1/2026</span>
       </button>
-      <button class="tray-btn tray-bell" id="trayBell" title="Notifications"><span class="badge hidden" id="notifBadge">0</span></button>
-      <button class="show-desktop" id="showDesktop" title="Show desktop"></button>
+      <button class="tray-btn tray-bell" id="trayBell" data-tip="Notifications"><span class="badge hidden" id="notifBadge">0</span></button>
+      <button class="show-desktop" id="showDesktop" data-tip="Show desktop"></button>
     </div>
   </div>
 
@@ -186,32 +186,32 @@
   </div>
 </div>
 
-<script src="js/icons.js?v=25"></script>
-<script src="js/state.js?v=25"></script>
-<script src="js/install.js?v=25"></script>
-<script src="js/fullscreen.js?v=25"></script>
-<script src="js/net.js?v=25"></script>
-<script src="js/proxy.js?v=25"></script>
-<script src="js/auth.js?v=25"></script>
-<script src="js/vfs.js?v=25"></script>
-<script src="js/wm.js?v=25"></script>
-<script src="js/games.js?v=25"></script>
-<script src="js/apps/edge.js?v=25"></script>
-<script src="js/apps/vpn.js?v=25"></script>
-<script src="js/apps/store.js?v=25"></script>
-<script src="js/apps/access.js?v=25"></script>
-<script src="js/apps/youtube.js?v=25"></script>
-<script src="js/apps/music.js?v=25"></script>
-<script src="js/apps/office.js?v=25"></script>
-<script src="js/apps/creative.js?v=25"></script>
-<script src="js/apps/explorer.js?v=25"></script>
-<script src="js/apps/notepad.js?v=25"></script>
-<script src="js/apps/settings.js?v=25"></script>
-<script src="js/apps/calculator.js?v=25"></script>
-<script src="js/apps/terminal.js?v=25"></script>
-<script src="js/apps/extras.js?v=25"></script>
-<script src="js/shell.js?v=25"></script>
-<script src="js/tour.js?v=25"></script>
-<script src="js/main.js?v=25"></script>
+<script src="js/icons.js?v=26"></script>
+<script src="js/state.js?v=26"></script>
+<script src="js/install.js?v=26"></script>
+<script src="js/fullscreen.js?v=26"></script>
+<script src="js/net.js?v=26"></script>
+<script src="js/proxy.js?v=26"></script>
+<script src="js/auth.js?v=26"></script>
+<script src="js/vfs.js?v=26"></script>
+<script src="js/wm.js?v=26"></script>
+<script src="js/games.js?v=26"></script>
+<script src="js/apps/edge.js?v=26"></script>
+<script src="js/apps/vpn.js?v=26"></script>
+<script src="js/apps/store.js?v=26"></script>
+<script src="js/apps/access.js?v=26"></script>
+<script src="js/apps/youtube.js?v=26"></script>
+<script src="js/apps/music.js?v=26"></script>
+<script src="js/apps/office.js?v=26"></script>
+<script src="js/apps/creative.js?v=26"></script>
+<script src="js/apps/explorer.js?v=26"></script>
+<script src="js/apps/notepad.js?v=26"></script>
+<script src="js/apps/settings.js?v=26"></script>
+<script src="js/apps/calculator.js?v=26"></script>
+<script src="js/apps/terminal.js?v=26"></script>
+<script src="js/apps/extras.js?v=26"></script>
+<script src="js/shell.js?v=26"></script>
+<script src="js/tour.js?v=26"></script>
+<script src="js/main.js?v=26"></script>
 </body>
 </html>

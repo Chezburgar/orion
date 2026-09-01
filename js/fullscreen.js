@@ -60,7 +60,10 @@
     function fire() {
       disarm();
       if (!Emu.state.autoFullscreen) return;
-      if (isStandalone()) return;      // installed app is already chromeless
+      // An installed app still gets a window frame - on ChromeOS it opens in a
+      // normal app window with a title bar - so it needs the request too. This
+      // used to bail out here, which is why installing it stopped it filling
+      // the screen.
       enter().then(function (ok) {
         if (ok || warned) return;
         warned = true;

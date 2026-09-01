@@ -109,3 +109,9 @@ html[data-ui="mac"] .search-panel{left:50%;transform:translateX(-50%);bottom:80p
 
 /* Snap previews and maximised windows must clear the menu bar */
 html[data-ui="mac"] .snap-preview{top:26px}
+
+/* The menu bar already names the focused app, so a maximised window must not
+   repeat it directly underneath - that read as two bars contradicting. */
+html[data-ui="mac"] .win.maximized .win-title{display:none}
+html[data-ui="mac"] #macBar .mb-gear{padding:0 7px}
+html[data-ui="mac"] #macBar .mb-gear svg{width:14px;height:14px}

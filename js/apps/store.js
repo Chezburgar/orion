@@ -13,7 +13,7 @@
 
   function stars(n) {
     var full = Math.round(n);
-    return '<span class="stars" title="' + n.toFixed(1) + '">' +
+    return '<span class="stars" data-tip="' + n.toFixed(1) + ' out of 5">' +
       '★★★★★'.slice(0, full) + '<span class="dim">' + '★★★★★'.slice(0, 5 - full) + '</span>' +
       ' <small>' + n.toFixed(1) + '</small></span>';
   }
@@ -133,6 +133,18 @@
 
       var ids = Object.keys(Games.list());
 
+      /**
+       * Published entries carry a section the owner sets in Orion Admin.
+       * The built-in catalogue and anything added locally has none, so it
+       * counts as a game.
+       */
+      function inSection(want) {
+        var list = Games.list();
+        return function (id) {
+          return ((list[id] && list[id].section) || 'game') === want;
+        };
+      }
+
       if (page === 'home') {
         main.innerHTML =
           '<div class="store-hero2"><div><h2>Your games, on your desktop</h2>' +
@@ -148,7 +160,7 @@
 
       if (page === 'games') {
         main.innerHTML = '<h3 class="store-h">Games</h3><div class="store-grid2">' +
-          ids.map(gameCard).join('') + addTile() + '</div>';
+          ids.filter(inSection('game')).map(gameCard).join('') + addTile() + '</div>';
         return;
       }
 
@@ -165,7 +177,13 @@
         var office = suite('office'), creative = suite('creative');
         var rest = appIds.filter(function (id) { return !Emu.apps[id].suite; });
 
+        var published = ids.filter(inSection('app'));
+
         main.innerHTML =
+          (published.length ? '<h3 class="store-h">Added by the owner</h3>' +
+            '<p class="store-lead">Web apps published to this Orion. They install the same way ' +
+            'a game does and get their own icon and window.</p>' +
+            '<div class="store-grid2">' + published.map(gameCard).join('') + '</div>' : '') +
           (office.length ? '<h3 class="store-h">Orion Office</h3>' +
             '<p class="store-lead">Documents, spreadsheets, decks and notes. Everything saves into ' +
             'your Documents folder and reopens from File Explorer.</p>' +

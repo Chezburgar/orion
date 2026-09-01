@@ -3,7 +3,7 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-08-31.25';
+  var BUILD = '2026-09-01.26';
 
   var DEFAULTS = {
     user: 'Chase',
