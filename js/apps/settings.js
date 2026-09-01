@@ -86,7 +86,7 @@
               '<option value="win"' + (s.ui !== 'mac' ? ' selected' : '') + '>Windows style</option>' +
               '<option value="mac"' + (s.ui === 'mac' ? ' selected' : '') + '>Mac style</option></select>') +
             card('monitor', 'Start in full screen',
-              'Orion fills the display on the first click after it loads. Alt+F toggles it any time.',
+              'Orion fills the display on the first click after it loads. Ctrl+Alt+F toggles it any time.',
               sw(s.autoFullscreen, 'autoFullscreen')) +
             card('orion', 'Setup and tour', 'Run first-time setup and the guided tour again',
               '<button class="btn" data-act="tour">Run it</button>') +

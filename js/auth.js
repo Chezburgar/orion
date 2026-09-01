@@ -347,6 +347,89 @@
       });
     },
 
+    /**
+     * Sign in with an owner or administrator key from inside a running Orion,
+     * without going back through the access gate. Bound to Ctrl+Alt+Shift+A.
+     * The field is a password box: these keys are handed out to other people
+     * and typed on shared screens.
+     */
+    signInPrompt: function () {
+      var host = document.getElementById('desktop');
+      if (!host || host.classList.contains('hidden')) return null;
+      var existing = host.querySelector('[data-authprompt]');
+      if (existing) { existing.querySelector('input').focus(); return null; }
+
+      var signedIn = Auth.isSignedIn();
+      var back = U.el('<div class="dlg-backdrop" data-authprompt><div class="dlg">' +
+        '<h3>Owner or admin sign in</h3>' +
+        '<div class="dlg-body">' +
+          (signedIn
+            ? '<p style="padding:0 0 12px">Signed in as <b>' + U.esc(Auth.roleLabel()) +
+              '</b> on this device. Enter another key to switch, or sign out.</p>'
+            : '<p style="padding:0 0 12px">Enter the owner key, or an administrator key the ' +
+              'owner gave you. This unlocks Orion Admin on this device.</p>') +
+          '<form class="gate-form" autocomplete="off">' +
+            '<label>Access key<input name="key" type="password" autocomplete="off" ' +
+              'placeholder="orion-xxxxxx-xxxxxx-xxxxxx"></label>' +
+            '<div class="gate-err hidden" data-err></div>' +
+          '</form>' +
+        '</div>' +
+        '<div class="dlg-actions">' +
+          '<button data-x="cancel">Cancel</button>' +
+          (signedIn ? '<button data-x="out">Sign out</button>' : '') +
+          '<button class="primary" data-x="go">Sign in</button>' +
+        '</div></div></div>');
+      host.appendChild(back);
+
+      var form = back.querySelector('form');
+      var box = back.querySelector('[data-err]');
+      form.key.focus();
+
+      function fail(msg) {
+        box.textContent = msg;
+        box.classList.remove('hidden');
+      }
+
+      function submit() {
+        var key = form.key.value.trim();
+        if (!key) return fail('Enter a key first.');
+        var go = back.querySelector('[data-x="go"]');
+        go.disabled = true;
+        go.textContent = 'Checking…';
+        Auth.verifyOwner(key).then(function (who) {
+          back.remove();
+          Emu.notify('Orion', 'Signed in as ' +
+            (who.role === 'owner' ? 'the owner' : 'an administrator') + ' on this device.', 'shield');
+          if (global.AccessApp) global.AccessApp.syncVisibility();
+          Emu.emit('apps');
+        }).catch(function (err) {
+          go.disabled = false;
+          go.textContent = 'Sign in';
+          fail(/unauthor/i.test(err.message) ? 'That key was not recognised.' : err.message);
+        });
+      }
+
+      back.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-x]');
+        if (!b) return;
+        if (b.dataset.x === 'cancel') { back.remove(); return; }
+        if (b.dataset.x === 'out') {
+          Auth.setOwnerKey('');
+          back.remove();
+          Emu.notify('Orion', 'Signed out of the admin console on this device.', 'shield');
+          if (global.AccessApp) global.AccessApp.syncVisibility();
+          Emu.emit('apps');
+          return;
+        }
+        submit();
+      });
+      form.addEventListener('submit', function (e) { e.preventDefault(); submit(); });
+      back.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { e.stopPropagation(); back.remove(); }
+      });
+      return back;
+    },
+
     /** Poll for new requests so the owner gets notified inside Orion. */
     watch: function () {
       if (!Auth.isOwner()) return;
@@ -380,6 +463,19 @@
       setInterval(poll, 45000);
     }
   };
+
+  /**
+   * Ctrl+Alt+Shift+A opens the key box from anywhere in Orion. Captured, so a
+   * focused text field in an app cannot swallow it, and deliberately obscure
+   * enough that nobody trips it by accident.
+   */
+  document.addEventListener('keydown', function (e) {
+    if (!e.ctrlKey || !e.altKey || !e.shiftKey || e.metaKey) return;
+    if (String(e.key).toLowerCase() !== 'a') return;
+    e.preventDefault();
+    e.stopPropagation();
+    Auth.signInPrompt();
+  }, true);
 
   global.Auth = Auth;
 })(window);

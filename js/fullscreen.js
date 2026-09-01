@@ -2,7 +2,7 @@
    Orion wants the whole display, but no browser will let a page go full
    screen on load - it must happen inside a real user gesture. So the first
    click or key press after Orion starts is used as that gesture (which in
-   practice is the click that dismisses the lock screen), and Alt+F toggles it
+   practice is the click that dismisses the lock screen), and Ctrl+Alt+F toggles it
    any time after.                                                          */
 (function (global) {
   'use strict';
@@ -71,7 +71,7 @@
         // the page permission that just refused us.
         Emu.notify('Full screen',
           'This browser blocked Orion from going full screen on its own. Press F11 to fill the display — ' +
-          'Alt+F toggles it too, where the browser allows it.', 'monitor');
+          'Ctrl+Alt+F toggles it too, where the browser allows it.', 'monitor');
       });
     }
     function disarm() {
@@ -89,10 +89,11 @@
       global.navigator.standalone === true;
   }
 
-  // Alt+F toggles. Registered in the capture phase so a focused text field in
-  // an app cannot swallow it.
+  // Ctrl+Alt+F toggles. Registered in the capture phase so a focused text
+  // field in an app cannot swallow it. Alt+F alone is left to the apps - it
+  // is a common in-app "File menu" chord.
   document.addEventListener('keydown', function (e) {
-    if (!e.altKey || e.ctrlKey || e.metaKey) return;
+    if (!e.ctrlKey || !e.altKey || e.metaKey) return;
     if (String(e.key).toLowerCase() !== 'f') return;
     e.preventDefault();
     e.stopPropagation();
