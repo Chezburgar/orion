@@ -3,12 +3,14 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-08-31.24';
+  var BUILD = '2026-08-31.25';
 
   var DEFAULTS = {
     user: 'Chase',
     ui: 'win',
     autoFullscreen: true,
+    appsMaximized: true,
+    wallpapers: [],
     setupDone: false,
     theme: 'dark',
     accent: '#4f46e5',
@@ -189,6 +191,44 @@
     },
 
     /**
+     * Ask for a photo and hand back a JPEG data URL at wallpaper size. Kept
+     * separate from pickImage, which squashes everything into a 128px square
+     * for icons - useless for a background. JPEG at this quality keeps a
+     * 1600px wallpaper to a few hundred KB, which localStorage can hold.
+     */
+    pickPhoto: function (maxPx, quality) {
+      return new Promise(function (resolve) {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.addEventListener('change', function () {
+          var file = input.files && input.files[0];
+          if (!file) return resolve(null);
+          var reader = new FileReader();
+          reader.onload = function () {
+            var img = new Image();
+            img.onload = function () {
+              var max = maxPx || 1600;
+              var scale = Math.min(1, max / Math.max(img.width, img.height));
+              var c = document.createElement('canvas');
+              c.width = Math.max(1, Math.round(img.width * scale));
+              c.height = Math.max(1, Math.round(img.height * scale));
+              var ctx = c.getContext('2d');
+              ctx.drawImage(img, 0, 0, c.width, c.height);
+              try { resolve(c.toDataURL('image/jpeg', quality || 0.72)); }
+              catch (e) { resolve(null); }
+            };
+            img.onerror = function () { resolve(null); };
+            img.src = reader.result;
+          };
+          reader.onerror = function () { resolve(null); };
+          reader.readAsDataURL(file);
+        });
+        input.click();
+      });
+    },
+
+    /**
      * Ask for an image file and hand back a small square PNG data URL.
      * Downscaling here keeps logos well under any storage limit.
      */
@@ -329,6 +369,23 @@
       if (state.recent.length > 8) state.recent.length = 8;
       Emu.save();
       Emu.emit('recent');
+    },
+
+    /**
+     * The tray slider was decorative - it moved a number nothing read. This
+     * makes it the master volume: it drives every audio/video element Orion
+     * has on the page, and apps that own an external player (Orion Music's
+     * YouTube frame) listen for the 'volume' event and scale their own level
+     * by it, so the tray behaves like a real system mixer.
+     */
+    masterVolume: function () { return util.clamp(state.volume, 0, 100) / 100; },
+
+    applyVolume: function () {
+      var v = Emu.masterVolume();
+      util.$$('audio, video').forEach(function (el) {
+        try { el.volume = v; el.muted = v === 0; } catch (e) {}
+      });
+      Emu.emit('volume', state.volume);
     },
 
     applyTheme: function () {

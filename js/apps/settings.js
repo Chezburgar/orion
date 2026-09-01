@@ -66,7 +66,14 @@
             var style = /^#/.test(w.value) ? 'background:' + w.value : 'background-image:url(' + w.value + ')';
             return '<div class="wall-opt' + (s.wallpaper === w.value ? ' sel' : '') + '" style="' + style +
               '" data-wall="' + U.esc(w.value) + '" title="' + w.name + '"></div>';
-          }).join('');
+          }).join('') +
+          // Wallpapers the user added, each removable, plus the picker tile.
+          (s.wallpapers || []).map(function (w, i) {
+            return '<div class="wall-opt' + (s.wallpaper === w ? ' sel' : '') +
+              '" style="background-image:url(' + w + ')" data-wall="' + U.esc(w) + '" title="Your photo">' +
+              '<button class="wall-del" data-delwall="' + i + '" title="Remove">' + Icons.get('x') + '</button></div>';
+          }).join('') +
+          '<div class="wall-opt wall-add" data-act="addwall" title="Add a photo">' + Icons.get('plus') + '</div>';
           var accents = Emu.ACCENTS.map(function (a) {
             return '<div class="acc' + (s.accent === a ? ' sel' : '') + '" style="background:' + a + '" data-accent="' + a + '"></div>';
           }).join('');
@@ -181,6 +188,15 @@
       if (p) { page = p.dataset.page; render(); return; }
 
       var w = e.target.closest('[data-wall]');
+      var dw = e.target.closest('[data-delwall]');
+      if (dw) {
+        var di = parseInt(dw.dataset.delwall, 10);
+        var gone = (s.wallpapers || [])[di];
+        s.wallpapers.splice(di, 1);
+        if (s.wallpaper === gone) s.wallpaper = Emu.WALLPAPERS[0].value;
+        Emu.save(); Emu.applyTheme(); render();
+        return;
+      }
       if (w) { s.wallpaper = w.dataset.wall; Emu.save(); Emu.applyTheme(); render(); return; }
 
       var a = e.target.closest('[data-accent]');
@@ -227,6 +243,30 @@
       }
       if (k === 'lock') { global.Shell.lock(); return; }
       if (k === 'tour') { win.close(); if (global.Tour) global.Tour.run(true); return; }
+      if (k === 'addwall') {
+        U.pickPhoto(1600, 0.72).then(function (url) {
+          if (!url) return;
+          s.wallpapers = (s.wallpapers || []).concat([url]);
+          // A wallpaper is far bigger than any other setting, so a full disk
+          // has to be reported rather than silently dropping the picture.
+          var before = s.wallpaper;
+          s.wallpaper = url;
+          try {
+            localStorage.setItem('win11emu.state.v1', JSON.stringify(Emu.state));
+          } catch (err) {
+            s.wallpapers.pop();
+            s.wallpaper = before;
+            WM.alert('Personalisation',
+              'There is not enough room left in this browser to store that photo.\n' +
+              'Remove a wallpaper you added earlier and try again.', win);
+            return;
+          }
+          Emu.save();
+          Emu.applyTheme();
+          render();
+        });
+        return;
+      }
       if (k === 'install') {
         global.Install.prompt().then(function (outcome) {
           if (outcome === 'unavailable') WM.alert('Install Orion', global.Install.hint(), win);

@@ -246,14 +246,35 @@
           '<label>Description<textarea name="desc" rows="2" maxlength="400"></textarea></label>' +
           '<label class="dlg-check"><input type="checkbox" name="proxied"> ' +
             'Open through the proxy (for sites your network blocks)</label>' +
+          '<div class="store-logo"><div class="store-logo-prev" data-prev>' + Icons.get('game') + '</div>' +
+            '<div><button type="button" class="btn" data-pick>Upload a logo</button>' +
+            '<small class="muted">Optional. Everyone who opens the Store sees it.</small></div>' +
+            '<button type="button" class="btn" data-clearlogo hidden>Remove</button></div>' +
           '<div class="gate-err hidden" data-err></div>' +
         '</form></div>' +
         '<div class="dlg-actions"><button data-x="cancel">Cancel</button>' +
         '<button class="primary" data-x="add">Publish</button></div></div></div>');
       win.el.appendChild(back);
       var form = back.querySelector('form');
+      var logo = null;
 
       back.addEventListener('click', function (ev) {
+        if (ev.target.closest('[data-pick]')) {
+          U.pickImage(128).then(function (url) {
+            if (!url) return;
+            logo = url;
+            back.querySelector('[data-prev]').innerHTML = Icons.get(url);
+            back.querySelector('[data-clearlogo]').hidden = false;
+          });
+          return;
+        }
+        if (ev.target.closest('[data-clearlogo]')) {
+          logo = null;
+          back.querySelector('[data-prev]').innerHTML = Icons.get('game');
+          back.querySelector('[data-clearlogo]').hidden = true;
+          return;
+        }
+
         var b = ev.target.closest('[data-x]');
         if (!b) return;
         if (b.dataset.x === 'cancel') { back.remove(); return; }
@@ -272,6 +293,17 @@
           cat: form.cat.value.trim(),
           desc: form.desc.value.trim(),
           proxied: form.proxied.checked
+        }).then(function (game) {
+          // The logo goes on after the row exists, so a failure here loses the
+          // picture but never the published game.
+          if (!logo || !game) return game;
+          b.textContent = 'Uploading logo…';
+          return Games.setIcon(game.id, logo).then(function () { return game; })
+            .catch(function () {
+              Emu.notify('Orion Store',
+                '"' + name + '" was published, but the logo did not upload. Open it and use Change logo.', 'warning');
+              return game;
+            });
         }).then(function () {
           back.remove();
           Emu.notify('Orion Store', '"' + name + '" published to the Store for everyone.', 'orionstore');

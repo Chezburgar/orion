@@ -227,13 +227,24 @@
     Emu.save();
   }
 
+  /**
+   * Publishes a game and resolves with the catalogue row it created, so the
+   * caller can immediately attach a logo to it - the RPC does not hand back
+   * an id, and the logo has to be set on a game that already exists.
+   */
   function addShared(name, url, opts) {
     opts = opts || {};
     return rpc('orion_games_add', {
       p_key: Auth.ownerKey(), p_name: name, p_url: url,
       p_cat: opts.cat || 'Added', p_descr: opts.desc || ('Added from ' + url),
       p_proxied: !!opts.proxied, p_art1: opts.art1 || '', p_art2: opts.art2 || ''
-    }).then(refresh);
+    }).then(refresh).then(function (list) {
+      var found = null;
+      Object.keys(list || {}).forEach(function (k) {
+        if (list[k].url === url && list[k].name === name) found = list[k];
+      });
+      return found;
+    });
   }
 
   function removeShared(id) {

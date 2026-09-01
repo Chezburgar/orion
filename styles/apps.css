@@ -308,3 +308,15 @@ html[data-theme="light"] .ntp-card{background:rgba(255,255,255,.75);border-color
   .ex-list-hdr,.ex-list-row{grid-template-columns:1fr 80px}
   .ex-list-hdr span:nth-child(n+3),.ex-list-row span:nth-child(n+3){display:none}
 }
+
+/* Wallpapers the user adds: a picker tile and a remove button per photo */
+.wall-opt{position:relative}
+.wall-add{display:grid;place-items:center;border:2px dashed var(--stroke-strong);color:var(--text-3);
+  background:var(--card)}
+.wall-add:hover{border-color:var(--accent);color:var(--text)}
+.wall-add svg{width:22px;height:22px}
+.wall-del{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(10,12,20,.72);color:#fff;opacity:0;transition:opacity .12s}
+.wall-opt:hover .wall-del{opacity:1}
+.wall-del svg{width:10px;height:10px}
+.wall-del:hover{background:#c42b1c}

@@ -134,7 +134,11 @@
       wins.push(win);
       focus(win);
 
-      if (mobile || opt.maximized) maximize(win);
+      // Apps open filling the desktop by default; an app can still ask for a
+      // floating window explicitly, and the user can turn the default off in
+      // Settings. Dialogs are overlays, not windows, so they are unaffected.
+      var wantMax = opt.maximized != null ? opt.maximized : (Emu.state.appsMaximized !== false);
+      if (mobile || wantMax) maximize(win);
       Emu.emit('win:open', win);
       return win;
     },

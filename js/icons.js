@@ -269,6 +269,23 @@
     return '<svg viewBox="' + vb + '" xmlns="http://www.w3.org/2000/svg" ' + (extra || '') + '>' + inner + '</svg>';
   }
 
+  /**
+   * Gradient ids are written once in the table but drawn many times on the
+   * page - the Store icon appears on the taskbar, the desktop, in Start and in
+   * Settings all at once. Every copy carried the SAME id, and url(#id) binds to
+   * whichever one is first in the document, so as soon as a re-render removed
+   * that copy the rest lost their fill and went flat. Stamping each render with
+   * its own suffix keeps every instance self-contained.
+   */
+  var idSeq = 0;
+  function uniqueIds(markup) {
+    if (markup.indexOf('id="') < 0) return markup;
+    var tag = '_i' + (++idSeq).toString(36);
+    return markup
+      .replace(/id="([^"]+)"/g, function (_, id) { return 'id="' + id + tag + '"'; })
+      .replace(/url\(#([^)"]+)\)/g, function (_, id) { return 'url(#' + id + tag + ')'; });
+  }
+
   var Icons = {
     /** Returns SVG markup for a named icon. */
     get: function (name) {
@@ -282,7 +299,7 @@
           'x="0" y="0" width="32" height="32" preserveAspectRatio="xMidYMid meet"/>',
           '0 0 32 32', 'xmlns:xlink="http://www.w3.org/1999/xlink"');
       }
-      if (A[name]) return wrap(A[name], '0 0 32 32');
+      if (A[name]) return wrap(uniqueIds(A[name]), '0 0 32 32');
       if (S[name]) {
         return wrap(S[name], '0 0 24 24',
           'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"');

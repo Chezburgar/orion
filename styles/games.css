@@ -34,3 +34,12 @@
   border-color:rgba(247,185,85,.45);color:#f7b955}
 .e-mode.mode-local{background:var(--card);color:var(--text-3)}
 .e-btn.on{color:#f7b955}
+
+/* Logo picker inside the publish dialog */
+.store-logo{display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--r-sm);
+  background:var(--card-active);border:1px solid var(--stroke)}
+.store-logo-prev{width:48px;height:48px;flex:none;border-radius:10px;display:grid;place-items:center;
+  background:var(--card);overflow:hidden}
+.store-logo-prev svg{width:34px;height:34px}
+.store-logo>div{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.store-logo small{font-size:11px;line-height:1.4}

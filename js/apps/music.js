@@ -170,6 +170,18 @@
 
     function current() { return queue[qIndex] || null; }
 
+    /**
+     * The tray slider is the master; this window's slider is the app level.
+     * YouTube takes one number, so they are combined the way a mixer would.
+     */
+    function effectiveVolume() {
+      return Math.round(store().volume * Emu.masterVolume());
+    }
+    function applyVolume() {
+      if (!player || !ready) return;
+      try { player.setVolume(effectiveVolume()); } catch (e) {}
+    }
+
     // ------------------------------------------------------- the player
     /**
      * One iframe for the whole session. The IFrame API gives real transport
@@ -199,7 +211,7 @@
           events: {
             onReady: function () {
               ready = true;
-              try { player.setVolume(store().volume); } catch (e) {}
+              try { player.setVolume(effectiveVolume()); } catch (e) {}
               readyCbs.splice(0).forEach(function (f) { try { f(); } catch (e) {} });
               if (pendingTrack) { var t = pendingTrack; pendingTrack = null; loadNow(t); }
             },
@@ -258,7 +270,7 @@
       if (!player || !ready) { pendingTrack = track; ensurePlayer(); return; }
       try {
         player.loadVideoById(track.id);
-        player.setVolume(store().volume);
+        player.setVolume(effectiveVolume());
         playing = true;
       } catch (e) { /* player still warming up */ }
       pushRecent(track);
@@ -778,7 +790,7 @@
       var mm = store();
       mm.volume = parseInt(e.target.value, 10);
       save();
-      if (player && ready) { try { player.setVolume(mm.volume); } catch (err) {} }
+      if (player && ready) { applyVolume(); }
     });
 
     // Space toggles playback unless you are typing.
@@ -791,8 +803,12 @@
     };
     document.addEventListener('keydown', onKey);
 
+    // The tray slider is the master, so follow it while a track is playing.
+    var onMaster = Emu.on('volume', applyVolume);
+
     win.onClose = function () {
       stopPoll();
+      Emu.off('volume', onMaster);
       document.removeEventListener('keydown', onKey);
       try { if (player && player.destroy) player.destroy(); } catch (e) {}
       player = null;

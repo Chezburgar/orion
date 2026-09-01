@@ -179,10 +179,55 @@
     return Emu.appOrder.filter(function (id) { return Emu.apps[id].pinned && !Emu.apps[id].hidden; });
   }
 
+  /**
+   * The taskbar used native title= tooltips, and syncTaskbar() replaces the
+   * whole strip whenever a window opens, focuses or closes. That destroys the
+   * button the tooltip belongs to without ever firing a mouseleave, so the
+   * browser leaves the label stranded on screen. Orion draws its own instead,
+   * and hides it on every rebuild.
+   */
+  var tipEl = null, tipFor = null;
+
+  function showTip(btn) {
+    var text = btn && btn.dataset.tip;
+    if (!text) return hideTip();
+    if (!tipEl) {
+      tipEl = U.el('<div class="tb-tip" role="tooltip"></div>');
+      els.desktop.appendChild(tipEl);
+    }
+    tipFor = btn;
+    tipEl.textContent = text;
+    tipEl.classList.add('on');
+    var r = btn.getBoundingClientRect();
+    var t = tipEl.getBoundingClientRect();
+    var left = U.clamp(r.left + r.width / 2 - t.width / 2, 8, window.innerWidth - t.width - 8);
+    var above = r.top > t.height + 14;
+    tipEl.style.left = Math.round(left) + 'px';
+    tipEl.style.top = Math.round(above ? r.top - t.height - 10 : r.bottom + 10) + 'px';
+  }
+
+  function hideTip() {
+    tipFor = null;
+    if (tipEl) tipEl.classList.remove('on');
+  }
+
+  function wireTips() {
+    els.taskbar.addEventListener('pointerover', function (e) {
+      var b = e.target.closest('[data-tip]');
+      if (b !== tipFor) b ? showTip(b) : hideTip();
+    });
+    els.taskbar.addEventListener('pointerleave', hideTip);
+    // Anything that can pull the button out from under the pointer
+    els.taskbar.addEventListener('pointerdown', hideTip);
+    window.addEventListener('blur', hideTip);
+    document.addEventListener('visibilitychange', hideTip);
+  }
+
   function buildTaskbar() {
     els.tbLeft.innerHTML =
-      '<button class="tb-btn" data-tb="widgets" title="Widgets (Win+W)">' + Icons.get('widgets') + '</button>';
+      '<button class="tb-btn" data-tb="widgets" data-tip="Widgets (Win+W)">' + Icons.get('widgets') + '</button>';
     syncTaskbar();
+    wireTips();
 
     els.taskbar.addEventListener('click', function (e) {
       var b = e.target.closest('[data-tb]');
@@ -240,19 +285,22 @@
 
     var focusedApp = WM.focused && !WM.focused.minimized ? WM.focused.appId : null;
     var html = '<button class="tb-btn start-btn' + (openFlyout === 'start' ? ' open' : '') +
-      '" data-tb="start" title="Start (Win)">' + Icons.start() + '</button>' +
-      '<button class="tb-btn" data-tb="search" title="Search (Win+S)">' + Icons.get('search') + '</button>' +
-      '<button class="tb-btn" data-tb="taskview" title="Task view (Win+Tab)">' + Icons.get('taskview') + '</button>';
+      '" data-tb="start" data-tip="Start (Win)">' + Icons.start() + '</button>' +
+      '<button class="tb-btn" data-tb="search" data-tip="Search (Win+S)">' + Icons.get('search') + '</button>' +
+      '<button class="tb-btn" data-tb="taskview" data-tip="Task view (Win+Tab)">' + Icons.get('taskview') + '</button>';
 
     ids.forEach(function (id) {
       var app = Emu.apps[id];
       if (!app) return;
       var wins = WM.byApp(id).filter(onDesk);
       html += '<button class="tb-btn' + (wins.length ? ' running' : '') + (focusedApp === id ? ' active-win' : '') +
-        '" data-tb="app" data-app="' + id + '" title="' + U.esc(app.name) + '">' +
+        '" data-tb="app" data-app="' + id + '" data-tip="' + U.esc(app.name) + '">' +
         Icons.get(app.icon) + '<span class="ind"></span></button>';
     });
     els.tbCenter.innerHTML = html;
+    // The buttons just went away and came back; any label about one of them
+    // is now pointing at an element that no longer exists.
+    hideTip();
   }
 
   function appButton(id) {
@@ -549,6 +597,7 @@
       Emu.state.volume = +this.value;
       $('#volumeVal').textContent = this.value;
       Emu.save();
+      Emu.applyVolume();
       renderQuick();
     });
     $('#brightSlider').addEventListener('input', function () {

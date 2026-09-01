@@ -238,3 +238,11 @@ input[type=range]::-moz-range-thumb{width:10px;height:10px;border-radius:50%;bac
   .tray-clock{font-size:11px;padding:2px 5px}
   .show-desktop{display:none}
 }
+
+/* Taskbar label. Orion draws this itself because a native title= tooltip
+   survives the button being replaced by a taskbar rebuild. */
+.tb-tip{position:fixed;z-index:820;padding:5px 10px;border-radius:6px;pointer-events:none;
+  background:var(--layer-solid);border:1px solid var(--stroke);color:var(--text);
+  font-size:12px;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.4);
+  opacity:0;transform:translateY(3px);transition:opacity .1s,transform .1s}
+.tb-tip.on{opacity:1;transform:none}
