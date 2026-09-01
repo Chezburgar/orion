@@ -12,6 +12,7 @@
   var Emu = global.Emu, U = Emu.util, Icons = global.Icons, WM = global.WM;
 
   var API = 'https://bgoxonxxutkporbqbtbh.supabase.co/functions/v1/yt';
+  var RADIO = 'https://bgoxonxxutkporbqbtbh.supabase.co/functions/v1/radio';
   var MUSIC_CATEGORY = '10';
 
   // ------------------------------------------------------------- storage
@@ -276,6 +277,9 @@
       pushRecent(track);
       renderPlayer();
       renderQueue();
+      // Fetch the next batch before the queue actually runs dry, so the gap
+      // between songs is not spent waiting on the network.
+      if (qIndex >= queue.length - 2) extendRadio(false);
     }
 
     function pushRecent(track) {
@@ -295,6 +299,68 @@
       ensurePlayer(function () { loadNow(current()); });
     }
 
+    // ------------------------------------------------------------- radio
+    // What plays when the queue runs out. Asking for "more results for the
+    // same words" is not a recommendation, so the server picks songs that
+    // actually sit next to this one musically and resolves each to a track.
+    var radioBusy = false, radioOn = false, radioWantsPlay = false;
+
+    /** Same artist's other songs - the fallback when radio cannot answer. */
+    function fallbackArtist(seed) {
+      return api('/search', { q: seed.artist, category: MUSIC_CATEGORY, max: 12 })
+        .then(function (items) {
+          var have = {};
+          queue.forEach(function (t) { have[t.id] = 1; });
+          return withDurations(items.map(toTrack).filter(function (t) { return !have[t.id]; }));
+        })
+        .catch(function () { return []; });
+    }
+
+    /**
+     * Append similar tracks. `andPlay` is set when the queue has already run
+     * dry and playback is waiting on the refill.
+     */
+    function extendRadio(andPlay) {
+      var seed = current() || queue[queue.length - 1];
+      if (!seed) return;
+      // The prefetch usually gets here first and is already in flight when the
+      // queue actually runs dry. Record that playback is now waiting on it, so
+      // the call that is already running starts the next track when it lands -
+      // otherwise the tracks arrive and nothing plays.
+      if (andPlay) { radioWantsPlay = true; renderPlayer(); }
+      if (radioBusy) return;
+      radioBusy = true;
+
+      var exclude = queue.slice(-30).map(function (t) { return t.id; }).join(',');
+      var url = RADIO + '?artist=' + encodeURIComponent(seed.artist) +
+        '&title=' + encodeURIComponent(seed.title) + '&max=6' +
+        '&exclude=' + encodeURIComponent(exclude);
+
+      fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+        var items = (d.items || []).map(toTrack);
+        return items.length ? withDurations(items) : fallbackArtist(seed);
+      }).then(function (items) {
+        radioBusy = false;
+        var wantPlay = radioWantsPlay;
+        radioWantsPlay = false;
+        if (!items || !items.length) {
+          if (wantPlay) { playing = false; stopPoll(); renderPlayer(); }
+          return;
+        }
+        var atEnd = qIndex >= queue.length - 1;
+        queue = queue.concat(items);
+        radioOn = true;
+        renderQueue();
+        if (wantPlay && atEnd) { qIndex += 1; loadNow(current()); }
+        else renderPlayer();
+      }).catch(function () {
+        radioBusy = false;
+        var wantPlay = radioWantsPlay;
+        radioWantsPlay = false;
+        if (wantPlay) { playing = false; stopPoll(); renderPlayer(); }
+      });
+    }
+
     function advance(dir, auto) {
       var mm = store();
       if (!queue.length) return;
@@ -308,8 +374,9 @@
       }
       var next = qIndex + dir;
       if (next >= queue.length) {
+        // End of the queue: keep going with similar songs rather than stopping.
         if (mm.repeat === 'all') next = 0;
-        else { playing = false; stopPoll(); renderPlayer(); return; }
+        else { extendRadio(true); return; }
       }
       if (next < 0) next = 0;
       qIndex = next;
@@ -498,6 +565,8 @@
     }
 
     function renderQueue() {
+      var head = U.$('.mu-qhead b', win.body);
+      if (head) head.textContent = radioOn ? 'Queue · radio' : 'Queue';
       qList.innerHTML = queue.length
         ? queue.map(function (t, i) {
             return '<div class="mu-qrow' + (i === qIndex ? ' active' : '') + '" data-q="' + i + '">' +

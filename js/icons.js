@@ -251,6 +251,14 @@
       + '<path d="m18.4 9.8 3.8 3.8" stroke="#160f2e" stroke-width="1.6"/>'
       + '<circle cx="10.4" cy="10.4" r="3" fill="none" stroke="#22d3ee" stroke-width="1.8"/>'
       + '<rect x="18.6" y="19.4" width="6.4" height="6.4" rx="1.4" fill="none" stroke="#a855f7" stroke-width="1.8"/>',
+    orionlearn: '<defs><linearGradient id="olG" x1="0" y1="0" x2="1" y2="1">'
+      + '<stop offset="0" stop-color="#34d399"/><stop offset="100%" stop-color="#0f766e"/></linearGradient></defs>'
+      + '<rect x="2.6" y="2.6" width="26.8" height="26.8" rx="6.5" fill="url(#olG)"/>'
+      + '<path d="M6.8 11.4 16 7.2l9.2 4.2-9.2 4.2z" fill="#fff"/>'
+      + '<path d="M10.4 13.6v4.9c0 2.2 2.5 3.6 5.6 3.6s5.6-1.4 5.6-3.6v-4.9" fill="none" '
+      + 'stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<path d="M25.2 11.4v6.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>'
+      + '<circle cx="25.2" cy="19" r="1.5" fill="#fff"/>',
     orionmusic: '<defs><linearGradient id="omG" x1="0" y1="0" x2="1" y2="1">'
       + '<stop offset="0" stop-color="#ff2d55"/><stop offset="100%" stop-color="#b0154a"/></linearGradient></defs>'
       + '<circle cx="16" cy="16" r="13.4" fill="url(#omG)"/>'
