@@ -55,7 +55,6 @@
 .lr-items{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:14px}
 .lr-items li{padding-left:4px}
 .lr-q{font-size:13.5px;line-height:1.6}
-.lr-hint{font-size:11.5px;color:var(--text-3);font-style:italic;margin-top:3px}
 .lr-work{height:34px;border-bottom:1px dashed var(--stroke-strong);margin-top:7px}
 .lr-study{margin-top:18px;padding:12px 14px;border-radius:9px;background:var(--card);font-size:12.5px}
 .lr-study b{display:block;margin-bottom:5px}
@@ -93,3 +92,43 @@
   .lr-brand span,.lr-mode span,.lr-note span{display:none}
   .lr-mode{justify-content:center}
 }
+
+/* ---------- photo input ---------- */
+.lr-photo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lr-photo .btn{display:flex;align-items:center;gap:7px}
+.lr-photo .btn svg{width:15px;height:15px}
+.lr-photook{display:flex;align-items:center;gap:6px;font-size:12px;color:#34d399}
+.lr-photook svg{width:14px;height:14px}
+.lr-photook .e-btn{width:22px;height:22px;color:var(--text-3)}
+.lr-photook .e-btn svg{width:9px;height:9px}
+.lr-src.short{height:88px}
+
+/* ---------- sheet picker ---------- */
+.lr-pick{display:flex;gap:7px;flex-wrap:wrap;min-height:30px;align-items:center}
+.lr-chip{display:flex;align-items:center;gap:7px;height:30px;padding:0 11px;border-radius:15px;
+  background:var(--card);border:1px solid var(--stroke);color:var(--text);font-size:12.5px}
+.lr-chip small{color:var(--text-3);font-size:11px}
+.lr-chip:hover{background:var(--card-hover)}
+.lr-chip.on{border-color:var(--accent);background:var(--card-active)}
+
+/* ---------- marked report ---------- */
+.lr-marks{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.lr-marks li{display:flex;gap:11px;padding:11px 13px;border-radius:9px;background:var(--card);
+  border-left:3px solid var(--stroke)}
+.lr-marks li.ok{border-left-color:#34d399}
+.lr-marks li.no{border-left-color:#f87171}
+.lr-tick{width:19px;height:19px;flex:none;display:grid;place-items:center;border-radius:50%;margin-top:1px}
+.lr-marks li.ok .lr-tick{background:rgba(52,211,153,.18);color:#34d399}
+.lr-marks li.no .lr-tick{background:rgba(248,113,113,.18);color:#f87171}
+.lr-tick svg{width:11px;height:11px}
+.lr-given{font-size:12px;color:var(--text-2);margin-top:3px}
+.lr-note2{font-size:11.5px;color:var(--text-3);margin-top:4px;line-height:1.55}
+
+/* ---------- my sheets ---------- */
+.lr-sheetgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.lr-card{display:flex;flex-direction:column;gap:3px;padding:13px;border-radius:10px;
+  background:var(--card);text-align:left;color:var(--text)}
+.lr-card:hover{background:var(--card-hover)}
+.lr-card svg{width:22px;height:22px;color:var(--text-3);margin-bottom:5px}
+.lr-card b{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr-card small{font-size:11px;color:var(--text-3)}

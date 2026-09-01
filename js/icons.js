@@ -251,14 +251,26 @@
       + '<path d="m18.4 9.8 3.8 3.8" stroke="#160f2e" stroke-width="1.6"/>'
       + '<circle cx="10.4" cy="10.4" r="3" fill="none" stroke="#22d3ee" stroke-width="1.8"/>'
       + '<rect x="18.6" y="19.4" width="6.4" height="6.4" rx="1.4" fill="none" stroke="#a855f7" stroke-width="1.8"/>',
-    orionlearn: '<defs><linearGradient id="olG" x1="0" y1="0" x2="1" y2="1">'
-      + '<stop offset="0" stop-color="#34d399"/><stop offset="100%" stop-color="#0f766e"/></linearGradient></defs>'
-      + '<rect x="2.6" y="2.6" width="26.8" height="26.8" rx="6.5" fill="url(#olG)"/>'
-      + '<path d="M6.8 11.4 16 7.2l9.2 4.2-9.2 4.2z" fill="#fff"/>'
-      + '<path d="M10.4 13.6v4.9c0 2.2 2.5 3.6 5.6 3.6s5.6-1.4 5.6-3.6v-4.9" fill="none" '
-      + 'stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>'
-      + '<path d="M25.2 11.4v6.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>'
-      + '<circle cx="25.2" cy="19" r="1.5" fill="#fff"/>',
+    // A star with an orbit rising out of an open book - Chase's own mark.
+    orionlearn: '<defs>'
+      + '<linearGradient id="olA" x1="0" y1="0" x2="1" y2="1">'
+      + '<stop offset="0" stop-color="#4f86f7"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient>'
+      + '<linearGradient id="olB" x1="0" y1="0" x2="1" y2="0">'
+      + '<stop offset="0" stop-color="#4f86f7"/><stop offset="100%" stop-color="#9b7cf6"/></linearGradient>'
+      + '</defs>'
+      // open book
+      + '<path d="M2.9 23.1c3.9-1.5 8.2-1.4 12.3 1.2v4.6c-4.1-2.6-8.4-2.7-12.3-1.2z" fill="url(#olB)"/>'
+      + '<path d="M29.1 23.1c-3.9-1.5-8.2-1.4-12.3 1.2v4.6c4.1-2.6 8.4-2.7 12.3-1.2z" fill="url(#olB)"/>'
+      + '<path d="M5.1 20.6c3.3-1.1 6.9-.9 10.1 1.3v2.1c-3.2-2.2-6.8-2.4-10.1-1.3z" fill="#c9d4fb"/>'
+      + '<path d="M26.9 20.6c-3.3-1.1-6.9-.9-10.1 1.3v2.1c3.2-2.2 6.8-2.4 10.1-1.3z" fill="#d8cffb"/>'
+      // four point star
+      + '<path d="M16 3.4c.7 6.6 1.9 8.9 5.9 10.1-4 1.2-5.2 3.5-5.9 10.1-.7-6.6-1.9-8.9-5.9-10.1 4-1.2 5.2-3.5 5.9-10.1Z" fill="url(#olA)"/>'
+      // orbit ring and its moon
+      + '<ellipse cx="16" cy="13.5" rx="10.4" ry="4.1" fill="none" stroke="url(#olB)" '
+      + 'stroke-width="1.5" transform="rotate(-19 16 13.5)"/>'
+      + '<circle cx="24.4" cy="8.6" r="2.1" fill="#4f86f7"/>'
+      // small sparkle
+      + '<path d="M9.2 5.6c.3 2.1.6 2.5 2.2 3-1.6.5-1.9.9-2.2 3-.3-2.1-.6-2.5-2.2-3 1.6-.5 1.9-.9 2.2-3Z" fill="#8b9cf7"/>',
     orionmusic: '<defs><linearGradient id="omG" x1="0" y1="0" x2="1" y2="1">'
       + '<stop offset="0" stop-color="#ff2d55"/><stop offset="100%" stop-color="#b0154a"/></linearGradient></defs>'
       + '<circle cx="16" cy="16" r="13.4" fill="url(#omG)"/>'
