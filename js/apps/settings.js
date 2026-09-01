@@ -78,6 +78,9 @@
               '<select class="st-select" data-act="uistyle">' +
               '<option value="win"' + (s.ui !== 'mac' ? ' selected' : '') + '>Windows style</option>' +
               '<option value="mac"' + (s.ui === 'mac' ? ' selected' : '') + '>Mac style</option></select>') +
+            card('monitor', 'Start in full screen',
+              'Orion fills the display on the first click after it loads. Alt+F toggles it any time.',
+              sw(s.autoFullscreen, 'autoFullscreen')) +
             card('orion', 'Setup and tour', 'Run first-time setup and the guided tour again',
               '<button class="btn" data-act="tour">Run it</button>') +
             card('download', 'Install Orion as an app',
@@ -206,6 +209,11 @@
       var k = act.dataset.act;
       if (act.classList.contains('sw')) {
         if (k === 'transparency') { s.transparency = !s.transparency; }
+        else if (k === 'autoFullscreen') {
+          s.autoFullscreen = !s.autoFullscreen;
+          // Toggling it here is itself a gesture, so it can take effect now.
+          if (global.Fullscreen) s.autoFullscreen ? global.Fullscreen.enter() : global.Fullscreen.exit();
+        }
         else { s.quick[k] = !s.quick[k]; if (k === 'airplane' && s.quick.airplane) { s.quick.wifi = false; s.quick.bluetooth = false; } }
         Emu.save(); Emu.applyTheme(); Emu.emit('quick'); render();
         return;

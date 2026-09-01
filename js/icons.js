@@ -102,7 +102,23 @@
     text: '<path d="M5 6.4V4.6h14v1.8"/><path d="M12 4.6v14.8"/><path d="M9 19.4h6"/>',
     eraser: '<path d="m9.4 19.4-4.8-4.8a1.8 1.8 0 0 1 0-2.6l8-8a1.8 1.8 0 0 1 2.6 0l4.2 4.2a1.8 1.8 0 0 1 0 2.6l-8.6 8.6z"/><path d="M9.4 19.4H20M8 8.6l6.4 6.4"/>',
     bucket: '<path d="M6 10.4 12.6 3.8l7.2 7.2-6.6 6.6a1.8 1.8 0 0 1-2.6 0L6 13a1.8 1.8 0 0 1 0-2.6Z"/><path d="M4 8.6 8.8 13.4"/><path d="M20 15.4s2 2.6 2 4a2 2 0 0 1-4 0c0-1.4 2-4 2-4Z" fill="currentColor" stroke="none"/>',
-    dropper: '<path d="m14.6 4.8 4.6 4.6"/><path d="M17.8 3.4a2.4 2.4 0 0 1 3.4 3.4l-2 2-3.4-3.4z"/><path d="m14.4 7.4 2.2 2.2-8 8L4.4 19l1.4-4.2z"/>'
+    dropper: '<path d="m14.6 4.8 4.6 4.6"/><path d="M17.8 3.4a2.4 2.4 0 0 1 3.4 3.4l-2 2-3.4-3.4z"/><path d="m14.4 7.4 2.2 2.2-8 8L4.4 19l1.4-4.2z"/>',
+
+    // Orion Music transport
+    pause: '<rect x="6.6" y="5" width="3.8" height="14" rx="1.3" fill="currentColor" stroke="none"/><rect x="13.6" y="5" width="3.8" height="14" rx="1.3" fill="currentColor" stroke="none"/>',
+    playfill: '<path d="M7.5 4.8v14.4L19.6 12z" fill="currentColor" stroke="none"/>',
+    next: '<path d="M5.6 5.4v13.2L15.4 12z" fill="currentColor" stroke="none"/><rect x="16.8" y="5.4" width="2.6" height="13.2" rx="1.2" fill="currentColor" stroke="none"/>',
+    prev: '<path d="M18.4 5.4v13.2L8.6 12z" fill="currentColor" stroke="none"/><rect x="4.6" y="5.4" width="2.6" height="13.2" rx="1.2" fill="currentColor" stroke="none"/>',
+    shuffle: '<path d="M3.6 6.6h3.2c1.9 0 3 1.1 4.2 2.7l2.6 3.6c1.2 1.6 2.3 2.5 4.2 2.5h2.6"/><path d="M17.6 3.8 20.8 6.6l-3.2 2.8M17.6 12.6l3.2 2.8-3.2 2.8"/><path d="M3.6 17.4h3.2c1.6 0 2.6-.8 3.6-2"/>',
+    repeat: '<path d="M6.4 8.2h11a3 3 0 0 1 3 3v.6"/><path d="M17.6 16.8h-11a3 3 0 0 1-3-3v-.6"/><path d="m8.8 5.4-2.8 2.8 2.8 2.8M15.2 13.6l2.8 3.2-2.8 2.8"/>',
+    repeatone: '<path d="M6.4 8.2h11a3 3 0 0 1 3 3v.6"/><path d="M17.6 16.8h-11a3 3 0 0 1-3-3v-.6"/><path d="m8.8 5.4-2.8 2.8 2.8 2.8M15.2 13.6l2.8 3.2-2.8 2.8"/><path d="M11.4 10.6 12.8 9.6v5" stroke-width="1.5"/>',
+    queue: '<path d="M4 6.6h11M4 11h11M4 15.4h7"/><path d="M17.6 9.6v8.2" /><circle cx="15.6" cy="18" r="2" fill="currentColor" stroke="none"/><path d="M17.6 9.6 21 8.4v2.4l-3.4 1.2z" fill="currentColor" stroke="none"/>',
+    heart: '<path d="M12 20.2 4.9 13a4.4 4.4 0 0 1 6.2-6.2l.9.9.9-.9A4.4 4.4 0 0 1 19.1 13z"/>',
+    heartfill: '<path d="M12 20.2 4.9 13a4.4 4.4 0 0 1 6.2-6.2l.9.9.9-.9A4.4 4.4 0 0 1 19.1 13z" fill="currentColor"/>',
+    note: '<path d="M9 18V5.4l10-2v12.2"/><ellipse cx="6.6" cy="18" rx="2.6" ry="2.2"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2.2"/>',
+    disc: '<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.4a8.6 8.6 0 0 1 0 17.2" opacity=".5"/>',
+    explore: '<circle cx="12" cy="12" r="8.6"/><path d="m15.4 8.6-1.8 5.2-5.2 1.8 1.8-5.2z" fill="currentColor" stroke="none"/>',
+    library: '<rect x="3.4" y="5" width="4" height="14" rx="1.2"/><rect x="9.6" y="5" width="4" height="14" rx="1.2"/><path d="m16.4 6.4 3.6 1-3 12-3.6-1z"/>'
   };
 
   // Filled / colored app icons (32x32) ------------------------------------
@@ -235,6 +251,13 @@
       + '<path d="m18.4 9.8 3.8 3.8" stroke="#160f2e" stroke-width="1.6"/>'
       + '<circle cx="10.4" cy="10.4" r="3" fill="none" stroke="#22d3ee" stroke-width="1.8"/>'
       + '<rect x="18.6" y="19.4" width="6.4" height="6.4" rx="1.4" fill="none" stroke="#a855f7" stroke-width="1.8"/>',
+    orionmusic: '<defs><linearGradient id="omG" x1="0" y1="0" x2="1" y2="1">'
+      + '<stop offset="0" stop-color="#ff2d55"/><stop offset="100%" stop-color="#b0154a"/></linearGradient></defs>'
+      + '<circle cx="16" cy="16" r="13.4" fill="url(#omG)"/>'
+      + '<circle cx="16" cy="16" r="13.4" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="1"/>'
+      + '<path d="M13.4 21.4V11.2l8.2-1.7v9.1" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<ellipse cx="11.7" cy="21.6" rx="2.5" ry="2.1" fill="#fff"/>'
+      + '<ellipse cx="19.9" cy="19.8" rx="2.5" ry="2.1" fill="#fff"/>',
     photo: '<rect x="3" y="3" width="26" height="26" rx="4" fill="#0d1b2f"/>'
       + '<circle cx="16" cy="16" r="9.4" fill="none" stroke="#31c5f4" stroke-width="1.6"/>'
       + '<path d="M16 6.6a9.4 9.4 0 0 1 0 18.8z" fill="#31c5f4" opacity=".85"/>'

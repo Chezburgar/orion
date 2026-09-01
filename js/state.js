@@ -3,11 +3,12 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-08-31.23';
+  var BUILD = '2026-08-31.24';
 
   var DEFAULTS = {
     user: 'Chase',
     ui: 'win',
+    autoFullscreen: true,
     setupDone: false,
     theme: 'dark',
     accent: '#4f46e5',

@@ -58,6 +58,8 @@
     Shell.init();
     checkForUpdate();
     if (global.Install) global.Install.register();
+    // Uses the first click or key press as the gesture browsers require.
+    if (global.Fullscreen) global.Fullscreen.armAuto();
     Emu.onNotifAction('app:reload', function () {
       location.replace(location.pathname + '?b=' + Date.now());
     });
