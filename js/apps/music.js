@@ -1113,6 +1113,62 @@
     return win;
   }
 
+  /* ---------- Rythem's song picker ----------------------------------
+     The game asks Orion for songs and Orion answers. Kept at module level so
+     it is listening whether or not the Music window happens to be open.
+
+     A picked track goes over as a video id plus a tempo, not as audio: no
+     page can read YouTube audio as samples, so the game charts it on a beat
+     grid. That is why the tempo matters enough to look up, and why the game
+     is told whether the tempo is actually known or only estimated.       */
+  (function () {
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d || !d.orion || !e.source) return;
+      var reply = function (msg) { try { e.source.postMessage(msg, '*'); } catch (err) {} };
+
+      if (d.orion === 'music-query') {
+        var q = String(d.q || '').trim();
+        var p = q
+          ? api('/search', { q: q + ' music', category: MUSIC_CATEGORY, max: 24 })
+          : api('/popular', { category: MUSIC_CATEGORY, max: 24 });
+        p.then(function (items) {
+          reply({
+            orion: 'music-list',
+            items: items.map(toTrack).map(function (t) {
+              return { id: t.id, title: t.title, artist: t.artist, thumb: t.thumb, seconds: t.seconds };
+            })
+          });
+        }).catch(function (err) {
+          reply({ orion: 'music-error', message: err.message });
+        });
+        return;
+      }
+
+      if (d.orion === 'music-pick') {
+        var id = String(d.id || '').slice(0, 40);
+        if (!id) return;
+        api('/videos', { ids: id }).then(function (items) {
+          var v = items[0];
+          if (!v) throw new Error('That track could not be found.');
+          var t = toTrack(v);
+          return fetch(RADIO + '/bpm?artist=' + encodeURIComponent(t.artist) +
+            '&title=' + encodeURIComponent(t.title))
+            .then(function (r) { return r.json(); })
+            .catch(function () { return { bpm: 120, sure: false }; })
+            .then(function (b) {
+              reply({
+                orion: 'music-track', videoId: t.id, title: t.title, artist: t.artist,
+                seconds: t.seconds, bpm: Number(b.bpm) || 120, sure: !!b.sure
+              });
+            });
+        }).catch(function (err) {
+          reply({ orion: 'music-error', message: err.message });
+        });
+      }
+    });
+  })();
+
   Emu.registerApp({
     id: 'music', name: 'Orion Music', icon: 'orionmusic', pinned: true,
     desc: 'Songs, playlists and your library', singleton: true,
