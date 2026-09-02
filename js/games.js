@@ -148,16 +148,11 @@
 
     function mount() {
       stage.innerHTML = '';
-      loadEl.textContent = g.proxied ? 'Starting the proxy…' : 'Loading…';
+      loadEl.textContent = 'Loading…';
       loadEl.classList.remove('hidden');
-      // Games flagged "open through the proxy" need the tunnel up first.
-      if (g.proxied && global.OrionProxy) {
-        global.OrionProxy.startFor(g.url).then(function (ok) {
-          var via = ok ? global.OrionProxy.urlFor(g.url) : null;
-          mountFrame(via || g.url);
-        });
-        return;
-      }
+      // Games are embedded straight from the site that hosts them. There is no
+      // proxy and nothing is unblocked - if a site refuses to be framed, or the
+      // network blocks it, it will not load here either.
       mountFrame(g.url);
     }
 

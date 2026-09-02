@@ -3,7 +3,7 @@
   'use strict';
 
   var KEY = 'win11emu.state.v1';
-  var BUILD = '2026-09-01.30';
+  var BUILD = '2026-09-01.31';
 
   var DEFAULTS = {
     user: 'Chase',
@@ -21,7 +21,7 @@
     quick: { wifi: true, bluetooth: false, airplane: false, night: false, saver: false, cast: false },
     edge: {
       homepage: 'edge://newtab',
-      searchEngine: 'bing',
+      searchEngine: 'google',
       render: 'app',
       siteModes: {},
       modesReset: false,
@@ -30,25 +30,15 @@
       allowEmbedding: true,
       favorites: [
         { title: 'New tab', url: 'edge://newtab', icon: 'globe' },
-        { title: 'Bing', url: 'https://bing.local', icon: 'search' },
-        { title: 'Emulator docs', url: 'https://docs.emu', icon: 'doc' },
+        { title: 'Google', url: 'https://google.local', icon: 'search' },
+        { title: 'Orion docs', url: 'https://docs.emu', icon: 'doc' },
         { title: 'Example.com', url: 'https://example.com', icon: 'globe' }
       ],
       history: [],
       downloads: []
     },
-    net: {
-      connected: false,
-      relay: 'corssh',
-      location: 'auto',
-      killSwitch: false,
-      autoConnect: false,
-      protocol: 'WireGuard',
-      since: 0,
-      lastPing: 0,
-      lastProbe: '',
-      seenDisclosure: false
-    },
+    // The tunnel state that used to live here is gone with the VPN app and the
+    // proxy engines. Nothing was ever unblocked by any of it.
     rebranded: false,
     appIcons: {},
     installed: [],

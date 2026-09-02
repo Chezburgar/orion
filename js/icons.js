@@ -252,6 +252,17 @@
       + '<circle cx="10.4" cy="10.4" r="3" fill="none" stroke="#22d3ee" stroke-width="1.8"/>'
       + '<rect x="18.6" y="19.4" width="6.4" height="6.4" rx="1.4" fill="none" stroke="#a855f7" stroke-width="1.8"/>',
     // A star with an orbit rising out of an open book - Chase's own mark.
+    chrome: '<defs>'
+      + '<linearGradient id="crR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ea4335"/><stop offset="100%" stop-color="#c5221f"/></linearGradient>'
+      + '<linearGradient id="crY" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fcc934"/><stop offset="100%" stop-color="#f9ab00"/></linearGradient>'
+      + '<linearGradient id="crG" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34a853"/><stop offset="100%" stop-color="#1e8e3e"/></linearGradient>'
+      + '</defs>'
+      // red arc across the top, then green and yellow thirds beneath it
+      + '<path d="M16 2.6a13.4 13.4 0 0 1 11.6 6.7H16a6.7 6.7 0 0 0-5.8 3.35L4.4 9.3A13.4 13.4 0 0 1 16 2.6Z" fill="url(#crR)"/>'
+      + '<path d="M27.6 9.3A13.4 13.4 0 0 1 16 29.4l5.8-10.05A6.7 6.7 0 0 0 21.8 12.65L16 9.3Z" fill="url(#crG)"/>'
+      + '<path d="M4.4 9.3 10.2 19.35a6.7 6.7 0 0 0 5.8 3.35L16 29.4A13.4 13.4 0 0 1 4.4 9.3Z" fill="url(#crY)"/>'
+      + '<circle cx="16" cy="16" r="6.7" fill="#fff"/>'
+      + '<circle cx="16" cy="16" r="5.2" fill="#4285f4"/>',
     orionlearn: '<defs>'
       + '<linearGradient id="olA" x1="0" y1="0" x2="1" y2="1">'
       + '<stop offset="0" stop-color="#4f86f7"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient>'

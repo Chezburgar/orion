@@ -320,3 +320,11 @@ html[data-theme="light"] .ntp-card{background:rgba(255,255,255,.75);border-color
 .wall-opt:hover .wall-del{opacity:1}
 .wall-del svg{width:10px;height:10px}
 .wall-del:hover{background:#c42b1c}
+
+/* Google-style new tab for the browser */
+.ntp-g{align-items:center;padding-top:12vh}
+.g-word{font:400 62px/1 "Product Sans","Segoe UI",system-ui,sans-serif;letter-spacing:-2px;
+  margin-bottom:26px;user-select:none}
+.g-word .b{color:#4285f4}.g-word .r{color:#ea4335}.g-word .y{color:#fbbc05}.g-word .g{color:#34a853}
+.g-search{max-width:560px;width:100%;border-radius:24px !important}
+.g-search input{font-size:15px}

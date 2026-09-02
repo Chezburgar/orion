@@ -56,11 +56,9 @@
   var stats = { requests: 0, bytes: 0, blocked: 0, started: 0, errors: 0 };
   var cache = {};
 
-  function relay() {
-    var s = Emu.state.net;
-    if (!s.connected) return RELAYS.direct;
-    return RELAYS[s.relay] || RELAYS.corsproxy;
-  }
+  // There is no tunnel to be "connected" to any more, so a fetch starts
+  // direct and falls back down the chain if the site will not answer.
+  function relay() { return RELAYS.direct; }
 
   function timedFetch(url, ms, asBlob) {
     var ctrl = new AbortController();
@@ -76,66 +74,14 @@
     });
   }
 
+  // The tunnel simulation that used to live here is gone, along with the proxy
+  // engines and the VPN app. None of it unblocked anything, and pretending
+  // otherwise was the dishonest part. What is left is the browser's own
+  // fetching and search, which do work.
+  //
+  // relay() survives as an internal detail: reading a page cross-origin needs
+  // SOMETHING to fetch it, and that is all it is used for now.
   var Net = {
-    RELAYS: RELAYS,
-    LOCATIONS: LOCATIONS,
-    stats: stats,
-
-    relay: relay,
-    relayFor: function (id) { return RELAYS[id] || RELAYS.direct; },
-    isConnected: function () { return !!Emu.state.net.connected; },
-
-    /** Bring the tunnel up. Returns a promise that resolves once a probe succeeds. */
-    connect: function (locationId) {
-      var s = Emu.state.net;
-      var loc = LOCATIONS.filter(function (l) { return l.id === (locationId || s.location); })[0] || LOCATIONS[0];
-      s.location = loc.id;
-      s.relay = loc.relay;
-      s.connected = true;
-      s.since = Date.now();
-      stats.started = stats.started || Date.now();
-      Emu.save();
-      Emu.emit('net');
-      return Net.probe().then(function (ms) {
-        Emu.emit('net');
-        return { location: loc, ms: ms };
-      });
-    },
-
-    disconnect: function () {
-      var s = Emu.state.net;
-      s.connected = false;
-      s.since = 0;
-      Emu.save();
-      Emu.emit('net');
-    },
-
-    /** Round-trip test through the current relay. */
-    probe: function () {
-      var t0 = performance.now();
-      return timedFetch(relay().url('https://example.com'), 12000).then(function (r) {
-        var ms = Math.round(performance.now() - t0);
-        Emu.state.net.lastPing = ms;
-        Emu.state.net.lastProbe = r.ok ? 'ok' : ('http ' + r.status);
-        Emu.save();
-        return ms;
-      }).catch(function () {
-        Emu.state.net.lastProbe = 'unreachable';
-        Emu.save();
-        return -1;
-      });
-    },
-
-    /** Simulated public address - the relay does not actually hide anything. */
-    exitIp: function () {
-      var s = Emu.state.net;
-      if (!s.connected) return 'your real address';
-      var loc = LOCATIONS.filter(function (l) { return l.id === s.location; })[0] || LOCATIONS[0];
-      var seed = 0;
-      for (var i = 0; i < loc.id.length; i++) seed += loc.id.charCodeAt(i);
-      return '185.' + (40 + seed % 60) + '.' + (10 + seed % 200) + '.' + (2 + seed % 250);
-    },
-
     // ------------------------------------------------------------ fetching
     /**
      * Fetch a page for the emulated browser.
@@ -154,8 +100,7 @@
       if (opts.mode === 'reader') {
         chain = [RELAYS.jina, RELAYS.corssh];
       } else {
-        if (Emu.state.net.connected) chain.push(relay());
-        else chain.push(RELAYS.direct);
+        chain.push(RELAYS.direct);
         FALLBACK.forEach(function (id) {
           if (chain.indexOf(RELAYS[id]) < 0) chain.push(RELAYS[id]);
         });
@@ -187,7 +132,7 @@
     /** Route an asset (image, stylesheet) through the active relay. */
     assetUrl: function (url) {
       if (!/^https?:/i.test(url)) return url;
-      var r = Emu.state.net.connected ? relay() : RELAYS.corssh;
+      var r = RELAYS.corssh;
       if (r.kind !== 'html') r = RELAYS.corssh;   // the reader relay cannot serve binaries
       return r.url(url);
     },

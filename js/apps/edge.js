@@ -1,4 +1,4 @@
-/* ===== Microsoft Edge =====
+/* ===== Google Chrome =====
    A browser that renders pages itself: it fetches the document over the
    emulator's network stack, sanitises and rewrites it, then paints it into
    a shadow root. Tabs, history, favourites, downloads, find-in-page, zoom,
@@ -21,6 +21,8 @@
     { url: 'https://example.com', title: 'Example Domain', desc: 'The smallest real page on the internet.', kw: 'example real internet live' }
   ];
 
+  // google.local is the search page. bing.local stays as an alias so old
+  // bookmarks and history entries still resolve.
   // ------------------------------------------------------------ URL parse
   function parseUrl(input) {
     var s = String(input || '').trim();
@@ -277,24 +279,15 @@
         return { title: 'Downloads', favicon: 'download', html: '<div class="e-list"><h1>Downloads</h1>' + dls + '</div>' };
       }
       case 'net': {
-        var s = Emu.state.net, r = Net.relay(), st2 = Net.stats;
         return {
-          title: 'Network internals', favicon: 'network',
-          html: '<div class="e-list"><h1>edge://net</h1>' +
-            '<div class="e-row"><span class="t">Tunnel</span><span class="when">' +
-              (s.connected ? 'connected via ' + U.esc(r.host) : 'direct (no relay)') + '</span></div>' +
-            '<div class="e-row"><span class="t">Fetch strategy</span><span class="when">' +
-              (s.connected ? 'relay → fallback relay' : 'direct → relay fallback') + '</span></div>' +
-            '<div class="e-row"><span class="t">Exit address (simulated)</span><span class="when">' + U.esc(Net.exitIp()) + '</span></div>' +
-            '<div class="e-row"><span class="t">Last probe</span><span class="when">' + U.esc(s.lastProbe || '—') + '</span></div>' +
-            '<div class="e-row"><span class="t">Requests</span><span class="when">' + st2.requests + '</span></div>' +
-            '<div class="e-row"><span class="t">Transferred</span><span class="when">' + U.fmtBytes(st2.bytes) + '</span></div>' +
-            '<div class="e-row"><span class="t">Scripts &amp; frames blocked</span><span class="when">' + st2.blocked + '</span></div>' +
-            '<div class="e-row"><span class="t">Failed fetches</span><span class="when">' + st2.errors + '</span></div>' +
+          title: 'Browser internals', favicon: 'network',
+          html: '<div class="e-list"><h1>chrome://net</h1>' +
             '<div class="e-row"><span class="t">Cached pages</span><span class="when">' + Net.cacheSize() + '</span></div>' +
             '<div class="e-row"><span class="t">Orion build</span><span class="when">' + U.esc(Emu.BUILD) + '</span></div>' +
-            '<p><button class="btn" data-act="clear-cache">Clear cache</button> ' +
-            '<button class="btn" data-act="open-vpn">Open Orion VPN</button></p></div>'
+            '<p class="muted">Sites load straight from the site that hosts them. There is no proxy ' +
+            'and nothing is unblocked — if a page refuses to be framed, or your network blocks it, ' +
+            'it will not load here either.</p>' +
+            '<p><button class="btn" data-act="clear-cache">Clear cache</button></p></div>'
         };
       }
       case 'settings': {
@@ -336,36 +329,30 @@
 
   function newTabHtml() {
     var tiles = [
-      { t: 'Search', u: 'https://bing.local', i: 'search' },
-      { t: 'Docs', u: 'https://docs.emu', i: 'doc' },
-      { t: 'Wikipedia', u: 'https://en.wikipedia.org/wiki/Windows_11', i: 'globe' },
+      { t: 'Search', u: 'https://google.local', i: 'search' },
+      { t: 'Wikipedia', u: 'https://en.wikipedia.org/wiki/Main_Page', i: 'globe' },
       { t: 'Hacker News', u: 'https://news.ycombinator.com', i: 'globe' },
+      { t: 'Docs', u: 'https://docs.emu', i: 'doc' },
       { t: 'News', u: 'https://news.emu', i: 'globe' },
       { t: 'Weather', u: 'https://weather.emu', i: 'sun' },
-      { t: 'Network', u: 'edge://net', i: 'network' },
+      { t: 'Downloads', u: 'edge://downloads', i: 'download' },
       { t: 'History', u: 'edge://history', i: 'history' }
     ].map(function (x) {
       return '<div class="ntp-tile" data-url="' + U.esc(x.u) + '">' + Icons.get(x.i) + '<span>' + U.esc(x.t) + '</span></div>';
     }).join('');
 
-    var vpn = Emu.state.net.connected;
-    return '<div class="ntp">' +
-      '<div class="ntp-brand">' + Icons.get('edge') + '<span>Microsoft Edge</span></div>' +
-      '<div class="ntp-search"><input data-ntp-q placeholder="Search the web" spellcheck="false">' +
-      '<button data-ntp-go title="Search">' + Icons.get('search') + '</button></div>' +
+    return '<div class="ntp ntp-g">' +
+      '<div class="g-word"><span class="b">G</span><span class="r">o</span><span class="y">o</span>' +
+        '<span class="b">g</span><span class="g">l</span><span class="r">e</span></div>' +
+      '<div class="ntp-search g-search"><input data-ntp-q placeholder="Search Google or type a URL" ' +
+        'spellcheck="false"><button data-ntp-go title="Search">' + Icons.get('search') + '</button></div>' +
       '<div class="ntp-tiles">' + tiles + '</div>' +
-      '<div class="ntp-feed">' +
-        '<div class="ntp-card"><span class="k">Engine</span><b>This browser renders pages itself</b>' +
-        'Documents are fetched, stripped of scripts and frames, rewritten and painted here - no iframe. ' +
-        'Search results come from live APIs.</div>' +
-        '<div class="ntp-card"><span class="k">Tunnel</span><b>' +
-        (vpn ? 'Orion VPN is connected' : 'Orion VPN is off') + '</b>' +
-        (vpn ? 'Pages are being fetched through the relay, so more sites load.'
-             : 'Sites that block cross-origin reads may fail. Open Orion VPN to route through a relay.') +
-        '</div></div></div>';
+      '</div>';
   }
 
   // --------------------------------------------------------- Edge window
+  SITES['google.local'] = SITES['bing.local'];
+
   function launchEdge(args) {
     var win = WM.create({
       appId: 'edge', title: 'Microsoft Edge', icon: 'edge',
@@ -391,7 +378,6 @@
           '<button class="e-mode" data-nav="mode" title="How this page is being shown - click for App mode">App</button>' +
           '<button class="e-btn" data-nav="find" title="Find on page (Ctrl+F)">' + Icons.get('find') + '</button>' +
           '<button class="e-btn" data-nav="reader" title="Reader mode">' + Icons.get('reader') + '</button>' +
-          '<button class="e-btn" data-nav="vpn" title="Tunnel status">' + Icons.get('shield') + '</button>' +
           '<button class="e-btn" data-nav="favs" title="Favourites">' + Icons.get('star') + '</button>' +
           '<button class="e-btn" data-nav="menu" title="Settings and more">' + Icons.get('more') + '</button>' +
         '</div>' +
@@ -481,8 +467,8 @@
       if (document.activeElement !== omni) omni.value = active.url;
       var p = parseUrl(active.url);
       lockIco.innerHTML = Icons.get(p.kind === 'internal' ? 'gear'
-        : Emu.state.net.connected ? 'shield' : (p.secure === false ? 'info' : 'lock'));
-      lockIco.title = Emu.state.net.connected ? 'Fetched through the relay' : 'Fetched directly';
+        : (p.secure === false ? 'info' : 'lock'));
+      lockIco.title = p.secure === false ? 'Not a secure connection' : 'Loaded from the site itself';
       U.$('[data-nav="back"]', win.body).classList.toggle('disabled', active.hIndex <= 0);
       U.$('[data-nav="fwd"]', win.body).classList.toggle('disabled', active.hIndex >= active.history.length - 1);
       starBtn.classList.toggle('on', isFav(active.url));
@@ -491,8 +477,7 @@
       var chip = U.$('.e-mode', win.body);
       if (chip) {
         chip.textContent = shown === 'local' ? 'Orion'
-          : shown === 'proxy' ? 'Proxy'
-          : shown === 'app' ? (active.viaProxy ? 'Proxy' : 'App')
+          : shown === 'app' ? 'Site'
           : shown === 'reader' ? 'Reader' : 'Engine';
         chip.className = 'e-mode mode-' + shown;
         chip.title = shown === 'app' ? 'Running the real site'
@@ -500,7 +485,6 @@
           : 'Showing a stripped-down copy - click to run the real site';
       }
       U.$('[data-nav="reader"]', win.body).classList.toggle('on', shown === 'reader');
-      U.$('[data-nav="vpn"]', win.body).classList.toggle('vpn-on', !!Emu.state.net.connected);
       renderFavbar();
     }
 
@@ -567,46 +551,11 @@
       // A real page on the real internet. App mode runs the site's own code
       // in a frame, which is the only way games and web apps actually work;
       // the engine is for reading pages that refuse to be framed.
+      // Sites load straight from the site that hosts them. Nothing is proxied
+      // or unblocked: if a site refuses to be framed, or the network blocks
+      // it, it will not load here either.
       var mode = tab.mode || 'app';
-      if (mode === 'app') {
-        var Px = global.OrionProxy;
-        // Sites a filtered network blocks, or that are known to refuse
-        // framing, go straight through the proxy. Everything else tries
-        // direct first, which is faster when the network allows it.
-        if (Px && !Px.isProtected(url) && Px.config().enabled &&
-            (Px.preferProxy(url) || Px.likelyBlocked(url))) {
-          status('Starting the proxy…');
-          Px.startFor(url).then(function (ok) {
-            if (tab.url !== url) return;
-            renderFrame(tab, url, p.host, !!ok);
-          });
-          return;
-        }
-        renderFrame(tab, url, p.host, false);
-        return;
-      }
-      if (mode === 'proxy') {
-        status('Starting the proxy…');
-        global.OrionProxy.startFor(url).then(function (ok) {
-          if (tab.url !== url) return;
-          if (ok) renderFrame(tab, url, p.host, true);
-          else {
-            renderMessage(tab, 'warning', 'The proxy is not available',
-              global.OrionProxy.lastError(),
-              [['retry', 'Try again', true], ['use-direct', 'Load it directly', false],
-               ['open-external', 'Open in system browser', false]], url);
-            finish(tab);
-          }
-        });
-        return;
-      }
-      if (Emu.state.net.killSwitch && !Emu.state.net.connected) {
-        renderMessage(tab, 'warning', 'Blocked by the VPN kill switch',
-          'Orion VPN is not connected and the kill switch is on, so real sites are not being fetched.',
-          [['open-vpn', 'Open Orion VPN', true], ['killswitch-off', 'Turn the kill switch off', false]], url);
-        finish(tab);
-        return;
-      }
+      if (mode === 'app') { renderFrame(tab, url, p.host); return; }
       renderEngine(tab, url, mode === 'reader');
     }
 
@@ -673,10 +622,9 @@
       }).catch(function (err) {
         status('');
         renderMessage(tab, 'warning', 'This page could not be fetched',
-          Emu.state.net.connected
-            ? 'The relay could not retrieve it (' + err.message + '). It may be rate limiting, or the site may block relays.'
-            : 'A direct fetch failed (' + err.message + '). Real sites usually need the relay - open Orion VPN and connect.',
-          [['use-proxy', 'Try the proxy', true], ['retry', 'Try again', false],
+          'The page could not be retrieved (' + err.message + '). The site may block being read this ' +
+          'way, or your network may be blocking it.',
+          [['retry', 'Try again', true],
            ['reader', 'Try reader mode', false], ['open-external', 'Open in system browser', false]], url);
         finish(tab);
       });
@@ -698,33 +646,23 @@
      * App mode: the site loads in a real frame and runs its own JavaScript,
      * WebGL, audio and pointer lock. This is what games need.
      */
-    function renderFrame(tab, url, host, viaProxy) {
-      var proxied = viaProxy ? global.OrionProxy.urlFor(url) : null;
-      if (viaProxy && !proxied) viaProxy = false;
+    function renderFrame(tab, url, host) {
       var frame = document.createElement('iframe');
       frame.className = 'edge-frame';
       // Delegate the permissions interactive sites actually use.
       frame.setAttribute('allow',
         'fullscreen; autoplay; gamepad; pointer-lock; accelerometer; gyroscope; microphone; camera; clipboard-write');
       frame.setAttribute('allowfullscreen', 'true');
-      frame.src = proxied || url;
+      frame.src = url;
       tab.pane.appendChild(frame);
       tab.root = null;
-      tab.viaProxy = !!proxied;
       tab.title = host || parseUrl(url).host || url;
       tab.favicon = 'globe';
       record(tab.title, url);
-      status(proxied
-        ? 'Proxy · ' + (global.OrionProxy.activeEngine() === 'scramjet' ? 'Scramjet' : 'Ultraviolet') +
-          ' · routed through your proxy'
-        : 'App mode · the site is running its own code');
+      status('Running the site itself');
 
-      var canProxy = global.OrionProxy && !global.OrionProxy.isProtected(url) && global.OrionProxy.config().enabled;
       var bar = U.el('<div class="edge-infobar app-bar">' + Icons.get('info') +
-        '<span class="sp">' + (proxied
-          ? 'Loaded through your proxy.'
-          : 'Running the real site. Big games can take a while to appear.') + '</span>' +
-        (canProxy && !proxied ? '<button data-act="use-proxy">Refused to load? Use the proxy</button>' : '') +
+        '<span class="sp">Loaded straight from the site. Big pages can take a while to appear.</span>' +
         '<button data-act="open-external">Open in system browser</button>' +
         '<button data-act="dismiss-bar">Dismiss</button></div>');
       bar.addEventListener('click', function (e) {
@@ -732,7 +670,6 @@
         if (!b) return;
         if (b.dataset.act === 'dismiss-bar') { bar.remove(); sizeFrame(); return; }
         if (b.dataset.act === 'open-external') { openExternal(url); return; }
-        if (b.dataset.act === 'use-proxy') { tab.mode = 'proxy'; navigate(tab, url, false); return; }
       });
       tab.pane.appendChild(bar);
       bar.style.cssText = 'position:absolute;left:0;right:0;top:0;z-index:5';
@@ -816,7 +753,7 @@
         var form = e.target;
         var action = form.getAttribute('data-emu-form') || baseUrl;
         if ((form.getAttribute('data-emu-method') || 'get') !== 'get') {
-          Emu.notify('Microsoft Edge', 'Forms that submit data are disabled in the emulated browser.', 'edge');
+          Emu.notify('Google Chrome', 'Forms that submit data are disabled in the emulated browser.', 'edge');
           return;
         }
         var parts = [];
@@ -867,15 +804,12 @@
         if (a === 'open-external') { openExternal(url || tab.url); return; }
         if (a === 'retry') { navigate(tab, url || tab.url, false); return; }
         if (a === 'reader') { tab.mode = 'reader'; navigate(tab, url || tab.url, false); return; }
-        if (a === 'use-proxy') { tab.mode = 'proxy'; navigate(tab, url || tab.url, false); return; }
         if (a === 'use-direct') { tab.mode = null; navigate(tab, url || tab.url, false); return; }
-        if (a === 'open-vpn') { Emu.launch('vpn'); return; }
-        if (a === 'killswitch-off') { Emu.state.net.killSwitch = false; Emu.save(); navigate(tab, url || tab.url, false); return; }
         if (a === 'clear-history') { st.history = []; Emu.save(); navigate(tab, tab.url, false); return; }
         if (a === 'clear-cache') { Net.clearCache(); navigate(tab, tab.url, false); return; }
         if (a === 'clear-all') {
           st.history = []; st.downloads = []; Emu.save();
-          Emu.notify('Microsoft Edge', 'Browsing data cleared.', 'edge');
+          Emu.notify('Google Chrome', 'Browsing data cleared.', 'edge');
           navigate(tab, tab.url, false); return;
         }
         if (a === 'unfav') { st.favorites.splice(+act.dataset.i, 1); Emu.save(); navigate(tab, tab.url, false); syncChrome(); return; }
@@ -906,7 +840,7 @@
 
     function openExternal(url) {
       var w = window.open(url, '_blank', 'noopener');
-      if (!w) Emu.notify('Microsoft Edge', 'Your browser blocked the pop-up.', 'warning');
+      if (!w) Emu.notify('Google Chrome', 'Your browser blocked the pop-up.', 'warning');
     }
 
     function doDownload(name, from) {
@@ -1129,7 +1063,6 @@
         active.mode = null;
         navigate(active, active.url, false);
       }
-      else if (kind === 'vpn') Emu.launch('vpn');
       else if (kind === 'fav') toggleFav();
       else if (kind === 'menu') openMenu(b);
     });
@@ -1139,7 +1072,7 @@
         st.favorites = st.favorites.filter(function (f) { return f.url !== active.url; });
       } else {
         st.favorites.push({ title: active.title.slice(0, 32), url: active.url, icon: active.favicon });
-        Emu.notify('Microsoft Edge', 'Added to favourites.', 'star');
+        Emu.notify('Google Chrome', 'Added to favourites.', 'star');
       }
       Emu.save();
       syncChrome();
@@ -1167,18 +1100,6 @@
         { label: 'Zoom out', icon: 'zoomOut', key: 'Ctrl+-', action: function () { setZoom(-0.1); } },
         { sep: true },
         { label: (mode === 'app' ? '✓ ' : '') + 'App mode (run the site)', icon: 'monitor', action: pick('app') },
-        { label: (mode === 'proxy' ? '✓ ' : '') + 'Through the proxy', icon: 'plug',
-          disabled: !!(global.OrionProxy && global.OrionProxy.isProtected(active.url)), action: pick('proxy') },
-        { label: 'Proxy engine: ' + (global.OrionProxy ? (global.OrionProxy.engineFor(active.url) === 'scramjet' ? 'Scramjet' : 'Ultraviolet') : '-') +
-            ' (switch)', icon: 'refresh', action: function () {
-          var Px = global.OrionProxy;
-          var next = Px.engineFor(active.url) === 'scramjet' ? 'uv' : 'scramjet';
-          Px.setEngineFor(active.url, next, true);
-          Emu.notify('Microsoft Edge', 'Using ' + (next === 'scramjet' ? 'Scramjet' : 'Ultraviolet') +
-            ' for this site.', 'plug');
-          active.mode = 'proxy';
-          navigate(active, active.url, false);
-        } },
         { label: (mode === 'engine' ? '✓ ' : '') + 'Engine rendering', icon: 'apps', action: pick('engine') },
         { label: (mode === 'reader' ? '✓ ' : '') + 'Reader mode', icon: 'reader', action: pick('reader') },
         { label: 'View source', icon: 'code', action: function () { navigate(active, 'view-source:' + active.url, true); } },
@@ -1190,7 +1111,7 @@
         { sep: true },
         { label: 'Open in system browser', icon: 'upload', action: function () {
           if (/^edge:\/\//.test(active.url) || /\.emu|bing\.local/.test(active.url)) {
-            Emu.notify('Microsoft Edge', 'That page only exists inside the emulator.', 'info');
+            Emu.notify('Google Chrome', 'That page only exists inside the emulator.', 'info');
           } else openExternal(active.url);
         } },
         { label: 'Settings', icon: 'gear', action: function () { navigate(active, 'edge://settings', true); } }
@@ -1234,8 +1155,8 @@
   }
 
   Emu.registerApp({
-    id: 'edge', name: 'Microsoft Edge', icon: 'edge', pinned: true,
-    desc: 'Web browser with its own rendering engine',
+    id: 'edge', name: 'Google Chrome', icon: 'chrome', pinned: true,
+    desc: 'Browse the web',
     launch: launchEdge,
     open: function (url) {
       var existing = WM.byApp('edge')[0];

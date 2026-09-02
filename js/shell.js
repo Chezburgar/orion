@@ -63,8 +63,7 @@
       Emu.on('user', function () { buildStart(); });
       Emu.on('theme', function () { renderIcons(); });
       Emu.on('apps', function () { buildStart(); syncTaskbar(); });
-      Emu.on('net', function () { syncVpnTray(); syncMacStatus(); });
-      syncVpnTray();
+      Emu.on('net', syncMacStatus);
 
       // Live device state, rather than the numbers the tray used to invent.
       initPower();
@@ -771,12 +770,6 @@
       Icons.get(netIconName()) +
       Icons.get(s.volume === 0 ? 'mute' : 'volume');
     box.title = [netText(), powerText(), 'Volume ' + s.volume + '%'].join(' · ');
-    var vpn = $('#macVpn');
-    if (vpn) {
-      var on = s.net.connected;
-      vpn.classList.toggle('hidden', !on);
-      if (on) vpn.innerHTML = Icons.get('shield');
-    }
   }
 
   /**
@@ -800,7 +793,6 @@
       else if (k === 'bell') { toggleFlyout('notif'); if (openFlyout === 'notif') renderNotifs(); }
       else if (k === 'search') { toggleFlyout('search'); if (openFlyout === 'search') $('#searchInput').focus(); }
       else if (k === 'settings') { closeFlyouts(); Emu.launch('settings'); }
-      else if (k === 'vpn') { closeFlyouts(); Emu.launch('vpn'); }
       else if (k === 'close' && WM.focused) WM.focused.close();
       else if (k === 'min' && WM.focused) WM.minimize(WM.focused);
     });
@@ -813,21 +805,7 @@
     $('.lock-name').textContent = Emu.state.user;
   }
 
-  /** The tray shield only appears while the tunnel is up. */
-  function syncVpnTray() {
-    var el = $('#trayVpn');
-    if (!el) return;
-    var on = Emu.state.net.connected;
-    el.classList.toggle('hidden', !on);
-    if (on) {
-      var loc = (global.Net.LOCATIONS.filter(function (l) { return l.id === Emu.state.net.location; })[0] || {});
-      el.innerHTML = Icons.get('shield');
-      el.dataset.tip = 'Orion VPN - connected via ' + (loc.city || 'relay');
-    }
-  }
-
   function wireTray() {
-    $('#trayVpn').addEventListener('click', function () { Emu.launch('vpn'); });
     $('#trayQuick').addEventListener('click', function () { toggleFlyout('quick'); });
     $('#trayClock').addEventListener('click', function () { toggleFlyout('notif'); });
     $('#trayBell').addEventListener('click', function () { toggleFlyout('notif'); });
