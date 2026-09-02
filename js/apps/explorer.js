@@ -168,7 +168,7 @@
       if (node.type === 'dir') return go(p);
       if (node.type === 'app') { Emu.launch(node.app, node.args); return; }
       if (node.ext === 'exe') {
-        var map = { 'cmd.exe': 'terminal', 'notepad.exe': 'notepad', 'msedge.exe': 'edge' };
+        var map = { 'cmd.exe': 'terminal', 'notepad.exe': 'notepad', 'chrome.exe': 'edge' };
         var app = map[VFS.nameOf(p)];
         if (app) Emu.launch(app);
         else WM.alert('File Explorer', 'This app cannot run in the emulator.', win);

@@ -92,9 +92,9 @@
     setTimeout(function () {
       if (Emu.state.setupDone && !Emu.state.notifications.length) {
         Emu.notify('Welcome to Orion',
-          'Press the Windows key for Start, or open Microsoft Edge to browse. Right-click the desktop for more.', 'info');
+          'Press the Windows key for Start, or open Google Chrome to browse. Right-click the desktop for more.', 'info');
         setTimeout(function () {
-          Emu.notify('Microsoft Edge', 'Tip: visit docs.emu inside Edge for every shortcut and feature.', 'edge');
+          Emu.notify('Google Chrome', 'Search the web from the address bar, or press the Windows key for Start.', 'edge');
         }, 6000);
       }
     }, 4200);

@@ -124,7 +124,7 @@
             '<p class="muted" style="font-size:11.5px">Logos you set are stored on this device. ' +
             '<span class="lnk" data-act="reset-icons">Reset all logos</span></p>' +
             '<h3>Default apps</h3>' +
-            card('edge', 'Web browser', 'Microsoft Edge (emulated)', '<span class="muted">Default</span>') +
+            card('edge', 'Web browser', 'Google Chrome', '<span class="muted">Default</span>') +
             card('notepad', 'Text editor', 'Notepad', '<span class="muted">Default</span>');
         },
         accounts: function () {

@@ -437,7 +437,7 @@
     }
     html += '<div class="sr-group">Web</div>' +
       '<div class="sr" data-web="' + U.esc(q) + '">' + Icons.get('edge') +
-      '<div><b>' + U.esc(q) + '</b><small>Search the web in Microsoft Edge</small></div></div>';
+      '<div><b>' + U.esc(q) + '</b><small>Search the web in Google Chrome</small></div></div>';
     if (!apps.length && !files.length) html += '<div class="sr-empty">No local results for “' + U.esc(q) + '”.</div>';
     host.innerHTML = html;
   }

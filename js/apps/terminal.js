@@ -64,7 +64,7 @@
               '  ren &lt;a&gt; &lt;b&gt;     rename\n' +
               '  tree            show the directory tree\n' +
               '  start &lt;app&gt;     launch an app (edge, notepad, explorer, calc…)\n' +
-              '  edge &lt;url&gt;      open a URL in Microsoft Edge\n' +
+              '  edge &lt;url&gt;      open a URL in Google Chrome\n' +
               '  ipconfig        network information\n' +
               '  systeminfo      emulator information\n' +
               '  whoami, hostname, date, ver\n' +
@@ -145,7 +145,7 @@
         })(cwd, '', 0);
       },
       start: function (a) {
-        var alias = { calc: 'calculator', msedge: 'edge', browser: 'edge', explorer: 'explorer', notepad: 'notepad', cmd: 'terminal', taskmgr: 'taskmgr' };
+        var alias = { calc: 'calculator', msedge: 'edge', chrome: 'edge', browser: 'edge', explorer: 'explorer', notepad: 'notepad', cmd: 'terminal', taskmgr: 'taskmgr' };
         var id = alias[(a[0] || '').toLowerCase()] || (a[0] || '').toLowerCase();
         if (!Emu.apps[id]) return print('<span class="r">start: unknown app \'' + U.esc(a[0] || '') + '\'</span>');
         Emu.launch(id);
@@ -153,7 +153,7 @@
       },
       edge: function (a) {
         Emu.apps.edge.open(a.join(' ') || 'edge://newtab');
-        print('<span class="g">Opening Microsoft Edge…</span>');
+        print('<span class="g">Opening Google Chrome…</span>');
       },
       ipconfig: function () {
         print('\nWindows IP Configuration (emulated)\n');

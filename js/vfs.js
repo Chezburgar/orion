@@ -18,7 +18,7 @@
         'Users': dir({
           'Chase': dir({
             'Desktop': dir({
-              'Microsoft Edge': link('edge'),
+              'Google Chrome': link('edge'),
               'File Explorer': link('explorer'),
               'Notepad': link('notepad'),
               'Read me first.txt': file(
@@ -26,7 +26,7 @@
                 'Everything here runs in your browser - no VM, no install.\r\n\r\n' +
                 'Try this:\r\n' +
                 '  * Press the Windows key (or click Start) to open the Start menu\r\n' +
-                '  * Open Microsoft Edge and browse the built-in web (try bing.local)\r\n' +
+                '  * Open Google Chrome to search the web\r\n' +
                 '  * Right-click the desktop for the Windows 11 context menu\r\n' +
                 '  * Drag a window to a screen edge to snap it\r\n' +
                 '  * Hover a window\'s maximize button for Snap Layouts\r\n' +
@@ -60,7 +60,7 @@
           'Web': dir({ 'Wallpaper': dir({}) })
         }),
         'Program Files': dir({
-          'Microsoft': dir({ 'Edge': dir({ 'Application': dir({ 'msedge.exe': file('', 'exe') }) }) })
+          'Google': dir({ 'Chrome': dir({ 'Application': dir({ 'chrome.exe': file('', 'exe') }) }) })
         })
       })
     };

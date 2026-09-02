@@ -53,6 +53,148 @@
     return new Date(d).toLocaleDateString([], { day: 'numeric', month: 'short' });
   }
 
+  // ------------------------------------------------------------ real maths
+  /**
+   * The model is told to write maths as ordinary characters, and mostly does,
+   * but it still falls back to LaTeX when a question gets fiddly. Asking more
+   * firmly does not fix that reliably, so every string it produces is put
+   * through here on the way to the screen, the printer and the PDF. LaTeX in
+   * means real characters out; anything that is already plain is untouched.
+   */
+  var GREEK = {
+    alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε',
+    varepsilon: 'ε', zeta: 'ζ', eta: 'η', theta: 'θ', vartheta: 'θ',
+    iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ',
+    pi: 'π', rho: 'ρ', sigma: 'σ', tau: 'τ', upsilon: 'υ',
+    phi: 'φ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
+    Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Xi: 'Ξ',
+    Pi: 'Π', Sigma: 'Σ', Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω'
+  };
+  var SYMS = {
+    infty: '∞', pm: '±', mp: '∓', times: '×', div: '÷',
+    cdot: '·', cdots: '⋯', ldots: '…', dots: '…', vdots: '⋮',
+    leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠',
+    approx: '≈', equiv: '≡', cong: '≅', sim: '~', propto: '∝',
+    cup: '∪', cap: '∩', in: '∈', notin: '∉', subset: '⊂',
+    subseteq: '⊆', supset: '⊃', emptyset: '∅', varnothing: '∅',
+    to: '→', rightarrow: '→', leftarrow: '←', leftrightarrow: '↔',
+    Rightarrow: '⇒', Leftrightarrow: '⇔', mapsto: '→',
+    sum: '∑', prod: '∏', int: '∫', partial: '∂', nabla: '∇',
+    angle: '∠', perp: '⊥', parallel: '∥', therefore: '∴',
+    forall: '∀', exists: '∃', land: '∧', lor: '∨', lnot: '¬',
+    degree: '°', circ: '°', prime: '′', ast: '*', star: '*',
+    mathbb: '', quad: ' ', qquad: '  ', ',': ' ', ';': ' ', '!': '',
+    left: '', right: '', displaystyle: '', limits: '', big: '', Big: '', bigg: '', Bigg: ''
+  };
+  var SUPC = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+    '+': '⁺', '-': '⁻', '−': '⁻', '=': '⁼', '(': '⁽',
+    ')': '⁾', 'n': 'ⁿ', 'x': 'ˣ' };
+  var SUBC = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+    '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+    '+': '₊', '-': '₋', '−': '₋', '=': '₌', '(': '₍',
+    ')': '₎', 'x': 'ₓ', 'n': 'ₙ' };
+  var BLACKBOARD = { R: 'ℝ', Z: 'ℤ', N: 'ℕ', Q: 'ℚ', C: 'ℂ' };
+
+  /** Read the balanced {...} group that starts at i, or a single token. */
+  function group(s, i) {
+    if (s[i] !== '{') {
+      if (s[i] === '\\') {
+        var m = /^\\[a-zA-Z]+/.exec(s.slice(i));
+        if (m) return { body: m[0], next: i + m[0].length };
+      }
+      return { body: s[i] || '', next: i + 1 };
+    }
+    var depth = 0;
+    for (var j = i; j < s.length; j++) {
+      if (s[j] === '{') depth++;
+      else if (s[j] === '}' && --depth === 0) return { body: s.slice(i + 1, j), next: j + 1 };
+    }
+    return { body: s.slice(i + 1), next: s.length };
+  }
+
+  /** Wrap in brackets only when the piece is not already a single unit. */
+  function tight(s) {
+    if (/^[A-Za-z0-9.α-ωΑ-Ω]+$/.test(s)) return s;
+    if (/^\\[a-zA-Z]+$/.test(s)) return s;   // one symbol, not yet translated
+    if (/^\(.*\)$/.test(s)) return s;
+    return '(' + s + ')';
+  }
+
+  function toScript(s, map) {
+    var out = '';
+    for (var i = 0; i < s.length; i++) {
+      if (!map[s[i]]) return null;
+      out += map[s[i]];
+    }
+    return out;
+  }
+
+  function mathText(input) {
+    var s = String(input == null ? '' : input);
+    if (s.indexOf('\\') < 0 && s.indexOf('$') < 0 && s.indexOf('^') < 0 && s.indexOf('_') < 0) {
+      return s;
+    }
+
+    // delimiters first - they carry no meaning once the body is plain text
+    s = s.replace(/\\\[|\\\]|\\\(|\\\)/g, '').replace(/\$\$?/g, '');
+
+    // Fractions and roots, innermost first. Each is found by regex and then
+    // its arguments are read off by the brace scanner, which is the part a
+    // regex cannot do on its own.
+    for (var pass = 0; pass < 8; pass++) {
+      var before = s;
+
+      var mf = /\\(?:d|t)?frac\s*/.exec(s);
+      if (mf) {
+        var num = group(s, mf.index + mf[0].length);
+        var den = group(s, num.next);
+        s = s.slice(0, mf.index) + tight(num.body) + '/' + tight(den.body) + s.slice(den.next);
+      }
+
+      var mr = /\\sqrt\s*(?:\[\s*([^\]]*?)\s*\]\s*)?/.exec(s);
+      if (mr) {
+        var rad = group(s, mr.index + mr[0].length);
+        var sign = mr[1] === '3' ? '∛' : mr[1] ? mr[1] + '√' : '√';
+        s = s.slice(0, mr.index) + sign + tight(rad.body) + s.slice(rad.next);
+      }
+
+      s = s.replace(/\\(?:text|mathrm|mathbf|mathit|mathsf|operatorname|bm)\s*\{([^{}]*)\}/g, '$1');
+      s = s.replace(/\\mathbb\s*\{([A-Z])\}/g, function (m, c) { return BLACKBOARD[c] || c; });
+      if (s === before) break;
+    }
+
+    // named symbols, greek and function names
+    s = s.replace(/\\(sin|cos|tan|sec|csc|cot|arcsin|arccos|arctan|sinh|cosh|tanh|log|ln|exp|lim|max|min|det|gcd|lcm)\b/g, '$1');
+    s = s.replace(/\\([a-zA-Z]+)/g, function (m, name) {
+      if (GREEK[name]) return GREEK[name];
+      if (Object.prototype.hasOwnProperty.call(SYMS, name)) return SYMS[name];
+      return name;
+    });
+    s = s.replace(/\\([,;!:> ])/g, ' ');
+
+    // ^ and _ last, so whatever they lift is already plain characters. The
+    // cursor only moves forwards: an exponent that has no real superscript
+    // stays written as ^(...), and must not be picked up again.
+    var out = '', c = 0;
+    while (c < s.length) {
+      var ch = s[c];
+      if (ch !== '^' && ch !== '_') { out += ch; c++; continue; }
+      var g = group(s, c + 1);
+      var body = mathText(g.body).replace(/[{}]/g, '');
+      var mapped = toScript(body, ch === '^' ? SUPC : SUBC);
+      out += mapped != null ? mapped : ch + tight(body);
+      c = g.next;
+    }
+
+    return out.replace(/[{}]/g, '')
+      .replace(/[ \t]{2,}/g, ' ')
+      .trim();
+  }
+
+  /** Escaped for HTML, with the maths made readable first. */
+  function mesc(s) { return U.esc(mathText(s)); }
+
   // ------------------------------------------------- tables and diagrams
   /**
    * Everything below emits self-contained markup with inline styling, because
@@ -68,12 +210,12 @@
       (t.head && t.head.length
         ? '<tr>' + t.head.map(function (h) {
             return '<th style="' + cell + ';font-weight:600;background:' +
-              (ink ? '#f0f0f0' : 'var(--card-active)') + '">' + U.esc(h) + '</th>';
+              (ink ? '#f0f0f0' : 'var(--card-active)') + '">' + mesc(h) + '</th>';
           }).join('') + '</tr>'
         : '') +
       (t.rows || []).map(function (r) {
         return '<tr>' + r.map(function (c) {
-          return '<td style="' + cell + '">' + U.esc(c) + '</td>';
+          return '<td style="' + cell + '">' + mesc(c) + '</td>';
         }).join('') + '</tr>';
       }).join('') + '</table>';
   }
@@ -136,7 +278,7 @@
       if (f.label) {
         s += '<text x="' + (W - m - 4) + '" y="' + (m + 12) + '" text-anchor="end" ' +
           'font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="' + curve + '">' +
-          U.esc(f.label) + '</text>';
+          mesc(f.label) + '</text>';
       }
     }
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H +
@@ -177,23 +319,23 @@
       '.key{page-break-before:always}.key li{margin:0 0 3mm}' +
       '.foot{margin-top:10mm;font-size:9pt;color:#777}';
     return '<!doctype html><html><head><meta charset="utf-8"><title>' +
-      U.esc(d.topic || 'Practice') + '</title><style>' + css + '</style></head><body>' +
-      '<h1>' + U.esc(d.topic || 'Practice') + '</h1>' +
+      mesc(d.topic || 'Practice') + '</title><style>' + css + '</style></head><body>' +
+      '<h1>' + mesc(d.topic || 'Practice') + '</h1>' +
       '<p class="sub">' + U.esc(d.level || '') + ' &middot; ' + (d.items || []).length +
         ' questions &middot; Orion Learn</p>' +
       '<p class="name">Name: ________________________     Date: ____________</p>' +
       '<ol>' + (d.items || []).map(function (it) {
         var ex = extras(it, true);
-        return '<li><div class="q">' + U.esc(it.q) + '</div>' +
+        return '<li><div class="q">' + mesc(it.q) + '</div>' +
           (ex || '<div class="work"></div>') + '</li>';
       }).join('') + '</ol>' +
       (d.study && d.study.length
         ? '<div class="study"><b>Before you start</b><ul>' +
-          d.study.map(function (s) { return '<li>' + U.esc(s) + '</li>'; }).join('') + '</ul></div>'
+          d.study.map(function (s) { return '<li>' + mesc(s) + '</li>'; }).join('') + '</ul></div>'
         : '') +
       (withKey
         ? '<div class="key"><h2>Answer key</h2><ol>' +
-          (d.items || []).map(function (it) { return '<li>' + U.esc(it.a) + '</li>'; }).join('') +
+          (d.items || []).map(function (it) { return '<li>' + mesc(it.a) + '</li>'; }).join('') +
           '</ol></div>'
         : '') +
       '<p class="foot">Sheet ' + U.esc(d.sheetId || '') + ' &middot; made by Orion Learn</p>' +
@@ -210,19 +352,19 @@
       '.note{font-size:10.5pt;color:#444}';
     return '<!doctype html><html><head><meta charset="utf-8"><title>Marked</title>' +
       '<style>' + css + '</style></head><body>' +
-      '<h1>' + U.esc(d.topic || 'Marked') + '</h1>' +
+      '<h1>' + mesc(d.topic || 'Marked') + '</h1>' +
       '<p class="sub">Score ' + (Number(d.score) || 0) + '/100 &middot; ' + U.esc(d.grade || '') +
-        ' &middot; Orion Learn</p><p>' + U.esc(d.summary || '') + '</p><ol>' +
+        ' &middot; Orion Learn</p><p>' + mesc(d.summary || '') + '</p><ol>' +
       (d.marks || []).map(function (m) {
-        return '<li><div class="q">' + U.esc(m.q) + '</div>' +
+        return '<li><div class="q">' + mesc(m.q) + '</div>' +
           '<div class="tag ' + (m.ok ? 'ok' : 'no') + '">' + (m.ok ? 'Correct' : 'Not correct') +
-          ' &mdash; you wrote: ' + U.esc(m.given || 'blank') +
-          (m.ok ? '' : ' &middot; answer: ' + U.esc(m.correct)) + '</div>' +
-          (m.note ? '<div class="note">' + U.esc(m.note) + '</div>' : '') + '</li>';
+          ' &mdash; you wrote: ' + mesc(m.given || 'blank') +
+          (m.ok ? '' : ' &middot; answer: ' + mesc(m.correct)) + '</div>' +
+          (m.note ? '<div class="note">' + mesc(m.note) + '</div>' : '') + '</li>';
       }).join('') + '</ol>' +
       (d.next && d.next.length
         ? '<h2>Practise next</h2><ul>' +
-          d.next.map(function (s) { return '<li>' + U.esc(s) + '</li>'; }).join('') + '</ul>'
+          d.next.map(function (s) { return '<li>' + mesc(s) + '</li>'; }).join('') + '</ul>'
         : '') + '</body></html>';
   }
 
@@ -230,7 +372,91 @@
     return String(s || 'Orion Learn').replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 48) || 'Orion Learn';
   }
 
+  // -------------------------------------------------------------- as PDF
+  /**
+   * The same sheet again, drawn straight into a PDF rather than handed to the
+   * browser as HTML. It is written by js/pdf.js, so the file that lands in
+   * Downloads is a real .pdf with selectable text - no print dialog, no
+   * "save as", and no library fetched from anywhere.
+   */
+  function sheetPdf(d, withKey) {
+    var p = Pdf.doc({ title: mathText(d.topic || 'Practice') });
+    p.text(mathText(d.topic || 'Practice'), { size: 18, bold: true });
+    p.text((d.level || '') + ' · ' + (d.items || []).length + ' questions · Orion Learn',
+      { size: 9.5, gray: 0.4 });
+    p.rule();
+    p.space(6);
+    p.text('Name: ________________________     Date: ____________', { size: 10.5, gray: 0.25 });
+    p.space(10);
+
+    (d.items || []).forEach(function (it, i) {
+      p.text((i + 1) + '.  ' + mathText(it.q), { size: 11.5, bold: true });
+      if (it.table) p.table({
+        head: (it.table.head || []).map(mathText),
+        rows: (it.table.rows || []).map(function (r) { return r.map(mathText); })
+      });
+      if (it.figure) p.figure(Object.assign({}, it.figure,
+        { label: it.figure.label ? mathText(it.figure.label) : '' }));
+      p.lines(it.space || (it.table || it.figure ? 1 : 2));
+      p.space(6);
+    });
+
+    if (d.study && d.study.length) {
+      p.space(6);
+      p.text('Before you start', { size: 12, bold: true });
+      d.study.forEach(function (s) { p.text('·  ' + mathText(s), { size: 10.5, indent: 8 }); });
+    }
+    if (withKey) {
+      p.pageBreak();
+      p.text('Answer key', { size: 16, bold: true });
+      p.rule();
+      (d.items || []).forEach(function (it, i) {
+        p.text((i + 1) + '.  ' + mathText(it.a), { size: 10.5 });
+        p.space(3);
+      });
+    }
+    p.space(10);
+    p.text('Sheet ' + (d.sheetId || '') + ' · made by Orion Learn', { size: 8, gray: 0.55 });
+    return p.blob();
+  }
+
+  function reportPdf(d) {
+    var p = Pdf.doc({ title: mathText(d.topic || 'Marked') });
+    p.text(mathText(d.topic || 'Marked'), { size: 18, bold: true });
+    p.text('Score ' + (Number(d.score) || 0) + '/100 · ' + (d.grade || '') + ' · Orion Learn',
+      { size: 9.5, gray: 0.4 });
+    p.rule();
+    p.space(4);
+    if (d.summary) { p.text(mathText(d.summary), { size: 11 }); p.space(8); }
+
+    (d.marks || []).forEach(function (m, i) {
+      p.text((i + 1) + '.  ' + mathText(m.q), { size: 11.5, bold: true });
+      p.text((m.ok ? 'Correct' : 'Not correct') + ' — you wrote: ' +
+        mathText(m.given || 'blank') +
+        (m.ok ? '' : '   ·   answer: ' + mathText(m.correct)), { size: 10, indent: 8 });
+      if (m.note) p.text(mathText(m.note), { size: 10, indent: 8, gray: 0.35 });
+      p.space(7);
+    });
+
+    if (d.next && d.next.length) {
+      p.space(4);
+      p.text('Practise next', { size: 12, bold: true });
+      d.next.forEach(function (s) { p.text('·  ' + mathText(s), { size: 10.5, indent: 8 }); });
+    }
+    return p.blob();
+  }
+
   /** Real file download - a blob and an <a download>, no server round trip. */
+  function downloadBlob(name, blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { a.remove(); URL.revokeObjectURL(url); }, 4000);
+  }
+
   function download(name, mime, text) {
     var blob = new Blob(['﻿', text], { type: mime });
     var url = URL.createObjectURL(blob);
@@ -360,11 +586,11 @@
     // ------------------------------------------------------------ output
     function sheetMarkup(d) {
       return '<div class="lr-sheet">' +
-        '<div class="lr-sheethead"><div><h2>' + U.esc(d.topic || 'Practice') + '</h2>' +
+        '<div class="lr-sheethead"><div><h2>' + mesc(d.topic || 'Practice') + '</h2>' +
           '<small>' + U.esc(d.level || '') + ' · ' + (d.items || []).length + ' questions</small></div>' +
           '<div class="lr-sheetacts">' +
             '<button class="btn" data-act="print">Print</button>' +
-            '<button class="btn" data-act="dlhtml">Download</button>' +
+            '<button class="btn" data-act="dlpdf">Download PDF</button>' +
             '<button class="btn" data-act="dldoc">Word</button>' +
             '<button class="btn" data-act="save">Save to Documents</button>' +
             '<button class="btn" data-act="key">Show answer key</button>' +
@@ -372,16 +598,16 @@
           '</div></div>' +
         '<ol class="lr-items">' + (d.items || []).map(function (it) {
           var ex = extras(it, false);
-          return '<li><div class="lr-q">' + U.esc(it.q) + '</div>' +
+          return '<li><div class="lr-q">' + mesc(it.q) + '</div>' +
             (ex || '<div class="lr-work"></div>') + '</li>';
         }).join('') + '</ol>' +
         (d.study && d.study.length
           ? '<div class="lr-study"><b>Before you start</b><ul>' +
-            d.study.map(function (s) { return '<li>' + U.esc(s) + '</li>'; }).join('') + '</ul></div>' : '') +
+            d.study.map(function (s) { return '<li>' + mesc(s) + '</li>'; }).join('') + '</ul></div>' : '') +
         '<div class="lr-key hidden" data-keybox><b>Answer key</b>' +
           '<p class="muted">Check yourself against it after you have attempted the questions.</p>' +
           '<ol>' + (d.items || []).map(function (it) {
-            return '<li>' + U.esc(it.a) + '</li>';
+            return '<li>' + mesc(it.a) + '</li>';
           }).join('') + '</ol></div>' +
       '</div>';
     }
@@ -394,23 +620,23 @@
         '<div class="lr-scorebar ' + tone + '">' +
           '<div class="lr-score"><b>' + score + '</b><small>/100</small></div>' +
           '<div class="lr-gradeletter">' + U.esc(d.grade || '') + '</div>' +
-          '<p>' + U.esc(d.summary || '') + '<br><small class="muted">' + right + ' of ' +
+          '<p>' + mesc(d.summary || '') + '<br><small class="muted">' + right + ' of ' +
             (d.marks || []).length + ' correct</small></p>' +
           '<button class="btn" data-act="printreport">Print</button>' +
-          '<button class="btn" data-act="dlreport">Download</button>' +
+          '<button class="btn" data-act="dlreport">Download PDF</button>' +
         '</div>' +
         '<ol class="lr-marks">' + (d.marks || []).map(function (m) {
           return '<li class="' + (m.ok ? 'ok' : 'no') + '">' +
             '<span class="lr-tick">' + Icons.get(m.ok ? 'check' : 'x') + '</span>' +
-            '<div><div class="lr-q">' + U.esc(m.q) + '</div>' +
-            '<div class="lr-given">You wrote <b>' + U.esc(m.given || 'nothing') + '</b>' +
-              (m.ok ? '' : ' · answer <b>' + U.esc(m.correct) + '</b>') + '</div>' +
-            (m.note ? '<div class="lr-note2">' + U.esc(m.note) + '</div>' : '') +
+            '<div><div class="lr-q">' + mesc(m.q) + '</div>' +
+            '<div class="lr-given">You wrote <b>' + mesc(m.given || 'nothing') + '</b>' +
+              (m.ok ? '' : ' · answer <b>' + mesc(m.correct) + '</b>') + '</div>' +
+            (m.note ? '<div class="lr-note2">' + mesc(m.note) + '</div>' : '') +
             '</div></li>';
         }).join('') + '</ol>' +
         (d.next && d.next.length
           ? '<h3 class="lr-h">Practise next</h3><ul class="lr-list">' +
-            d.next.map(function (s) { return '<li>' + U.esc(s) + '</li>'; }).join('') + '</ul>'
+            d.next.map(function (s) { return '<li>' + mesc(s) + '</li>'; }).join('') + '</ul>'
           : '') + '</div>';
     }
 
@@ -555,11 +781,11 @@
 
     function saveSheet() {
       var d = result;
-      var html = '<h1>' + U.esc(d.topic || 'Practice') + '</h1><ol>' +
+      var html = '<h1>' + mesc(d.topic || 'Practice') + '</h1><ol>' +
         (d.items || []).map(function (it) {
-          return '<li><b>' + U.esc(it.q) + '</b><p><br></p></li>';
+          return '<li><b>' + mesc(it.q) + '</b><p><br></p></li>';
         }).join('') + '</ol><h2>Answer key</h2><ol>' +
-        (d.items || []).map(function (it) { return '<li>' + U.esc(it.a) + '</li>'; }).join('') + '</ol>';
+        (d.items || []).map(function (it) { return '<li>' + mesc(it.a) + '</li>'; }).join('') + '</ol>';
       var dir = VFS.HOME + '\\Documents';
       if (!VFS.exists(dir)) VFS.mkdir(dir);
       var name = VFS.uniqueName(dir, safeName(d.topic), '.odoc');
@@ -617,12 +843,11 @@
         WM.confirm('Print', 'Include the answer key on the last page?', win)
           .then(function (withKey) { printDoc(sheetDoc(result, !!withKey), win); });
       }
-      else if (k === 'dlhtml') {
-        WM.confirm('Download', 'Include the answer key on the last page?', win)
+      else if (k === 'dlpdf') {
+        WM.confirm('Download PDF', 'Include the answer key on the last page?', win)
           .then(function (withKey) {
-            download(safeName(result.topic) + '.html', 'text/html;charset=utf-8',
-              sheetDoc(result, !!withKey));
-            Emu.notify('Orion Learn', 'Sheet downloaded. Open it to print it.', 'orionlearn');
+            downloadBlob(safeName(result.topic) + '.pdf', sheetPdf(result, !!withKey));
+            Emu.notify('Orion Learn', 'Sheet saved as a PDF.', 'orionlearn');
           });
       }
       else if (k === 'dldoc') {
@@ -636,8 +861,8 @@
       else if (k === 'save') saveSheet();
       else if (k === 'printreport') printDoc(reportDoc(result), win);
       else if (k === 'dlreport') {
-        download(safeName(result.topic) + ' marked.html', 'text/html;charset=utf-8', reportDoc(result));
-        Emu.notify('Orion Learn', 'Marked sheet downloaded.', 'orionlearn');
+        downloadBlob(safeName(result.topic) + ' marked.pdf', reportPdf(result));
+        Emu.notify('Orion Learn', 'Marked sheet saved as a PDF.', 'orionlearn');
       }
     });
 
