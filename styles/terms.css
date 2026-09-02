@@ -1,0 +1,31 @@
+/* ===== Terms of use gate ===== */
+
+.tm-back{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;padding:24px;
+  background:rgba(6,8,16,.80);backdrop-filter:blur(18px) saturate(120%)}
+.tm-back.going{opacity:0;transition:opacity .24s ease}
+
+.tm-card{width:min(560px,100%);max-height:calc(100vh - 48px);overflow:auto;
+  padding:30px 32px 26px;border-radius:var(--r-lg);
+  background:var(--layer-solid);border:1px solid var(--stroke);
+  box-shadow:0 30px 90px rgba(0,0,0,.62);animation:tmIn .3s ease}
+@keyframes tmIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+
+.tm-logo{display:block;margin:0 auto 14px}
+.tm-card h2{margin:0 0 6px;font-size:22px;font-weight:640;text-align:center}
+.tm-sub{margin:0 0 20px;font-size:13.5px;color:var(--text-2);text-align:center}
+
+.tm-list{margin:0 0 20px;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+.tm-list li{position:relative;padding:13px 15px 13px 40px;border-radius:10px;
+  background:var(--card);font-size:12.8px;line-height:1.6;color:var(--text-2)}
+.tm-list li::before{content:"";position:absolute;left:16px;top:19px;
+  width:7px;height:7px;border-radius:50%;background:var(--accent)}
+
+.tm-agree{display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:10px;
+  background:var(--card-active);border:1px solid var(--stroke);cursor:pointer;margin-bottom:14px}
+.tm-agree input{width:17px;height:17px;flex:none;accent-color:var(--accent);cursor:pointer}
+.tm-agree span{font-size:13px;font-weight:550}
+.tm-agree:hover{border-color:var(--accent)}
+
+.tm-go{width:100%;height:40px;font-size:14px}
+.tm-go:disabled{opacity:.45;cursor:not-allowed}
+.tm-go:disabled:hover{filter:none}

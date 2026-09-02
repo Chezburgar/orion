@@ -65,11 +65,16 @@
     });
 
     // Nothing starts until this device is allowed in.
-    global.Auth.gate().then(function () {
-      Shell.boot();
-      global.Auth.watch();
-      if (global.AccessApp) global.AccessApp.syncVisibility();
-    });
+    // Let in, then the terms, then the desktop. Agreeing is a condition of
+    // getting in, so it sits between the gate and the boot rather than being
+    // a dialog you can dismiss once you are already inside.
+    global.Auth.gate()
+      .then(function () { return global.Terms ? global.Terms.require() : null; })
+      .then(function () {
+        Shell.boot();
+        global.Auth.watch();
+        if (global.AccessApp) global.AccessApp.syncVisibility();
+      });
 
     // Suppress the native browser menu so the emulated one is the only one.
     document.addEventListener('contextmenu', function (e) {

@@ -53,6 +53,112 @@
     return new Date(d).toLocaleDateString([], { day: 'numeric', month: 'short' });
   }
 
+  // ------------------------------------------------- tables and diagrams
+  /**
+   * Everything below emits self-contained markup with inline styling, because
+   * the same strings go into the app, the print iframe and the downloaded
+   * file. A downloaded sheet has no stylesheet to fall back on.
+   */
+  function tableHtml(t, ink) {
+    if (!t) return '';
+    var line = ink ? '#999' : 'var(--stroke-strong)';
+    var cell = 'border:1px solid ' + line + ';padding:5px 10px;min-width:44px;height:26px;' +
+      'text-align:center;font-size:' + (ink ? '11pt' : '12.5px') + '';
+    return '<table style="border-collapse:collapse;margin:9px 0">' +
+      (t.head && t.head.length
+        ? '<tr>' + t.head.map(function (h) {
+            return '<th style="' + cell + ';font-weight:600;background:' +
+              (ink ? '#f0f0f0' : 'var(--card-active)') + '">' + U.esc(h) + '</th>';
+          }).join('') + '</tr>'
+        : '') +
+      (t.rows || []).map(function (r) {
+        return '<tr>' + r.map(function (c) {
+          return '<td style="' + cell + '">' + U.esc(c) + '</td>';
+        }).join('') + '</tr>';
+      }).join('') + '</table>';
+  }
+
+  /** Nice round gridline step for a range, so lines land on sensible numbers. */
+  function step(span) {
+    var raw = span / 8;
+    var mag = Math.pow(10, Math.floor(Math.log10(raw || 1)));
+    var n = raw / mag;
+    return (n >= 5 ? 5 : n >= 2 ? 2 : 1) * mag;
+  }
+
+  function figureSvg(f, ink) {
+    if (!f) return '';
+    var W = 300, H = 210, m = 26;
+    var x0 = f.x[0], x1 = f.x[1], y0 = f.y[0], y1 = f.y[1];
+    var px = function (x) { return m + (x - x0) / (x1 - x0) * (W - m * 2); };
+    var py = function (y) { return H - m - (y - y0) / (y1 - y0) * (H - m * 2); };
+    var grid = ink ? '#d8d8d8' : 'rgba(140,150,175,.28)';
+    var axis = ink ? '#333' : 'rgba(190,200,225,.85)';
+    var text = ink ? '#555' : 'rgba(170,180,205,.9)';
+    var curve = ink ? '#1a1a1a' : '#7aa2ff';
+    var s = '';
+
+    var sx = step(x1 - x0), sy = step(y1 - y0);
+    for (var gx = Math.ceil(x0 / sx) * sx; gx <= x1 + 1e-9; gx += sx) {
+      s += '<line x1="' + px(gx).toFixed(1) + '" y1="' + m + '" x2="' + px(gx).toFixed(1) +
+        '" y2="' + (H - m) + '" stroke="' + grid + '" stroke-width="1"/>';
+    }
+    for (var gy = Math.ceil(y0 / sy) * sy; gy <= y1 + 1e-9; gy += sy) {
+      s += '<line x1="' + m + '" y1="' + py(gy).toFixed(1) + '" x2="' + (W - m) +
+        '" y2="' + py(gy).toFixed(1) + '" stroke="' + grid + '" stroke-width="1"/>';
+    }
+    // the axes themselves, only where zero is actually on the chart
+    if (y0 <= 0 && y1 >= 0) {
+      s += '<line x1="' + m + '" y1="' + py(0).toFixed(1) + '" x2="' + (W - m) + '" y2="' +
+        py(0).toFixed(1) + '" stroke="' + axis + '" stroke-width="1.6"/>';
+    }
+    if (x0 <= 0 && x1 >= 0) {
+      s += '<line x1="' + px(0).toFixed(1) + '" y1="' + m + '" x2="' + px(0).toFixed(1) +
+        '" y2="' + (H - m) + '" stroke="' + axis + '" stroke-width="1.6"/>';
+    }
+    s += '<rect x="' + m + '" y="' + m + '" width="' + (W - m * 2) + '" height="' + (H - m * 2) +
+      '" fill="none" stroke="' + axis + '" stroke-width="1"/>';
+
+    var lab = 'font-family="Segoe UI,system-ui,sans-serif" font-size="9" fill="' + text + '"';
+    s += '<text x="' + m + '" y="' + (H - m + 13) + '" text-anchor="middle" ' + lab + '>' + x0 + '</text>' +
+      '<text x="' + (W - m) + '" y="' + (H - m + 13) + '" text-anchor="middle" ' + lab + '>' + x1 + '</text>' +
+      '<text x="' + (m - 5) + '" y="' + (H - m) + '" text-anchor="end" ' + lab + '>' + y0 + '</text>' +
+      '<text x="' + (m - 5) + '" y="' + (m + 4) + '" text-anchor="end" ' + lab + '>' + y1 + '</text>';
+
+    if (f.kind === 'plot' && f.points && f.points.length > 1) {
+      var pts = f.points.filter(function (p) {
+        return p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1;
+      }).map(function (p) { return px(p[0]).toFixed(1) + ',' + py(p[1]).toFixed(1); });
+      if (pts.length > 1) {
+        s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + curve +
+          '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      }
+      if (f.label) {
+        s += '<text x="' + (W - m - 4) + '" y="' + (m + 12) + '" text-anchor="end" ' +
+          'font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="' + curve + '">' +
+          U.esc(f.label) + '</text>';
+      }
+    }
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H +
+      '" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;margin:9px 0;display:block">' +
+      s + '</svg>';
+  }
+
+  function spaceHtml(n, ink) {
+    if (!n) return '';
+    var line = ink ? '1px solid #ccc' : '1px dashed var(--stroke-strong)';
+    var out = '';
+    for (var i = 0; i < n; i++) {
+      out += '<div style="border-bottom:' + line + ';height:' + (ink ? '9mm' : '26px') + '"></div>';
+    }
+    return '<div style="margin-top:7px">' + out + '</div>';
+  }
+
+  /** The body of one question: table, figure and working space, in order. */
+  function extras(it, ink) {
+    return tableHtml(it.table, ink) + figureSvg(it.figure, ink) + spaceHtml(it.space, ink);
+  }
+
   // ------------------------------------------------------- printable file
   /**
    * One self-contained HTML document, used for printing, for the .html
@@ -77,7 +183,9 @@
         ' questions &middot; Orion Learn</p>' +
       '<p class="name">Name: ________________________     Date: ____________</p>' +
       '<ol>' + (d.items || []).map(function (it) {
-        return '<li><div class="q">' + U.esc(it.q) + '</div><div class="work"></div></li>';
+        var ex = extras(it, true);
+        return '<li><div class="q">' + U.esc(it.q) + '</div>' +
+          (ex || '<div class="work"></div>') + '</li>';
       }).join('') + '</ol>' +
       (d.study && d.study.length
         ? '<div class="study"><b>Before you start</b><ul>' +
@@ -263,7 +371,9 @@
             '<button class="btn primary" data-act="markthis">Mark my answers</button>' +
           '</div></div>' +
         '<ol class="lr-items">' + (d.items || []).map(function (it) {
-          return '<li><div class="lr-q">' + U.esc(it.q) + '</div><div class="lr-work"></div></li>';
+          var ex = extras(it, false);
+          return '<li><div class="lr-q">' + U.esc(it.q) + '</div>' +
+            (ex || '<div class="lr-work"></div>') + '</li>';
         }).join('') + '</ol>' +
         (d.study && d.study.length
           ? '<div class="lr-study"><b>Before you start</b><ul>' +
