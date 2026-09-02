@@ -88,6 +88,7 @@
     var page = (args && args.page) || 'home';
     var pageArg = null;
     var results = [], home = null, loading = false, error = null;
+    var localFiles = [], filesLoaded = false;
 
     // player state
     var queue = [], qIndex = -1, playing = false, ready = false;
@@ -100,7 +101,7 @@
         '<div class="mu-side">' +
           '<div class="mu-brand">' + Icons.get('orionmusic') + '<span>Orion Music</span></div>' +
           '<nav class="mu-nav">' +
-            [['home', 'Home', 'home'], ['explore', 'Explore', 'explore'],
+            [['home', 'Home', 'home'], ['explore', 'Explore', 'explore'], ['files', 'Your files', 'folder'],
              ['search', 'Search', 'search'], ['library', 'Library', 'library']]
               .map(function (n) {
                 return '<button class="mu-navitem" data-page="' + n[0] + '">' +
@@ -179,8 +180,56 @@
       return Math.round(store().volume * Emu.masterVolume());
     }
     function applyVolume() {
+      if (localEl) localEl.volume = Math.max(0, Math.min(1, effectiveVolume() / 100));
       if (!player || !ready) return;
       try { player.setVolume(effectiveVolume()); } catch (e) {}
+    }
+
+    // ------------------------------------------------------- local files
+    // Files you add play through an <audio> element rather than the YouTube
+    // frame. That is not just tidiness: a file has real bytes, which is what
+    // lets it be handed to Rythem to build a chart from. A YouTube track has
+    // none, so it can never go that way.
+    var localEl = null;
+
+    function isLocal(t) { return !!(t && t.local); }
+
+    function ensureLocal() {
+      if (localEl) return localEl;
+      localEl = document.createElement('audio');
+      localEl.preload = 'metadata';
+      stage.appendChild(localEl);
+      localEl.addEventListener('ended', function () { advance(1, true); });
+      localEl.addEventListener('play', function () { playing = true; startPoll(); renderPlayer(); });
+      localEl.addEventListener('pause', function () { playing = false; renderPlayer(); });
+      localEl.addEventListener('error', function () {
+        Emu.notify('Orion Music', 'That file could not be played.', 'orionmusic');
+        playing = false; renderPlayer();
+      });
+      return localEl;
+    }
+
+    function loadLocal(track) {
+      var el = ensureLocal();
+      // never leave two things playing at once
+      if (player && ready) { try { player.pauseVideo(); } catch (e) {} }
+      global.AudioDB.get(track.id).then(function (row) {
+        if (!row || !row.blob) {
+          Emu.notify('Orion Music', 'That file is no longer stored on this device.', 'orionmusic');
+          return;
+        }
+        if (el.dataset.url) URL.revokeObjectURL(el.dataset.url);
+        var url = URL.createObjectURL(row.blob);
+        el.dataset.url = url;
+        el.src = url;
+        el.volume = Math.max(0, Math.min(1, effectiveVolume() / 100));
+        el.play().catch(function () { /* autoplay refused; the button still works */ });
+        pushRecent(track);
+        renderPlayer();
+        renderQueue();
+      }).catch(function () {
+        Emu.notify('Orion Music', 'That file could not be read.', 'orionmusic');
+      });
     }
 
     // ------------------------------------------------------- the player
@@ -254,11 +303,19 @@
     function startPoll() {
       stopPoll();
       poll = setInterval(function () {
-        if (!player || !ready || seeking) return;
-        try {
-          position = player.getCurrentTime() || 0;
-          duration = player.getDuration() || (current() ? current().seconds : 0);
-        } catch (e) { return; }
+        if (seeking) return;
+        var t = current();
+        if (isLocal(t)) {
+          if (!localEl) return;
+          position = localEl.currentTime || 0;
+          duration = localEl.duration || t.seconds || 0;
+        } else {
+          if (!player || !ready) return;
+          try {
+            position = player.getCurrentTime() || 0;
+            duration = player.getDuration() || (t ? t.seconds : 0);
+          } catch (e) { return; }
+        }
         curEl.textContent = fmtTime(position);
         durEl.textContent = fmtTime(duration);
         seek.value = duration ? Math.round(position / duration * 1000) : 0;
@@ -268,6 +325,8 @@
 
     function loadNow(track) {
       if (!track) return;
+      if (isLocal(track)) { loadLocal(track); return; }
+      if (localEl) { try { localEl.pause(); } catch (e) {} }
       if (!player || !ready) { pendingTrack = track; ensurePlayer(); return; }
       try {
         player.loadVideoById(track.id);
@@ -390,6 +449,12 @@
         if (list && list.length) playList(list, 0);
         return;
       }
+      if (isLocal(current())) {
+        var el = ensureLocal();
+        if (playing) el.pause();
+        else el.play().catch(function () {});
+        return;
+      }
       if (!player || !ready) { ensurePlayer(function () { loadNow(current()); }); return; }
       try {
         if (playing) player.pauseVideo(); else player.playVideo();
@@ -491,6 +556,39 @@
           }).join('') + '</div>' +
           (results.length ? '<h3 class="mu-h">' + U.esc(pageArg || '') + '</h3>' +
             listMarkup(results, { src: 'results' }) : '');
+        return;
+      }
+
+      if (page === 'files') {
+        content.innerHTML =
+          '<div class="mu-fileshead"><div><h3 class="mu-h">Your files</h3>' +
+            '<p class="mu-lead">Music you add lives on this device. These are the only tracks ' +
+            'that can be sent to Rythem — the game builds its chart from the actual audio, and a ' +
+            'YouTube track has none to give it.</p></div>' +
+            '<button class="btn primary" data-act="addfiles">Add music</button></div>' +
+          (!global.AudioDB || !global.AudioDB.supported()
+            ? '<p class="mu-empty">This browser cannot store files.</p>'
+            : !filesLoaded ? '<div class="mu-loading"><i></i><span>Loading…</span></div>'
+            : !localFiles.length
+              ? '<div class="mu-empty2">' + Icons.get('folder') + '<b>No music added yet</b>' +
+                '<span>Add an mp3, ogg, wav or m4a and it will play here — and can be sent ' +
+                'straight into Rythem.</span></div>'
+              : '<div class="mu-list">' + localFiles.map(function (f, i) {
+                  var cur = current();
+                  var active = cur && cur.local && cur.id === f.id;
+                  return '<div class="mu-row' + (active ? ' active' : '') +
+                    '" data-track="' + i + '" data-src="files">' +
+                    '<span class="mu-rn">' + (active && playing ? Icons.get('sound') : (i + 1)) + '</span>' +
+                    '<span class="mu-art alt">' + Icons.get('note') + '</span>' +
+                    '<span class="mu-meta"><b>' + U.esc(f.name) + '</b>' +
+                    '<small>' + U.fmtBytes(f.size) + '</small></span>' +
+                    '<span class="mu-rowacts">' +
+                      '<button class="e-btn" data-fileact="rythem" data-id="' + U.esc(f.id) +
+                        '" data-tip="Play this in Rythem">' + Icons.get('game') + '</button>' +
+                      '<button class="e-btn" data-fileact="del" data-id="' + U.esc(f.id) +
+                        '" data-tip="Remove">' + Icons.get('trash') + '</button>' +
+                    '</span></div>';
+                }).join('') + '</div>');
         return;
       }
 
@@ -624,8 +722,110 @@
     }
 
     // ---------------------------------------------------- track sources
+    /** A stored file, shaped like any other track so the queue can hold it. */
+    function fileTrack(f) {
+      return {
+        id: f.id, local: true, title: f.name, artist: 'Your files',
+        thumb: '', seconds: 0
+      };
+    }
+
+    function loadFiles() {
+      if (!global.AudioDB || !global.AudioDB.supported()) { filesLoaded = true; render(); return; }
+      global.AudioDB.list().then(function (rows) {
+        localFiles = rows;
+        filesLoaded = true;
+        render();
+      });
+    }
+
+    function addFiles() {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'audio/*';
+      input.multiple = true;
+      input.addEventListener('change', function () {
+        var files = Array.prototype.slice.call(input.files || []);
+        if (!files.length) return;
+        Promise.all(files.map(function (f) { return global.AudioDB.add(f); }))
+          .then(function (added) {
+            Emu.notify('Orion Music',
+              added.length === 1 ? added[0].name + ' added to your files.'
+                : added.length + ' tracks added to your files.', 'orionmusic');
+            loadFiles();
+          })
+          .catch(function (e) {
+            WM.alert('Orion Music', 'Those files could not be stored:\n' + e.message, win);
+          });
+      });
+      input.click();
+    }
+
+    /**
+     * Hand a stored file to Rythem. The game analyses decoded audio to build
+     * its chart, so it needs the bytes - it waits to say it is ready, then the
+     * file goes across as an ArrayBuffer and is loaded exactly as if it had
+     * been dropped in by hand.
+     */
+    function sendToRythem(id) {
+      var meta = localFiles.filter(function (f) { return f.id === id; })[0];
+      if (!meta) return;
+      if (!global.Games || !global.Games.get('rythem')) {
+        WM.alert('Orion Music', 'Rythem is not in your Store catalogue.', win);
+        return;
+      }
+
+      Emu.notify('Orion Music', 'Opening Rythem with ' + meta.name + '…', 'orionmusic');
+      var gw = global.Games.open('rythem');
+      if (!gw) return;
+
+      global.AudioDB.get(id).then(function (row) {
+        if (!row || !row.blob) throw new Error('That file is no longer stored.');
+        return row.blob.arrayBuffer().then(function (buf) {
+          var sent = false;
+
+          function frame() { return gw.el && gw.el.querySelector('iframe.gw-frame'); }
+
+          function post() {
+            var f = frame();
+            if (!f || !f.contentWindow || sent) return;
+            sent = true;
+            // Rythem only accepts messages from Orion's own origin.
+            f.contentWindow.postMessage(
+              { orion: 'music-file', name: meta.fileName || (meta.name + '.mp3'),
+                type: meta.type || 'audio/mpeg', buffer: buf },
+              '*', [buf]);
+            window.removeEventListener('message', onReady);
+            clearInterval(tick);
+            clearTimeout(giveUp);
+          }
+
+          // The game announces itself when it loads; that is the reliable
+          // signal. Polling is only a fallback for a slow or cached frame.
+          function onReady(e) {
+            if (e.data && e.data.orion === 'rythem-ready') post();
+          }
+          window.addEventListener('message', onReady);
+
+          var tick = setInterval(function () { if (frame() && !sent) post(); }, 900);
+          var giveUp = setTimeout(function () {
+            clearInterval(tick);
+            window.removeEventListener('message', onReady);
+            if (!sent) {
+              Emu.notify('Orion Music',
+                'Rythem did not answer in time. Once it has loaded, try sending the track again.',
+                'warning');
+            }
+          }, 25000);
+        });
+      }).catch(function (e) {
+        WM.alert('Orion Music', 'That track could not be sent:\n' + e.message, win);
+      });
+    }
+
     function listFor(src) {
       var mm = store();
+      if (src === 'files') return localFiles.map(fileTrack);
       if (src === 'chart') return (home && home.chart) || [];
       if (src === 'results') return results;
       if (src === 'liked') return mm.liked;
@@ -702,6 +902,7 @@
         page = nav.dataset.page;
         if (page === 'home') loadHome();
         else if (page === 'search') { render(); searchIn.focus(); }
+        else if (page === 'files') { render(); if (!filesLoaded) loadFiles(); }
         else render();
         return;
       }
@@ -713,6 +914,21 @@
         else { page = 'playlist'; pageArg = v.slice(3); }
         render();
         return;
+      }
+
+      var fa = e.target.closest('[data-fileact]');
+      if (fa) {
+        var fid = fa.dataset.id;
+        if (fa.dataset.fileact === 'rythem') { sendToRythem(fid); return; }
+        if (fa.dataset.fileact === 'del') {
+          var f = localFiles.filter(function (x) { return x.id === fid; })[0];
+          WM.confirm('Orion Music', 'Remove "' + (f ? f.name : 'this track') +
+            '" from this device?', win).then(function (ok) {
+            if (!ok) return;
+            global.AudioDB.remove(fid).then(loadFiles);
+          });
+          return;
+        }
       }
 
       var g = e.target.closest('[data-genre]');
@@ -795,6 +1011,7 @@
         renderQueue();
       }
       else if (k === 'clearq') { queue = []; qIndex = -1; renderQueue(); }
+      else if (k === 'addfiles') addFiles();
       else if (k === 'newpl') newPlaylist();
       else if (k === 'retry') { error = null; home = null; loadHome(); }
       else if (k === 'back') { page = 'home'; loadHome(); }
@@ -848,8 +1065,14 @@
     seek.addEventListener('pointerdown', function () { seeking = true; });
     seek.addEventListener('change', function () {
       seeking = false;
-      if (!player || !ready || !duration) return;
-      try { player.seekTo(duration * (seek.value / 1000), true); } catch (e) {}
+      if (!duration) return;
+      var to = duration * (seek.value / 1000);
+      if (isLocal(current())) {
+        if (localEl) { try { localEl.currentTime = to; } catch (e) {} }
+        return;
+      }
+      if (!player || !ready) return;
+      try { player.seekTo(to, true); } catch (e) {}
     });
     seek.addEventListener('input', function () {
       if (duration) curEl.textContent = fmtTime(duration * (seek.value / 1000));
