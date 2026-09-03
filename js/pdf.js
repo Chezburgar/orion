@@ -120,6 +120,23 @@
     });
   }
 
+  /**
+   * Split a point list into the runs drawn as one stroke. A null is an
+   * explicit break; so is leaving the window, or a curve running off the top
+   * returns as a straight line across the graph.
+   */
+  function segments(points, x0, x1, y0, y1) {
+    var out = [], run = [];
+    function end() { if (run.length) { out.push(run); run = []; } }
+    points.forEach(function (p) {
+      if (!p || p.length < 2) { end(); return; }
+      if (p[0] < x0 || p[0] > x1 || p[1] < y0 || p[1] > y1) { end(); return; }
+      run.push(p);
+    });
+    end();
+    return out;
+  }
+
   // --------------------------------------------------------------- doc
   function doc(opts) {
     opts = opts || {};
@@ -283,18 +300,49 @@
         lab(y0, ox + pad - 4, py(y0) - 2, 'end');
         lab(y1, ox + pad - 4, py(y1) - 2, 'end');
 
+        // Asymptotes under the curve, dashed, so the curve stays dominant.
+        var asym = f.asymptotes || {}, i;
+        op('0.55 G 0.9 w [3 3] 0 d');
+        (asym.v || []).forEach(function (v) {
+          if (v <= x0 || v >= x1) return;
+          op(n(px(v)) + ' ' + n(oy + pad) + ' m ' + n(px(v)) + ' ' + n(oy + H - pad) + ' l S');
+        });
+        (asym.h || []).forEach(function (v) {
+          if (v <= y0 || v >= y1) return;
+          op(n(ox + pad) + ' ' + n(py(v)) + ' m ' + n(ox + W - pad) + ' ' + n(py(v)) + ' l S');
+        });
+        op('[] 0 d 0 G');
+
         if (f.kind === 'plot' && f.points && f.points.length > 1) {
-          var pts = f.points.filter(function (p) {
-            return p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1;
+          // A null breaks the curve - without it a function with a vertical
+          // asymptote is drawn straight through the gap.
+          op('0.1 G 1.4 w');
+          segments(f.points, x0, x1, y0, y1).forEach(function (seg) {
+            if (seg.length < 2) return;
+            op(n(px(seg[0][0])) + ' ' + n(py(seg[0][1])) + ' m');
+            for (var k = 1; k < seg.length; k++) op(n(px(seg[k][0])) + ' ' + n(py(seg[k][1])) + ' l');
+            op('S');
           });
-          if (pts.length > 1) {
-            op('0.1 G 1.4 w ' + n(px(pts[0][0])) + ' ' + n(py(pts[0][1])) + ' m');
-            for (var i = 1; i < pts.length; i++) op(n(px(pts[i][0])) + ' ' + n(py(pts[i][1])) + ' l');
-            op('S 0 G');
-          }
+          op('0 G');
           if (f.label) drawRuns(runs(f.label, false), ox + W - pad - measure(f.label, 8, false) - 3,
             oy + H - pad - 11, 8);
         }
+
+        // Marked features on top: intercepts, turning points, and the open
+        // circles that say a point is missing.
+        (f.marks || []).forEach(function (mk) {
+          if (mk.x < x0 || mk.x > x1 || mk.y < y0 || mk.y > y1) return;
+          var cx = px(mk.x), cy = py(mk.y), r = 2.6;
+          // a circle from four Bezier arcs - PDF has no circle operator
+          var k = r * 0.5523;
+          op(n(cx - r) + ' ' + n(cy) + ' m ' +
+             n(cx - r) + ' ' + n(cy + k) + ' ' + n(cx - k) + ' ' + n(cy + r) + ' ' + n(cx) + ' ' + n(cy + r) + ' c ' +
+             n(cx + k) + ' ' + n(cy + r) + ' ' + n(cx + r) + ' ' + n(cy + k) + ' ' + n(cx + r) + ' ' + n(cy) + ' c ' +
+             n(cx + r) + ' ' + n(cy - k) + ' ' + n(cx + k) + ' ' + n(cy - r) + ' ' + n(cx) + ' ' + n(cy - r) + ' c ' +
+             n(cx - k) + ' ' + n(cy - r) + ' ' + n(cx - r) + ' ' + n(cy - k) + ' ' + n(cx - r) + ' ' + n(cy) + ' c h ' +
+             (mk.type === 'open' ? '1 g 0 G 1.1 w B' : '0 g 0 G 1.1 w B') + ' 0 g');
+          if (mk.label) drawRuns(runs(mk.label, false), cx + 4.5, cy + 4, 7);
+        });
         y = oy - 8;
         return api;
       },

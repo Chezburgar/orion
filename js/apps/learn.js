@@ -228,6 +228,24 @@
     return (n >= 5 ? 5 : n >= 2 ? 2 : 1) * mag;
   }
 
+  /**
+   * Split a point list into the runs that should be drawn as one stroke. A
+   * null entry is an explicit break, and so is a point that leaves the window
+   * - otherwise a curve running off the top comes back as a straight line
+   * across the whole graph.
+   */
+  function segments(points, x0, x1, y0, y1) {
+    var out = [], run = [];
+    function end() { if (run.length) { out.push(run); run = []; } }
+    points.forEach(function (p) {
+      if (!p || p.length < 2) { end(); return; }
+      if (p[0] < x0 || p[0] > x1 || p[1] < y0 || p[1] > y1) { end(); return; }
+      run.push(p);
+    });
+    end();
+    return out;
+  }
+
   function figureSvg(f, ink) {
     if (!f) return '';
     var W = 300, H = 210, m = 26;
@@ -267,20 +285,52 @@
       '<text x="' + (m - 5) + '" y="' + (H - m) + '" text-anchor="end" ' + lab + '>' + y0 + '</text>' +
       '<text x="' + (m - 5) + '" y="' + (m + 4) + '" text-anchor="end" ' + lab + '>' + y1 + '</text>';
 
+    // Asymptotes, drawn under the curve so the curve stays the strongest line.
+    var asym = f.asymptotes || {};
+    var dash = ink ? '#777' : 'rgba(190,200,225,.55)';
+    (asym.v || []).forEach(function (v) {
+      if (v <= x0 || v >= x1) return;
+      s += '<line x1="' + px(v).toFixed(1) + '" y1="' + m + '" x2="' + px(v).toFixed(1) +
+        '" y2="' + (H - m) + '" stroke="' + dash + '" stroke-width="1.2" stroke-dasharray="5 4"/>';
+    });
+    (asym.h || []).forEach(function (v) {
+      if (v <= y0 || v >= y1) return;
+      s += '<line x1="' + m + '" y1="' + py(v).toFixed(1) + '" x2="' + (W - m) +
+        '" y2="' + py(v).toFixed(1) + '" stroke="' + dash + '" stroke-width="1.2" stroke-dasharray="5 4"/>';
+    });
+
     if (f.kind === 'plot' && f.points && f.points.length > 1) {
-      var pts = f.points.filter(function (p) {
-        return p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1;
-      }).map(function (p) { return px(p[0]).toFixed(1) + ',' + py(p[1]).toFixed(1); });
-      if (pts.length > 1) {
-        s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + curve +
+      // A null in the list breaks the curve, so a function with a vertical
+      // asymptote is not drawn as one continuous line straight through it.
+      segments(f.points, x0, x1, y0, y1).forEach(function (seg) {
+        if (seg.length < 2) return;
+        s += '<polyline points="' + seg.map(function (p) {
+          return px(p[0]).toFixed(1) + ',' + py(p[1]).toFixed(1);
+        }).join(' ') + '" fill="none" stroke="' + curve +
           '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-      }
+      });
       if (f.label) {
         s += '<text x="' + (W - m - 4) + '" y="' + (m + 12) + '" text-anchor="end" ' +
           'font-family="Segoe UI,system-ui,sans-serif" font-size="10" fill="' + curve + '">' +
           mesc(f.label) + '</text>';
       }
     }
+
+    // Marked features last, on top of everything: intercepts, turning points,
+    // and the open circles that say a point is missing from the graph.
+    var paper = ink ? '#fff' : '#12151f';
+    (f.marks || []).forEach(function (mk) {
+      if (mk.x < x0 || mk.x > x1 || mk.y < y0 || mk.y > y1) return;
+      var cx = px(mk.x).toFixed(1), cy = py(mk.y).toFixed(1);
+      var open = mk.type === 'open';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="3.4" fill="' +
+        (open ? paper : curve) + '" stroke="' + curve + '" stroke-width="1.6"/>';
+      if (mk.label) {
+        s += '<text x="' + (px(mk.x) + 6).toFixed(1) + '" y="' + (py(mk.y) - 6).toFixed(1) + '" ' +
+          'font-family="Segoe UI,system-ui,sans-serif" font-size="8.5" fill="' + text + '">' +
+          mesc(mk.label) + '</text>';
+      }
+    });
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H +
       '" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;margin:9px 0;display:block">' +
       s + '</svg>';
@@ -296,9 +346,26 @@
     return '<div style="margin-top:7px">' + out + '</div>';
   }
 
-  /** The body of one question: table, figure and working space, in order. */
+  var LETTERS = 'abcdefgh';
+  function partLabel(i) { return '(' + (LETTERS[i] || String(i + 1)) + ')'; }
+
+  /**
+   * A question in labelled parts. The model used to run two questions together
+   * in one sentence with nothing to tell them apart; when it splits them out
+   * they get (a), (b) and their own room to answer in.
+   */
+  function partsHtml(it, ink) {
+    if (!it.parts || !it.parts.length) return spaceHtml(it.space, ink);
+    return it.parts.map(function (p, i) {
+      return '<div style="margin-top:' + (ink ? '5mm' : '11px') + '">' +
+        '<span style="font-weight:600;margin-right:6px">' + partLabel(i) + '</span>' +
+        mesc(p) + spaceHtml(it.space || 2, ink) + '</div>';
+    }).join('');
+  }
+
+  /** The body of one question: table, figure, then the parts or plain space. */
   function extras(it, ink) {
-    return tableHtml(it.table, ink) + figureSvg(it.figure, ink) + spaceHtml(it.space, ink);
+    return tableHtml(it.table, ink) + figureSvg(it.figure, ink) + partsHtml(it, ink);
   }
 
   // ------------------------------------------------------- printable file
@@ -395,9 +462,21 @@
         head: (it.table.head || []).map(mathText),
         rows: (it.table.rows || []).map(function (r) { return r.map(mathText); })
       });
-      if (it.figure) p.figure(Object.assign({}, it.figure,
-        { label: it.figure.label ? mathText(it.figure.label) : '' }));
-      p.lines(it.space || (it.table || it.figure ? 1 : 2));
+      if (it.figure) p.figure(Object.assign({}, it.figure, {
+        label: it.figure.label ? mathText(it.figure.label) : '',
+        marks: (it.figure.marks || []).map(function (mk) {
+          return Object.assign({}, mk, { label: mk.label ? mathText(mk.label) : '' });
+        })
+      }));
+      if (it.parts && it.parts.length) {
+        it.parts.forEach(function (part, k) {
+          p.space(3);
+          p.text(partLabel(k) + '  ' + mathText(part), { size: 11, indent: 14 });
+          p.lines(it.space || 2);
+        });
+      } else {
+        p.lines(it.space || (it.table || it.figure ? 1 : 2));
+      }
       p.space(6);
     });
 
@@ -783,7 +862,10 @@
       var d = result;
       var html = '<h1>' + mesc(d.topic || 'Practice') + '</h1><ol>' +
         (d.items || []).map(function (it) {
-          return '<li><b>' + mesc(it.q) + '</b><p><br></p></li>';
+          return '<li><b>' + mesc(it.q) + '</b>' +
+            (it.parts || []).map(function (p, k) {
+              return '<p>' + partLabel(k) + ' ' + mesc(p) + '</p><p><br></p>';
+            }).join('') + '<p><br></p></li>';
         }).join('') + '</ol><h2>Answer key</h2><ol>' +
         (d.items || []).map(function (it) { return '<li>' + mesc(it.a) + '</li>'; }).join('') + '</ol>';
       var dir = VFS.HOME + '\\Documents';
